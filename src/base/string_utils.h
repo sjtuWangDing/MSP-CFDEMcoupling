@@ -1,6 +1,6 @@
 /*!
  * Copyright (c) 2020 by Contributors
- * @file traits.H
+ * @file string_utils.h
  * \brief Basic functions of string utils.
  *
  * @author Wang Ding

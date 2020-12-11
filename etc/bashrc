@@ -1,0 +1,12 @@
+#------------------------------------------------------------------------------
+# MSP-CFDEMcoupling
+# Script
+#     etc/bashrc
+# Description
+#     Startup file for MSP-CFDEMcoupling environment variables
+# Author
+#     Wang Ding
+# Dec 2020
+#------------------------------------------------------------------------------
+
+# Add this block to your ~/.bashrc and modify for your installation

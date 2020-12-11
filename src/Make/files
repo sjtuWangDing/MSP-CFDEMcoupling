@@ -1,0 +1,32 @@
+source_path = ../src
+cloud = $(source_path)/cloud
+sub_model = $(source_path)/sub_model
+
+$(cloud)/cfdem_base.C
+$(cloud)/cfdem_cloud.C
+$(cloud)/cfdem_cloud_IB.C
+$(cloud)/coupling_properties.C
+
+$(sub_model)/averaging_model/averaging_model.C
+
+$(sub_model)/data_exchange_model/data_exchange_model.C
+$(sub_model)/data_exchange_model/two_way_mpi.C
+
+$(sub_model)/force_model/force_model.C
+$(sub_model)/force_model/force_sub_model.C
+$(sub_model)/force_model/Archimedes_IB.C
+$(sub_model)/force_model/Archimedes_IB_test.C
+$(sub_model)/force_model/Shirgaonkar_IB.C
+
+$(sub_model)/liggghts_command_model/liggghts_command_model.C
+$(sub_model)/liggghts_command_model/run_liggghts.C
+
+$(sub_model)/locate_model/locate_model.C
+$(sub_model)/locate_model/engine_search.C
+$(sub_model)/locate_model/engine_search_IB.C
+
+$(sub_model)/void_fraction_model/void_fraction_model.C
+$(sub_model)/void_fraction_model/no_void_fraction.C
+$(sub_model)/void_fraction_model/IB_void_fraction.C
+
+LIB = ./xxxxxx

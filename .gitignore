@@ -62,3 +62,7 @@ aaorig.*
 *.png
 *.eps
 *.jpg
+
+# add ignore for outputs of wmake in src/
+src/lnInclude/
+src/Make/src/

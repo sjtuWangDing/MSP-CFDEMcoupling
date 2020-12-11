@@ -1,6 +1,6 @@
 /*!
  * Copyright (c) 2020 by Contributors
- * @file traits.H
+ * @file traits.h
  * \brief Traits class for primitives.
  * \note All primitives need a specialised version of this class. The
          specialised version will normally also require a conversion method.
