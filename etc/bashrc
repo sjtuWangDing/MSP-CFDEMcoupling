@@ -10,3 +10,102 @@
 #------------------------------------------------------------------------------
 
 # Add this block to your ~/.bashrc and modify for your installation
+
+# STANDARD BLOCK FOR REGULAR INSTALLATIONS
+##-----------------------------------------------------------------------------
+## source cfdem env vars
+#export CFDEM_VERSION=PUBLIC
+#export CFDEM_PROJECT_DIR=$HOME/CFDEM/CFDEMcoupling-$CFDEM_VERSION-$WM_PROJECT_VERSION
+#export CFDEM_bashrc=$CFDEM_PROJECT_DIR/src/lagrangian/cfdemParticle/etc/bashrc
+#export CFDEM_LIGGGHTS_SRC_DIR=$HOME/LIGGGHTS/LIGGGHTS-PUBLIC/src
+#export CFDEM_LIGGGHTS_MAKEFILE_NAME=auto
+#export CFDEM_LPP_DIR=$HOME/LIGGGHTS/mylpp/src
+#. $CFDEM_bashrc
+
+## source msp-cfdem env vars
+
+#export MSP_CFDEM_PROJECT_DIR=$HOME/CFDEM/MSP-CFDEMcoupling-$WM_PROJECT_VERSION
+#export MSP_CFDEM_SRC_DIR=$MSP_CFDEM_PROJECT_DIR/src
+#export MSP_CFDEM_bashrc=$MSP_CFDEM_PROJECT_DIR/etc/bashrc
+#. $MSP_CFDEM_bashrc
+
+## source other env vars which will be used in ". $MSP_CFDEM_bashrc"
+#export MSP_CFDEM_VERBOSE=false
+##-----------------------------------------------------------------------------
+
+echo_()
+{
+  if [[ ! $MSP_CFDEM_VERBOSE == "false" ]]; then echo "$1"; fi
+}
+
+add_path_()
+{
+  for path in "$@"
+  do
+    export PATH="$path":"$PATH"
+  done
+}
+
+add_LDLib_()
+{
+  for path in "$@"
+  do
+    export LD_LIBRARY_PATH="$path":"$LD_LIBRARY_PATH"
+  done
+}
+
+set_var_() {
+  # define variables
+  env_variable="$1"
+  default_value="$2"
+  # get current env value of $env_variable
+  cur_value=$(eval echo \$$env_variable)
+  if [[ "$cur_value" == "" ]]; then
+    # not set for env variable and use defualt value
+    eval export $env_variable="$default_value"
+    echo "using default $env_variable = $default_value"
+  else
+    echo "using user defined $env_variable = $cur_value"
+  fi
+}
+
+echo_ "************************************"
+set_var_ LIGGGHTS_DIR $HOME/LIGGGHTS/LIGGGHTS-PUBLIC
+set_var_ LIGGGHTS_SRC_DIR $LIGGGHTS_DIR/src
+set_var_ LPP_DIR $HOME/LIGGGHTS/lpp
+set_var_ MSP_CFDEM_BIN_DIR $MSP_CFDEM_PROJECT_DIR/bin
+set_var_ MSP_CFDEM_ETC_DIR $MSP_CFDEM_PROJECT_DIR/etc
+set_var_ MSP_CFDEM_SRC_DIR $MSP_CFDEM_PROJECT_DIR/src
+set_var_ MSP_CFDEM_TEST_DIR $MSP_CFDEM_PROJECT_DIR/test
+set_var_ MSP_CFDEM_TOOLS_DIR $MSP_CFDEM_PROJECT_DIR/tools
+echo_ "************************************"
+set_var_ LIGGGHTS_MAKEFILE_NAME "auto"
+set_var_ LIGGGHTS_MAKEFILE_POSTFIX ""
+
+#check if default lammps lib path should be used
+set_var_ LAMMPS_LIB_DIR $LIGGGHTS_DIR/lib
+
+#- LIGGGHTS lib name
+if [[ "auto" != $LIGGGHTS_MAKEFILE_NAME ]]; then
+  echo_ "Error: LIGGGHTS_MAKEFILE_NAME must be \"auto\"!"
+fi
+if [[ "" != $LIGGGHTS_MAKEFILE_POSTFIX ]]; then
+  export LIGGGHTS_LIB_NAME="lmp_"$LIGGGHTS_MAKEFILE_NAME"_"$LIGGGHTS_MAKEFILE_POSTFIX
+else
+  export LIGGGHTS_LIB_NAME="lmp_"$LIGGGHTS_MAKEFILE_NAME
+fi
+#- LIGGGHTS lib path
+set_var_ LIGGGHTS_LIB_PATH $LIGGGHTS_SRC_DIR
+
+#- LIGGGHTS executable
+set_var_ LIGGGHTS_EXEC $LIGGGHTS_LIB_NAME
+
+#- LAMMPS lib path
+set_var_ LAMMPS_LIB_PATH $LIGGGHTS_DIR/lib
+
+#- MSP-CFDEM lib name
+export MSP_CFDEM_LIB_NAME=MSP-CFDEMcoupling-OF$WM_PROJECT_VERSION
+
+echo_ "************************************"
+
+alias mspCfdemCompLIG='bash $MSP_CFDEM_ETC_DIR/compile_LIGGGHTS.sh'
