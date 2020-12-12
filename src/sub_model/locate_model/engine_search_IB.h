@@ -63,17 +63,15 @@ Class
 
 namespace Foam {
 
-class engineSearchIB: public engineSearch {
-
-public:
-
+class engineSearchIB : public engineSearch {
+ public:
   //! \brief Runtime type information
   cfdemTypeName("engineIB")
 
-  cfdemDefineNewFunctionAdder(locateModel, engineSearchIB)
+      cfdemDefineNewFunctionAdder(locateModel, engineSearchIB)
 
-  //! \brief Constructor
-  engineSearchIB(cfdemCloud& cloud, const std::string& typeName = cTypeName());
+      //! \brief Constructor
+      engineSearchIB(cfdemCloud& cloud, const std::string& typeName = cTypeName());
 
   //! \brief Destructor
   ~engineSearchIB();
@@ -84,8 +82,7 @@ public:
    */
   void findCell(const base::CITensor1& findCellIDs) const;
 
-private:
-
+ private:
   /*!
    * \brief 判断 pos 是否位于长方体区域中
    * \param pos 颗粒中心位置
@@ -117,8 +114,7 @@ private:
     }
   }
 
-private:
-
+ private:
   bool verbose_;
 
   int zSplit_;
@@ -134,4 +130,4 @@ private:
   std::vector<Foam::vector> satellitePoints_;
 };
 
-} // namespace Foam
+}  // namespace Foam

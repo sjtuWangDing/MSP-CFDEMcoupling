@@ -5,29 +5,27 @@
  *
  * @author Wang Ding
  */
- 
+
 #ifndef __STRING_UTILS_H__
 #define __STRING_UTILS_H__
 
-#include <string>
 #include <sstream>
+#include <string>
 
 inline void makeStringKernel(std::stringstream& ss) {}
 
-template<typename DType>
+template <typename DType>
 inline void makeStringKernel(std::stringstream& ss, const DType& data) {
   ss << data;
 }
 
-template<typename DType, typename... ATypes>
-inline void makeStringKernel(std::stringstream& ss,
-                             const DType& data,
-                             const ATypes&... args) {
+template <typename DType, typename... ATypes>
+inline void makeStringKernel(std::stringstream& ss, const DType& data, const ATypes&... args) {
   makeStringKernel(ss, data);
   makeStringKernel(ss, args...);
 }
 
-template<typename... ATypes>
+template <typename... ATypes>
 std::string makeString(const ATypes&... args) {
   std::stringstream ss;
   makeStringKernel(ss, args...);
@@ -35,13 +33,11 @@ std::string makeString(const ATypes&... args) {
 }
 
 //! \brief Specializations for std::string type.
-template<>
+template <>
 inline std::string makeString(const std::string& str) {
   return str;
 }
 
-inline std::string makeString(const char* cstr) {
-  return std::string(cstr);
-}
+inline std::string makeString(const char* cstr) { return std::string(cstr); }
 
-#endif // __STRING_UTILS_H__
+#endif  // __STRING_UTILS_H__

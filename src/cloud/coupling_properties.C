@@ -39,23 +39,21 @@ const std::string LIGGGHTS_VERSION = "3.8.0";
 
 namespace Foam {
 
-CouplingProperties::CouplingProperties(const fvMesh& mesh,
-                                       const IOdictionary& couplingPropertiesDict,
+CouplingProperties::CouplingProperties(const fvMesh& mesh, const IOdictionary& couplingPropertiesDict,
                                        const IOdictionary& liggghtsCommandsDict)
-  : mesh_(mesh),
-    couplingPropertiesDict_(couplingPropertiesDict),
-    liggghtsCommandsDict_(liggghtsCommandsDict),
-    verbose_(couplingPropertiesDict.lookupOrDefault<bool>("verbose", false)),
-    solveFlow_(couplingPropertiesDict.lookupOrDefault<bool>("solveFlow", true)),
-    modelType_(couplingPropertiesDict.lookupOrDefault<Foam::word>("modelType", "none").c_str()),
-    turbulenceModelType_(couplingPropertiesDict.lookupOrDefault<Foam::word>("turbulenceModelType", "none").c_str()),
-    allowUseSubCFDTimeStep_(couplingPropertiesDict.lookupOrDefault<bool>("allowUseSubCFDTimeStep", false)),
-    couplingInterval_(couplingPropertiesDict.lookupOrDefault<int>("couplingInterval", 0)),
-    checkPeriodicCells_(couplingPropertiesDict.lookupOrDefault<bool>("checkPeriodicCells", false)),
-    periodicCheckRange_(Foam::vector(1, 1, 1)) {
-
-  Info << "CFDEM coupling version: " << CFDEM_VERSION <<  endl;
-  Info << "LIGGGHTS version: " << LIGGGHTS_VERSION <<  endl;
+    : mesh_(mesh),
+      couplingPropertiesDict_(couplingPropertiesDict),
+      liggghtsCommandsDict_(liggghtsCommandsDict),
+      verbose_(couplingPropertiesDict.lookupOrDefault<bool>("verbose", false)),
+      solveFlow_(couplingPropertiesDict.lookupOrDefault<bool>("solveFlow", true)),
+      modelType_(couplingPropertiesDict.lookupOrDefault<Foam::word>("modelType", "none").c_str()),
+      turbulenceModelType_(couplingPropertiesDict.lookupOrDefault<Foam::word>("turbulenceModelType", "none").c_str()),
+      allowUseSubCFDTimeStep_(couplingPropertiesDict.lookupOrDefault<bool>("allowUseSubCFDTimeStep", false)),
+      couplingInterval_(couplingPropertiesDict.lookupOrDefault<int>("couplingInterval", 0)),
+      checkPeriodicCells_(couplingPropertiesDict.lookupOrDefault<bool>("checkPeriodicCells", false)),
+      periodicCheckRange_(Foam::vector(1, 1, 1)) {
+  Info << "CFDEM coupling version: " << CFDEM_VERSION << endl;
+  Info << "LIGGGHTS version: " << LIGGGHTS_VERSION << endl;
 
   if (couplingPropertiesDict.found("forceModels")) {
     Foam::wordList fList = couplingPropertiesDict.lookup("forceModels");
@@ -108,9 +106,9 @@ CouplingProperties::CouplingProperties(const fvMesh& mesh,
   if (mag(flowVelocity_) < SMALL) {
     FatalError << "mag(flowVelocity_) is zero" << abort(FatalError);
   }
-#endif // CFDEM_MIX_CLOUD
+#endif  // CFDEM_MIX_CLOUD
 
   Info << "Reading coupling properties from dictionary - done" << endl;
 }
 
-} // namespace Foam
+}  // namespace Foam

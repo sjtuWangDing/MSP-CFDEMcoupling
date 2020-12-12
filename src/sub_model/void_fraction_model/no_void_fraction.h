@@ -43,20 +43,18 @@ Class
 namespace Foam {
 
 class noVoidFraction : public voidFractionModel {
-
-public:
-
+ public:
   cfdemTypeName("noVoidFraction")
 
-  cfdemDefineNewFunctionAdder(voidFractionModel, noVoidFraction)
+      cfdemDefineNewFunctionAdder(voidFractionModel, noVoidFraction)
 
-  //! \brief Constructor
-  noVoidFraction(cfdemCloud& cloud);
+      //! \brief Constructor
+      noVoidFraction(cfdemCloud& cloud);
 
   //! \brief Destructor
   virtual ~noVoidFraction();
 };
 
-} // namespace Foam
+}  // namespace Foam
 
-#endif // __NO_VOID_FRACTION_H__
+#endif  // __NO_VOID_FRACTION_H__

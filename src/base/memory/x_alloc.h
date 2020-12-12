@@ -6,46 +6,46 @@
 #ifndef __THROW_BAD_ALLOC
 #include <new>
 #define __THROW_BAD_ALLOC throw std::bad_alloc()
-#endif // __THROW_BAD_ALLOC
+#endif  // __THROW_BAD_ALLOC
 
 // window thread
 #ifdef __WIN32_THREADS
-  #include <windows.h>
-  #define __NODE_ALLOCATOR_LOCK                                    \
-    if (__threads) EnterCriticalSection(&_S_node_allocator_lock)
-  #define __NODE_ALLOCATOR_UNLOCK                                  \
-    if (__threads) LeaveCriticalSection(&_S_node_allocator_lock)
-  #define __NODE_ALLOCATOR_THREADS true
-#endif // __WIN32THREADS
+#include <windows.h>
+#define __NODE_ALLOCATOR_LOCK \
+  if (__threads) EnterCriticalSection(&_S_node_allocator_lock)
+#define __NODE_ALLOCATOR_UNLOCK \
+  if (__threads) LeaveCriticalSection(&_S_node_allocator_lock)
+#define __NODE_ALLOCATOR_THREADS true
+#endif  // __WIN32THREADS
 
 // posix thread
 #ifdef __P_THREADS
-  #include <pthread.h>
-  #define __NODE_ALLOCATOR_LOCK                                    \
-    if (__threads) pthread_mutex_lock(&_S_node_allocator_lock)
-  #define __NODE_ALLOCATOR_UNLOCK                                  \
-    if (__threads) pthread_mutex_unlock(&_S_node_allocator_lock)
-  #define __NODE_ALLOCATOR_THREADS true
-#endif // __PTHREADS
+#include <pthread.h>
+#define __NODE_ALLOCATOR_LOCK \
+  if (__threads) pthread_mutex_lock(&_S_node_allocator_lock)
+#define __NODE_ALLOCATOR_UNLOCK \
+  if (__threads) pthread_mutex_unlock(&_S_node_allocator_lock)
+#define __NODE_ALLOCATOR_THREADS true
+#endif  // __PTHREADS
 
 // c++11 stl thread
 #ifdef __STL_THREADS
-  #include <mutex>
-  #define __NODE_ALLOCATOR_LOCK                                    \
-    if (__threads) _S_node_allocator_lock.lock();
-  #define __NODE_ALLOCATOR_UNLOCK                                  \
-    if (__threads) _S_node_allocator_lock.unlock();
-  #define __NODE_ALLOCATOR_THREADS true
-#endif // __STL_THREADS
+#include <mutex>
+#define __NODE_ALLOCATOR_LOCK \
+  if (__threads) _S_node_allocator_lock.lock();
+#define __NODE_ALLOCATOR_UNLOCK \
+  if (__threads) _S_node_allocator_lock.unlock();
+#define __NODE_ALLOCATOR_THREADS true
+#endif  // __STL_THREADS
 
 #if !defined(__NO_THREADS) && !defined(__WIN32_THREADS) && !defined(__P_THREADS) && !defined(__STL_THREADS)
-  #define __NO_THREADS
+#define __NO_THREADS
 #endif
 
 #ifdef __NO_THREADS
-  #define __NODE_ALLOCATOR_LOCK
-  #define __NODE_ALLOCATOR_UNLOCK
-  #define __NODE_ALLOCATOR_THREADS false
+#define __NODE_ALLOCATOR_LOCK
+#define __NODE_ALLOCATOR_UNLOCK
+#define __NODE_ALLOCATOR_THREADS false
 #endif
 
 namespace base {
@@ -55,21 +55,15 @@ namespace base {
  * \tparam _T 分配内存的类型
  * \tparam _Alloc 指定内存配置器，可以是一级或者二级配置器
  */
-template<typename _T, typename _Alloc>
+template <typename _T, typename _Alloc>
 class simple_alloc {
-public:
-  static _T* allocate(size_t _N) {
-    return (_T*)(0 == _N ? 0 : _Alloc::allocate(_N * sizeof(_T)));
-  }
-  static _T* allocate() {
-    return (_T*)_Alloc::allocate(sizeof(_T));
-  }
+ public:
+  static _T* allocate(size_t _N) { return (_T*)(0 == _N ? 0 : _Alloc::allocate(_N * sizeof(_T))); }
+  static _T* allocate() { return (_T*)_Alloc::allocate(sizeof(_T)); }
   static void deallocate(_T* _p, size_t _N) {
     if (0 != _N) _Alloc::deallocate(_p, _N * sizeof(_T));
   }
-  static void deallocate(_T* _p) {
-    _Alloc::deallocate(_p, sizeof(_T));
-  }
+  static void deallocate(_T* _p) { _Alloc::deallocate(_p, sizeof(_T)); }
 };
 
 //! \brief 定义内存分配失败后 handler 的类型
@@ -79,15 +73,15 @@ typedef void (*__oom_handler)();
  * \brief SGI STL 一级配置器
  * \tparam __inst 目前暂时没有作用
  */
-template<int __inst>
+template <int __inst>
 class __malloc_alloc_template {
-private:
+ private:
   static __oom_handler _S_oom_handler;
   // 以下函数将用来处理内存不足的情况
   static void* _S_oom_malloc(size_t);
   static void* _S_oom_realloc(void*, size_t);
 
-public:
+ public:
   //! \brief 一级配置器直接调用 malloc 分配内存
   static void* allocate(size_t _N) {
     void* _result = malloc(_N);
@@ -107,36 +101,38 @@ public:
     return _result;
   }
   //! \brief 一级配置器直接调用 free 释放内存
-  static void deallocate(void* _p, size_t /* _N */) {
-    free(_p);
-  }
+  static void deallocate(void* _p, size_t /* _N */) { free(_p); }
   /*!
    * \brief This static function is defined to simulate std::set_new_handler() in C++
    * \note Why not use std::set_new_handler()? 因为一级配置器并没有使用 ::operator new() 来分配内存
    */
-  static void (*set_malloc_handler(void (*_f)())) () {
+  static void (*set_malloc_handler(void (*_f)()))() {
     void (*_old_handler)() = _S_oom_handler;
     _S_oom_handler = _f;
     return _old_handler;
   }
 };
 
-template<int __inst>
+template <int __inst>
 __oom_handler __malloc_alloc_template<__inst>::_S_oom_handler = 0;
 
-template<int __inst>
+template <int __inst>
 void* __malloc_alloc_template<__inst>::_S_oom_malloc(size_t _N) {
   __oom_handler _my_handler = 0;
   void* _result = 0;
   // 不断尝试释放内存，分配内存
   for (;;) {
     _my_handler = _S_oom_handler;
-    if (0 == _my_handler) { __THROW_BAD_ALLOC; }
+    if (0 == _my_handler) {
+      __THROW_BAD_ALLOC;
+    }
     // invoke handler, try to dealloc memory
     _my_handler();
     // try to malloc memory
     _result = malloc(_N);
-    if (_result) { return _result; }
+    if (_result) {
+      return _result;
+    }
   }
 }
 
@@ -145,18 +141,22 @@ void* __malloc_alloc_template<__inst>::_S_oom_malloc(size_t _N) {
  * \param _p memory address for realloc memory
  * \param _N realloc memory's size
  */
-template<int __inst>
+template <int __inst>
 void* __malloc_alloc_template<__inst>::_S_oom_realloc(void* _p, size_t _N) {
   __oom_handler _my_handler = 0;
   void* _result = 0;
   for (;;) {
     _my_handler = _S_oom_handler;
-    if (0 == _my_handler) { __THROW_BAD_ALLOC; }
+    if (0 == _my_handler) {
+      __THROW_BAD_ALLOC;
+    }
     // invoke handler, try to dealloc memory
     _my_handler();
     // try to realloc memory
     _result = realloc(_p, _N);
-    if (_result) { return _result; }
+    if (_result) {
+      return _result;
+    }
   }
 }
 
@@ -168,9 +168,9 @@ typedef __malloc_alloc_template<0> malloc_alloc;
  * \tparam __threads 多线程环境使用
  * \tparam __inst 目前暂时没有作用
  */
-template<bool __threads, int __inst>
+template <bool __threads, int __inst>
 class __default_alloc_template {
-public:
+ public:
   /*!
    * \brief 二级配置器申请内存函数
    * \note 该函数用于外部调用
@@ -188,7 +188,7 @@ public:
 #ifndef __NO_THREADS
       // 如果支持多线程则定义 lock
       __Lock _lock_instance;
-#endif // __NO_THREADS
+#endif  // __NO_THREADS
       __Obj* _new_node = *_my_free_list;
       if (0 == _new_node) {
         // free list 没有可用数据块，就将区块大小先调整至 8 倍数边界，然后调用 _S_refill() 重新填充
@@ -216,14 +216,15 @@ public:
       __Obj* volatile* _my_free_list = _S_free_list + _S_free_list_index(_N);
 #ifndef __NO_THREADS
       __Lock _lock_instance;
-#endif // __NO_THREADS
+#endif  // __NO_THREADS
       // 将 _p 指向的空闲内存插入到相应空闲链表的表头
       // 因为 _p 指向的空闲内存的大小一定是 8 的倍数，所以利用空闲内存的前 8 个字节存放 *_my_free_list
       ((__Obj*)_p)->_next = *_my_free_list;
       *_my_free_list = (__Obj*)_p;
     }
   }
-private:
+
+ private:
   /*!
    * \brief 自由链表中的节点结构
    *        Eg:
@@ -280,19 +281,20 @@ private:
   //! \brief 内存池的空闲内存大小
   static size_t _S_heap_size;
 
-  //! \brief 互斥量，保证多线程情况下访问 _S_free_list 的安全
+//! \brief 互斥量，保证多线程情况下访问 _S_free_list 的安全
 #ifdef __P_THREADS
   static pthread_mutex_t _S_node_allocator_lock;
-#endif // __P_THREADS
+#endif  // __P_THREADS
 
 #ifdef __STL_THREADS
   static std::mutex _S_node_allocator_lock;
-#endif // __STL_THREADS
+#endif  // __STL_THREADS
 
 #ifdef __WIN32_THREADS
   static CRITICAL_SECTION _S_node_allocator_lock;
   static bool _S_node_allocator_lock_initialized;
-public:
+
+ public:
   //! \brief 只有在 __WIN32_THREADS 下需要添加构造函数
   __default_alloc_template() {
     if (false == _S_node_allocator_lock_initialized) {
@@ -300,25 +302,22 @@ public:
       _S_node_allocator_lock_initialized = true;
     }
   }
-private:
-#endif // __WIN32_THREADS
+
+ private:
+#endif  // __WIN32_THREADS
 
   //! \brief lock used for __default_alloc_template
   class __Lock {
-  public:
+   public:
     __Lock() { __NODE_ALLOCATOR_LOCK; }
     ~__Lock() { __NODE_ALLOCATOR_UNLOCK; }
   };
   friend class __Lock;
 
   //! \brief 将任何小的内存需求上调至 8 的倍数（8, 16, 24, ... 128）
-  static inline size_t _S_round_up(size_t _bytes) {
-    return (_bytes + _S_align_bytes - 1) & (~(_S_align_bytes - 1));
-  }
+  static inline size_t _S_round_up(size_t _bytes) { return (_bytes + _S_align_bytes - 1) & (~(_S_align_bytes - 1)); }
   //! \brief 根据申请内存块的大小找到对应空闲链表的下标
-  static inline size_t _S_free_list_index(size_t _bytes) {
-    return (_bytes + _S_align_bytes - 1) / _S_align_bytes - 1;
-  }
+  static inline size_t _S_free_list_index(size_t _bytes) { return (_bytes + _S_align_bytes - 1) / _S_align_bytes - 1; }
   /*!
    * \brief 申请 _nobjs 个 _size 大小的节点，同时最终节点数量可能被减少
    * \param _size 申请的节点大小
@@ -332,73 +331,71 @@ private:
   static void* _S_refill(size_t _N);
 };
 
-template<bool __threads, int __inst>
-size_t __default_alloc_template<__threads, __inst>::_S_align_bytes =
-  (size_t)__default_alloc_template<__threads, __inst>::_ALIGN_BYTES;
+template <bool __threads, int __inst>
+size_t __default_alloc_template<__threads, __inst>::_S_align_bytes = (size_t)
+    __default_alloc_template<__threads, __inst>::_ALIGN_BYTES;
 
-template<bool __threads, int __inst>
-size_t __default_alloc_template<__threads, __inst>::_S_max_bytes =
-  (size_t)__default_alloc_template<__threads, __inst>::_MAX_BYTES;
+template <bool __threads, int __inst>
+size_t __default_alloc_template<__threads, __inst>::_S_max_bytes = (size_t)
+    __default_alloc_template<__threads, __inst>::_MAX_BYTES;
 
-template<bool __threads, int __inst>
-size_t __default_alloc_template<__threads, __inst>::_S_free_list_num =
-  (size_t)__default_alloc_template<__threads, __inst>::_FREE_LIST_NUM;
+template <bool __threads, int __inst>
+size_t __default_alloc_template<__threads, __inst>::_S_free_list_num = (size_t)
+    __default_alloc_template<__threads, __inst>::_FREE_LIST_NUM;
 
-template<bool __threads, int __inst>
-typename __default_alloc_template<__threads, __inst>::__Obj* volatile
-__default_alloc_template<__threads, __inst>::_S_free_list[_FREE_LIST_NUM] = {
-  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-};
+template <bool __threads, int __inst>
+typename __default_alloc_template<__threads, __inst>::__Obj* volatile __default_alloc_template<
+    __threads, __inst>::_S_free_list[_FREE_LIST_NUM] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
-template<bool __threads, int __inst>
+template <bool __threads, int __inst>
 char* __default_alloc_template<__threads, __inst>::_S_free_start = 0;
 
-template<bool __threads, int __inst>
+template <bool __threads, int __inst>
 char* __default_alloc_template<__threads, __inst>::_S_free_end = 0;
 
-template<bool __threads, int __inst>
+template <bool __threads, int __inst>
 size_t __default_alloc_template<__threads, __inst>::_S_heap_size = 0;
 
 #ifdef __P_THREADS
-template<bool __threads, int __inst>
+template <bool __threads, int __inst>
 pthread_mutex_t __default_alloc_template<__threads, __inst>::_S_node_allocator_lock = PTHREAD_MUTEX_INITIALIZER;
-#endif // __P_THREADS
+#endif  // __P_THREADS
 
 #ifdef __STL_THREADS
-template<bool __threads, int __inst>
+template <bool __threads, int __inst>
 std::mutex __default_alloc_template<__threads, __inst>::_S_node_allocator_lock;
-#endif // __STL_THREADS
+#endif  // __STL_THREADS
 
 #ifdef __WIN32_THREADS
-template<bool __threads, int __inst>
+template <bool __threads, int __inst>
 CRITICAL_SECTION __default_alloc_template<__threads, __inst>::_S_node_allocator_lock;
 
-template<bool __threads, int __inst>
+template <bool __threads, int __inst>
 bool __default_alloc_template<__threads, __inst>::_S_node_allocator_lock_initialized = false;
-#endif // __WIN32_THREADS
+#endif  // __WIN32_THREADS
 
 /*!
  * \brief 申请 _nobjs 个 _size 大小的节点，同时最终节点数量可能被减少
  * \param _size 申请的节点大小
  * \param _nobjs [in, out] 最终申请到的节点个数
  */
-template<bool __threads, int __inst>
-char* __default_alloc_template<__threads, __inst>::_S_chunk_alloc(size_t _size, int &_nobjs) {
+template <bool __threads, int __inst>
+char* __default_alloc_template<__threads, __inst>::_S_chunk_alloc(size_t _size, int& _nobjs) {
   char* _result = 0;
   size_t _total_size = _size * _nobjs;
   size_t _bytes_left = _S_free_end - _S_free_start;
-  if (_bytes_left >= _total_size) { // 内存池剩余空间完全满足申请
+  if (_bytes_left >= _total_size) {  // 内存池剩余空间完全满足申请
     _result = _S_free_start;
     _S_free_start += _total_size;
     return _result;
-  } else if (_bytes_left >= _size) { // 内存池剩余空间不能满足申请，但是能够提供一个以上的 _size
+  } else if (_bytes_left >= _size) {  // 内存池剩余空间不能满足申请，但是能够提供一个以上的 _size
     // 计算剩余空间能够满足分配的节点数
     _nobjs = (int)(_bytes_left / _size);
     _total_size = _nobjs * _size;
     _result = _S_free_start;
     _S_free_start += _total_size;
     return _result;
-  } else { // 内存池剩余空间无法提供至少一个节点的空间
+  } else {  // 内存池剩余空间无法提供至少一个节点的空间
     // 向堆内存申请空间，申请的空间大小是所要求的2倍还要多一点（申请空间一定是 8 的倍数）
     size_t _bytes_to_get = 2 * _total_size + _S_round_up(_S_heap_size >> 4);
     // 将内存池的剩余空间分给合适的空闲链表
@@ -419,7 +416,7 @@ char* __default_alloc_template<__threads, __inst>::_S_chunk_alloc(size_t _size, 
       for (_i = _size; _i < _S_max_bytes; _i += _S_align_bytes) {
         _my_free_list = _S_free_list + _S_free_list_index(_i);
         __Obj* _first_node = *_my_free_list;
-        if (0 != _first_node) { // 当前 free list 中尚有未使用的内存
+        if (0 != _first_node) {  // 当前 free list 中尚有未使用的内存
           // 将 _first_node 中内存添加到内存池
           *_my_free_list = _first_node->_next;
           _S_free_start = _first_node->_data;
@@ -433,7 +430,7 @@ char* __default_alloc_template<__threads, __inst>::_S_chunk_alloc(size_t _size, 
     }
     _S_heap_size += _bytes_to_get;
     _S_free_end = _S_free_start + _bytes_to_get;
-    return _S_chunk_alloc(_size, _nobjs); // 扩充内存池后，递归调用
+    return _S_chunk_alloc(_size, _nobjs);  // 扩充内存池后，递归调用
   }
 }
 
@@ -441,9 +438,9 @@ char* __default_alloc_template<__threads, __inst>::_S_chunk_alloc(size_t _size, 
  * \brief 如果管理大小为 _N 的 free list 中没有可用的节点，则该函数会为该 free list 填充多个新的节点
  * \param _N 指定 free list 管理的节点大小
  */
-template<bool __threads, int __inst>
+template <bool __threads, int __inst>
 void* __default_alloc_template<__threads, __inst>::_S_refill(size_t _N) {
-  int _nobjs = 20; // 默认一次分配 20 个 _N 大小的块
+  int _nobjs = 20;  // 默认一次分配 20 个 _N 大小的块
   char* _chunk = _S_chunk_alloc(_N, _nobjs);
   __Obj* volatile* _my_free_list = 0;
   __Obj* _next_node = 0;
@@ -452,7 +449,9 @@ void* __default_alloc_template<__threads, __inst>::_S_refill(size_t _N) {
   int _i = 1;
 
   // 如果只获得一个节点，那么这个节点就直接分给调用者，自由链表中不会增加新节点
-  if (1 == _nobjs) { return _chunk; }
+  if (1 == _nobjs) {
+    return _chunk;
+  }
   // 获取到多个节点，第 0 个节点的内存分配给调用者，其余节点需要被添加到自由链表中
   _result = (__Obj*)_chunk;
   _my_free_list = _S_free_list + _S_free_list_index(_N);
@@ -477,8 +476,8 @@ typedef __default_alloc_template<false, 0> single_thread_alloc;
 #ifdef __WIN32_THREADS
 // 如果使用 windows 多线程库，这里创建一个实例，仅仅用于初始化内存配置器中的 _S_node_allocator_lock
 static base::default_alloc _S_node_allocator_dummy_instance
-#endif // __WIN32_THREADS
+#endif  // __WIN32_THREADS
 
-} // namespace base
+}  // namespace base
 
-#endif // __X_ALLOC_H__
+#endif  // __X_ALLOC_H__

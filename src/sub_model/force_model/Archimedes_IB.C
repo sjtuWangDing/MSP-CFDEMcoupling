@@ -55,25 +55,25 @@ namespace Foam {
 
 cfdemDefineTypeName(ArchimedesIB)
 
-cfdemCreateNewFunctionAdder(forceModel, ArchimedesIB)
+    cfdemCreateNewFunctionAdder(forceModel, ArchimedesIB)
 
-/*!
- * \brief Constructor
- * \note The initialization list should be in the same order as the variable declaration
- */
-ArchimedesIB::ArchimedesIB(cfdemCloud& cloud)
-  : forceModel(cloud),
-    subPropsDict_(cloud.couplingPropertiesDict().subDict(typeName_ + "Props")),
-    volumeFractionFieldName_(
-      subPropsDict_.lookupOrDefault<Foam::word>("volumeFractionFieldName", "volumeFractionNext").c_str()),
-    gravityFieldName_(
-      subPropsDict_.lookupOrDefault<Foam::word>("gravityFieldName", "g").c_str()),
-    volumeFraction_(
-      cloud.mesh().lookupObject<volScalarField>(volumeFractionFieldName_)),
+    /*!
+     * \brief Constructor
+     * \note The initialization list should be in the same order as the variable declaration
+     */
+    ArchimedesIB::ArchimedesIB(cfdemCloud& cloud)
+    : forceModel(cloud),
+      subPropsDict_(cloud.couplingPropertiesDict().subDict(typeName_ + "Props")),
+      volumeFractionFieldName_(
+          subPropsDict_.lookupOrDefault<Foam::word>("volumeFractionFieldName", "volumeFractionNext").c_str()),
+      gravityFieldName_(subPropsDict_.lookupOrDefault<Foam::word>("gravityFieldName", "g").c_str()),
+      volumeFraction_(cloud.mesh().lookupObject<volScalarField>(volumeFractionFieldName_)),
 #if defined(version21)
-    g_(cloud.mesh().lookupObject<uniformDimensionedVectorField>(gravityFieldName_))
+      g_(cloud.mesh().lookupObject<uniformDimensionedVectorField>(gravityFieldName_))
 #elif defined(version16ext) || defined(version15)
-    g_(dimensionedVector(cloud.mesh().lookupObject<IOdictionary>("environmentalProperties").lookup(environmentalProperties)).value())
+      g_(dimensionedVector(
+             cloud.mesh().lookupObject<IOdictionary>("environmentalProperties").lookup(environmentalProperties))
+             .value())
 #endif
 {
   createForceSubModels(subPropsDict_, kResolved);
@@ -90,8 +90,9 @@ void ArchimedesIB::setForce() {
     // loop all mesh of current particle
     for (int subCell = 0; subCell < cloud_.particleOverMeshNumber()[index]; ++subCell) {
       label cellI = cloud_.cellIDs()[index][subCell];
-      if (cellI > -1) { // cell found
-        buoyancy += -g_.value() * forceSubModel_->rhoField()[cellI] * cloud_.mesh().V()[cellI] * (1.0 - volumeFraction_[cellI]);
+      if (cellI > -1) {  // cell found
+        buoyancy +=
+            -g_.value() * forceSubModel_->rhoField()[cellI] * cloud_.mesh().V()[cellI] * (1.0 - volumeFraction_[cellI]);
       }
     }
     // write particle data to global array
@@ -100,10 +101,10 @@ void ArchimedesIB::setForce() {
     forceSubModel_->partToArray(index, buoyancy, Foam::vector::zero, Foam::vector::zero, 0);
 
     if (forceSubModel_->verbose()) {
-      Info << "Archimedes buoyancy on particle " << index << ": ["
-        << buoyancy[0] << ", " << buoyancy[1] << ", " << buoyancy[2] << "]" << endl;
+      Info << "Archimedes buoyancy on particle " << index << ": [" << buoyancy[0] << ", " << buoyancy[1] << ", "
+           << buoyancy[2] << "]" << endl;
     }
   }
 }
 
-} // namespace Foam
+}  // namespace Foam

@@ -39,24 +39,22 @@ Class
 #ifndef __VOID_FRACTION_MODEL_H__
 #define __VOID_FRACTION_MODEL_H__
 
-#include "cloud/cfdem_cloud.h"
 #include "base/run_time_selection_tables.h"
+#include "cloud/cfdem_cloud.h"
 
 namespace Foam {
 
 //! \brief 空隙率模型
 class voidFractionModel {
-
-public:
-
+ public:
   //! \brief Runtime type information
   cfdemTypeName("voidFractionModel")
 
-  //! \brief Declare runtime constructor selection
-  cfdemDeclareRunTimeSelection(autoPtr, voidFractionModel, (cfdemCloud& cloud), (cloud))
+      //! \brief Declare runtime constructor selection
+      cfdemDeclareRunTimeSelection(autoPtr, voidFractionModel, (cfdemCloud & cloud), (cloud))
 
-  //! \brief Selector
-  static autoPtr<voidFractionModel> New(cfdemCloud& cloud, const dictionary& dict);
+      //! \brief Selector
+      static autoPtr<voidFractionModel> New(cfdemCloud& cloud, const dictionary& dict);
 
   //! \brief Constructor
   voidFractionModel(cfdemCloud& cloud);
@@ -65,8 +63,7 @@ public:
   virtual ~voidFractionModel();
 
   //! \brief 计算颗粒尺寸与其周围网格平均尺寸的比值, 并将颗粒索引按照颗粒尺寸归类
-  void getDimensionRatios(const base::CITensor1& findCellIDs,
-                          const base::CDTensor1& dimensionRatios) const;
+  void getDimensionRatios(const base::CITensor1& findCellIDs, const base::CDTensor1& dimensionRatios) const;
 
   //! \brief 重置空隙率
   inline void resetVoidFraction() {
@@ -90,9 +87,7 @@ public:
    *         > 0: 在颗粒外
    *         == 0: 在颗粒表面
    */
-  inline double pointInParticle(const Foam::vector& point,
-                                const Foam::vector& particlePos,
-                                const double radius,
+  inline double pointInParticle(const Foam::vector& point, const Foam::vector& particlePos, const double radius,
                                 const double scale = 1.0) const {
     return Foam::magSqr(point - particlePos) / (scale * scale * radius * radius) - 1.0;
   }
@@ -105,8 +100,7 @@ public:
 
   inline const volScalarField& volumeFractionNext() const { return volumeFractionNext_; }
 
-protected:
-
+ protected:
   /*!
    * \brief 构建颗粒覆盖的所有网格的哈希集合
    * \note 设置为递归函数，通过哈希器将网格编号转换为哈希值，并存入 set 中以便于搜索
@@ -116,14 +110,10 @@ protected:
    * \param radius      <[in] 颗粒半径
    * \param scale       <[in] 颗粒半径扩大系数
    */
-  void buildLabelHashSetForCoveredCell(labelHashSet& hashSett,
-                                       const int cellID,
-                                       const Foam::vector& particlePos,
-                                       const double radius,
-                                       const double scale) const;
+  void buildLabelHashSetForCoveredCell(labelHashSet& hashSett, const int cellID, const Foam::vector& particlePos,
+                                       const double radius, const double scale) const;
 
-protected:
-
+ protected:
   cfdemCloud& cloud_;
 
   //! \brief 小颗粒空隙率
@@ -146,6 +136,6 @@ protected:
   int maxCellsNumPerCoarseParticle_;
 };
 
-} // namespace Foam
+}  // namespace Foam
 
-#endif // __VOID_FRACTION_MODEL_H__
+#endif  // __VOID_FRACTION_MODEL_H__

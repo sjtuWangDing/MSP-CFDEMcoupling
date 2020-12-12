@@ -38,51 +38,32 @@ namespace Foam {
 
 cfdemDefineTypeName(forceModel)
 
-cfdemDefineNewFunctionMap(forceModel)
+    cfdemDefineNewFunctionMap(forceModel)
 
-cfdemDefineConstructNewFunctionMap(forceModel)
+        cfdemDefineConstructNewFunctionMap(forceModel)
 
-cfdemDefineDestroyNewFunctionMap(forceModel)
+            cfdemDefineDestroyNewFunctionMap(forceModel)
 
-cfdmeDefineBaseTypeNewWithTypeName(
-  std::unique_ptr,
-  forceModel,
-  (
-    cfdemCloud& cloud,
-    const dictionary& dict,
-    const std::string& modelName
-  ),
-  modelName,
-  (cloud)
-)
+                cfdmeDefineBaseTypeNewWithTypeName(std::unique_ptr, forceModel,
+                                                   (cfdemCloud & cloud, const dictionary& dict,
+                                                    const std::string& modelName),
+                                                   modelName, (cloud))
 
-//! \brief Constructor
-forceModel::forceModel(cfdemCloud& cloud)
-  : cloud_(cloud),
-    forceSubModel_(nullptr),
-    useProbe_(false),
-    impParticleForces_(
-      IOobject(
-        "impParticleForces",
-        cloud.mesh().time().timeName(),
-        cloud.mesh(),
-        IOobject::READ_IF_PRESENT,
-        IOobject::AUTO_WRITE
-      ),
-      cloud.mesh(),
-      dimensionedVector("zero", dimensionSet(1, 1, -2, 0, 0), vector(0, 0, 0))  // [N] == [kg * m / s^2]
-    ),
-    expParticleForces_(
-      IOobject(
-        "expParticleForces",
-        cloud.mesh().time().timeName(),
-        cloud.mesh(),
-        IOobject::READ_IF_PRESENT,
-        IOobject::AUTO_WRITE
-      ),
-      cloud.mesh(),
-      dimensionedVector("zero", dimensionSet(1, 1, -2, 0, 0), vector(0, 0, 0))  // [N] == [kg * m / s^2]
-    ) {}
+    //! \brief Constructor
+    forceModel::forceModel(cfdemCloud& cloud)
+    : cloud_(cloud),
+      forceSubModel_(nullptr),
+      useProbe_(false),
+      impParticleForces_(IOobject("impParticleForces", cloud.mesh().time().timeName(), cloud.mesh(),
+                                  IOobject::READ_IF_PRESENT, IOobject::AUTO_WRITE),
+                         cloud.mesh(), dimensionedVector("zero", dimensionSet(1, 1, -2, 0, 0),
+                                                         vector(0, 0, 0))  // [N] == [kg * m / s^2]
+                         ),
+      expParticleForces_(IOobject("expParticleForces", cloud.mesh().time().timeName(), cloud.mesh(),
+                                  IOobject::READ_IF_PRESENT, IOobject::AUTO_WRITE),
+                         cloud.mesh(), dimensionedVector("zero", dimensionSet(1, 1, -2, 0, 0),
+                                                         vector(0, 0, 0))  // [N] == [kg * m / s^2]
+                         ) {}
 
 //! \brief Destructor
 forceModel::~forceModel() {}
@@ -101,4 +82,4 @@ void forceModel::createForceSubModels(const dictionary& subPropsDict, EForceType
   forceSubModel_->checkSwitches(forceType);
 }
 
-} // namespace Foam
+}  // namespace Foam

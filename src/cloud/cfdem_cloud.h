@@ -35,26 +35,26 @@ Class
 #define __CFDEM_CLOUD_H__
 
 #include <memory>
-#include <vector>
 #include <unordered_map>
+#include <vector>
 
-#include "fvCFD.H"
 #include "IFstream.H"
+#include "fvCFD.H"
 
 #include "base/logging.h"
-#include "base/type_cast.h"
 #include "base/memory/x_alloc.h"
 #include "base/tensor/tensor.h"
+#include "base/type_cast.h"
 #include "cloud/cfdem_base.h"
-#include "cloud/of_version.h"
 #include "cloud/coupling_properties.h"
+#include "cloud/of_version.h"
 #include "cloud/particle_cloud.h"
 
 // must behind include "of_version.h"
 #if defined(version21) || defined(version16ext)
-  #include "turbulenceModel.H"
+#include "turbulenceModel.H"
 #elif defined(version15)
-  #include "RASModel.H"
+#include "RASModel.H"
 #endif
 
 namespace Foam {
@@ -69,9 +69,7 @@ class dataExchangeModel;
 class locateModel;
 
 class cfdemCloud {
-
-public:
-
+ public:
   //! \brief Constructor
   cfdemCloud(const fvMesh& mesh);
 
@@ -88,12 +86,9 @@ public:
    * \param Us            <[in, out] 局部平均小颗粒速度场
    * \param U             <[in] 流体速度场
    */
-  void evolve(volScalarField& voidFraction,
-              volVectorField& Us,
-              volVectorField& U);
+  void evolve(volScalarField& voidFraction, volVectorField& Us, volVectorField& U);
 
-protected:
-
+ protected:
   /*!
    * \brief check if simulation is fully periodic
    * \return true if simulation is fully periodic
@@ -102,8 +97,7 @@ protected:
 
   /* --------------------------------- interfaces ---------------------------------------- */
 
-public:
-
+ public:
   inline const fvMesh& mesh() const { return mesh_; }
 
   inline ParticleCloud& pCloud() { return parCloud_; }
@@ -234,8 +228,7 @@ public:
 
   inline void setNumberOfParticles(int number) { parCloud_.setNumberOfParticles(number); }
 
-protected:
-
+ protected:
   //! \note 在当前类中一定要最先声明 couplingPropertiesDict_ 和 liggghtsCommandsDict_
 
   const fvMesh& mesh_;
@@ -260,19 +253,19 @@ protected:
 
   autoPtr<locateModel> locateModel_;
 
-  // autoPtr<averagingModel> averagingModel_;
+// autoPtr<averagingModel> averagingModel_;
 
-  // autoPtr<IOModel> IOModel_;
+// autoPtr<IOModel> IOModel_;
 
-  // autoPtr<probeModel> probeModel_;
+// autoPtr<probeModel> probeModel_;
 
-  // autoPtr<registryModel> registryModel_;
+// autoPtr<registryModel> registryModel_;
 
-  // autoPtr<clockModel> clockModel_;
+// autoPtr<clockModel> clockModel_;
 
-  // autoPtr<smoothingModel> smoothingModel_;
+// autoPtr<smoothingModel> smoothingModel_;
 
-  // autoPtr<meshMotionModel> meshMotionModel_;
+// autoPtr<meshMotionModel> meshMotionModel_;
 
 #if defined(version24Dev)
   const turbulenceModel& turbulence_;
@@ -329,8 +322,8 @@ protected:
   scalar wallPeriodicityCheckTolerance_;
 };
 
-} // namespace Foam
+}  // namespace Foam
 
 #include "cloud/cfdem_cloud-inl.h"
 
-#endif // __CFDEM_CLOUD_H__
+#endif  // __CFDEM_CLOUD_H__

@@ -39,24 +39,22 @@ Class
 #ifndef __LOCAL_MODEL_H__
 #define __LOCAL_MODEL_H__
 
-#include "cloud/cfdem_cloud.h"
 #include "base/run_time_selection_tables.h"
+#include "cloud/cfdem_cloud.h"
 
 namespace Foam {
 
 //! \brief locateModel
 class locateModel {
-
-public:
-
+ public:
   //! \brief Runtime type information
   cfdemTypeName("locateModel")
 
-  //! \brief Declare runtime constructor selection
-  cfdemDeclareRunTimeSelection(autoPtr, locateModel, (cfdemCloud& cloud), (cloud))
+      //! \brief Declare runtime constructor selection
+      cfdemDeclareRunTimeSelection(autoPtr, locateModel, (cfdemCloud & cloud), (cloud))
 
-  //! \brief Selector
-  static autoPtr<locateModel> New(cfdemCloud& cloud, const dictionary& dict);
+      //! \brief Selector
+      static autoPtr<locateModel> New(cfdemCloud& cloud, const dictionary& dict);
 
   //! \brief Constructor
   locateModel(cfdemCloud& cloud);
@@ -74,14 +72,13 @@ public:
 
   virtual void correctSearchEngine() {
     FatalError << "locateModel::correctSearchEngine(): in current locate model has no search engine."
-      << abort(FatalError);
+               << abort(FatalError);
   }
 
-protected:
-
+ protected:
   cfdemCloud& cloud_;
 };
 
-} // namespace Foam
+}  // namespace Foam
 
-#endif // __LOCAL_MODEL_H__
+#endif  // __LOCAL_MODEL_H__

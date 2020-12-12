@@ -38,68 +38,41 @@ namespace Foam {
 
 cfdemDefineTypeName(voidFractionModel)
 
-cfdemDefineNewFunctionMap(voidFractionModel)
+    cfdemDefineNewFunctionMap(voidFractionModel)
 
-cfdemDefineConstructNewFunctionMap(voidFractionModel)
+        cfdemDefineConstructNewFunctionMap(voidFractionModel)
 
-cfdemDefineDestroyNewFunctionMap(voidFractionModel)
+            cfdemDefineDestroyNewFunctionMap(voidFractionModel)
 
-cfdmeDefineBaseTypeNew(autoPtr, voidFractionModel, (cfdemCloud& cloud, const dictionary& dict), dict, (cloud))
+                cfdmeDefineBaseTypeNew(autoPtr, voidFractionModel, (cfdemCloud & cloud, const dictionary& dict), dict,
+                                       (cloud))
 
-//! \brief Constructor
-voidFractionModel::voidFractionModel(cfdemCloud& cloud)
-  : cloud_(cloud),
-    voidFractionPrev_(
-      IOobject(
-        "voidFractionPrev",
-        cloud.mesh().time().timeName(),
-        cloud.mesh(),
-        IOobject::READ_IF_PRESENT, // or MUST_READ,
-        IOobject::AUTO_WRITE
-      ),
-      // cloud.mesh().lookupObject<volScalarField>("voidFraction")
-      cloud.mesh(),
-      dimensionedScalar("zero", dimensionSet(0, 0, 0, 0, 0), 1)
-    ),
-    voidFractionNext_(
-      IOobject(
-        "voidFractionNext",
-        cloud.mesh().time().timeName(),
-        cloud.mesh(),
-        IOobject::READ_IF_PRESENT, // or MUST_READ,
-        IOobject::AUTO_WRITE
-      ),
-      // cloud.mesh().lookupObject<volScalarField>("voidFraction")
-      cloud.mesh(),
-      dimensionedScalar("zero", dimensionSet(0, 0, 0, 0, 0), 1)
-    ),
-    volumeFractionPrev_(
-      IOobject(
-        "volumeFractionPrev",
-        cloud.mesh().time().timeName(),
-        cloud.mesh(),
-        IOobject::READ_IF_PRESENT, // or MUST_READ,
-        IOobject::AUTO_WRITE
-      ),
-      // cloud.mesh().lookupObject<volScalarField>("volumeFraction")
-      cloud.mesh(),
-      dimensionedScalar("zero", dimensionSet(0, 0, 0, 0, 0), 1)
-    ),
-    volumeFractionNext_(
-      IOobject(
-        "volumeFractionNext",
-        cloud.mesh().time().timeName(),
-        cloud.mesh(),
-        IOobject::READ_IF_PRESENT, // or MUST_READ,
-        IOobject::AUTO_WRITE
-      ),
-      // cloud.mesh().lookupObject<volScalarField>("volumeFraction")
-      cloud.mesh(),
-      dimensionedScalar("zero", dimensionSet(0, 0, 0, 0, 0), 1)
-    ),
-    maxCellsNumPerFineParticle_(1),
-    maxCellsNumPerMiddleParticle_(1),
-    maxCellsNumPerCoarseParticle_(1) {}
+    //! \brief Constructor
+    voidFractionModel::voidFractionModel(cfdemCloud& cloud)
+    : cloud_(cloud),
+      voidFractionPrev_(IOobject("voidFractionPrev", cloud.mesh().time().timeName(), cloud.mesh(),
+                                 IOobject::READ_IF_PRESENT,  // or MUST_READ,
+                                 IOobject::AUTO_WRITE),
+                        // cloud.mesh().lookupObject<volScalarField>("voidFraction")
+                        cloud.mesh(), dimensionedScalar("zero", dimensionSet(0, 0, 0, 0, 0), 1)),
+      voidFractionNext_(IOobject("voidFractionNext", cloud.mesh().time().timeName(), cloud.mesh(),
+                                 IOobject::READ_IF_PRESENT,  // or MUST_READ,
+                                 IOobject::AUTO_WRITE),
+                        // cloud.mesh().lookupObject<volScalarField>("voidFraction")
+                        cloud.mesh(), dimensionedScalar("zero", dimensionSet(0, 0, 0, 0, 0), 1)),
+      volumeFractionPrev_(IOobject("volumeFractionPrev", cloud.mesh().time().timeName(), cloud.mesh(),
+                                   IOobject::READ_IF_PRESENT,  // or MUST_READ,
+                                   IOobject::AUTO_WRITE),
+                          // cloud.mesh().lookupObject<volScalarField>("volumeFraction")
+                          cloud.mesh(), dimensionedScalar("zero", dimensionSet(0, 0, 0, 0, 0), 1)),
+      volumeFractionNext_(IOobject("volumeFractionNext", cloud.mesh().time().timeName(), cloud.mesh(),
+                                   IOobject::READ_IF_PRESENT,  // or MUST_READ,
+                                   IOobject::AUTO_WRITE),
+                          // cloud.mesh().lookupObject<volScalarField>("volumeFraction")
+                          cloud.mesh(), dimensionedScalar("zero", dimensionSet(0, 0, 0, 0, 0), 1)),
+      maxCellsNumPerFineParticle_(1),
+      maxCellsNumPerMiddleParticle_(1),
+      maxCellsNumPerCoarseParticle_(1) {}
 
 //! \brief Destructor
 voidFractionModel::~voidFractionModel() {}
@@ -113,13 +86,13 @@ voidFractionModel::~voidFractionModel() {}
  * \param radius      <[in] 颗粒半径
  * \param scale       <[in] 颗粒半径扩大系数
  */
-void voidFractionModel::buildLabelHashSetForCoveredCell(labelHashSet& hashSett,
-                                                        const int cellID,
-                                                        const Foam::vector& particlePos,
-                                                        const double radius,
+void voidFractionModel::buildLabelHashSetForCoveredCell(labelHashSet& hashSett, const int cellID,
+                                                        const Foam::vector& particlePos, const double radius,
                                                         const double scale) const {
   // 如果搜索到网格的边界，则结束搜索
-  if (cellID < 0) { return; }
+  if (cellID < 0) {
+    return;
+  }
   // 将 cellID 插入到哈希集合中
   hashSett.insert(cellID);
   // 获取网格中心坐标
@@ -135,7 +108,7 @@ void voidFractionModel::buildLabelHashSetForCoveredCell(labelHashSet& hashSett,
       // 以 neighbour 为中心递归构建哈希集合
       buildLabelHashSetForCoveredCell(hashSett, neighbour, particlePos, radius, scale);
     }
-  } // end loop of neighbour list
+  }  // end loop of neighbour list
 }
 
 //! \brief 计算颗粒尺寸与其周围网格平均尺寸的比值, 并将颗粒索引按照颗粒尺寸归类
@@ -154,8 +127,8 @@ void voidFractionModel::getDimensionRatios(const base::CITensor1& findCellIDs,
     buildLabelHashSetForCoveredCell(initHashSett, findCellID, particlePos, radius, 1.0);
     // 计算颗粒周围网格的平均尺寸
     Pout << "particleCenterCellID: " << findCellID << ", " << initHashSett.size() << endl;
-  } // end loop of particles
+  }  // end loop of particles
   base::MPI_Barrier(0.5);
 }
 
-} // namespace Foam
+}  // namespace Foam

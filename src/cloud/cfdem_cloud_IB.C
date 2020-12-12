@@ -32,18 +32,15 @@ Class
 \*---------------------------------------------------------------------------*/
 
 #include <mutex>
-#include "dynamicRefineFvMesh.H"
 #include "cloud/cfdem_cloud_IB.h"
+#include "dynamicRefineFvMesh.H"
 #include "subModels/dataExchangeModel/dataExchangeModel.H"
 #include "subModels/forceModel/forceModel.H"
 
 namespace Foam {
 
 //! \brief Constructed from mesh
-cfdemCloudIB::cfdemCloudIB(const fvMesh& mesh)
-  : cfdemCloud(mesh),
-    meshHasUpdated_(false) {
-}
+cfdemCloudIB::cfdemCloudIB(const fvMesh& mesh) : cfdemCloud(mesh), meshHasUpdated_(false) {}
 
 //! \brief Destructor
 cfdemCloudIB::~cfdemCloudIB() {
@@ -78,9 +75,7 @@ void cfdemCloudIB::getDEMData() {
   }
 }
 
-void cfdemCloudIB::giveDEMData() const {
-  dataExchangeM().giveData("dragforce", "vector-atom", DEMForcesPtr());
-}
+void cfdemCloudIB::giveDEMData() const { dataExchangeM().giveData("dragforce", "vector-atom", DEMForcesPtr()); }
 
 /*!
  * \brief 更新网格，如果 mesh 是 Foam::dynamicRefineFvMesh 类型，则更新网格，
@@ -103,7 +98,7 @@ void cfdemCloudIB::updateMesh(volScalarField& interface) {
       // mesh update, need to correct search engine.
       locateM().correctSearchEngine();
     }
-  } catch(const std::bad_cast& ex2) {
+  } catch (const std::bad_cast& ex2) {
     Info << "Not use Foam::dynamicRefineFvMesh" << endl;
     return;
   }
@@ -115,8 +110,7 @@ void cfdemCloudIB::updateMesh(volScalarField& interface) {
  * \param volumeFraction  <[in, out] 大颗粒体积分数
  * \param interface       <[in, out] 界面场，用于 dynamic mesh
  */
-void cfdemCloudIB::evolve(volScalarField& volumeFraction,
-                          volScalarField& interface) {
+void cfdemCloudIB::evolve(volScalarField& volumeFraction, volScalarField& interface) {
   Info << __func__ << ": used for cfdemSolverIB..." << endl;
   // 检查当前流体时间步是否同时也是耦合时间步
   if (dataExchangeM().checkValidCouplingStep()) {
@@ -170,8 +164,7 @@ void cfdemCloudIB::setInterface(volScalarField& interface) const {
 }
 
 //! @brief 确定颗粒周围 refined 网格的区域(每个方向的尺寸都是颗粒尺寸的两倍)
-void cfdemCloudIB::setInterface(volScalarField& interface,
-                                volScalarField& refineMeshKeepStep) const {
+void cfdemCloudIB::setInterface(volScalarField& interface, volScalarField& refineMeshKeepStep) const {
   // 确保 call_once 函数中的 lambda 表达式只会被执行一次
   static std::once_flag flag;
   std::call_once(flag, [&interface, &refineMeshKeepStep]() {
@@ -181,7 +174,7 @@ void cfdemCloudIB::setInterface(volScalarField& interface,
     interface = dimensionedScalar("zero", interface.dimensions(), 0.0);
     refineMeshKeepStep = dimensionedScalar("zero", refineMeshKeepStep.dimensions(), 0.0);
   });
-  forAll (mesh_.C(), cellI) {
+  forAll(mesh_.C(), cellI) {
     // 当前 cellI 是否位于任意一个颗粒中
     bool cellInParticle = false;
     bool cellFirstEntryRefineMeshKeepStep = false;
@@ -197,7 +190,7 @@ void cfdemCloudIB::setInterface(volScalarField& interface,
         if (value <= 0.0) {
           interface[cellI] = std::max(interface[cellI], value + 1);
         }
-      } else { // valid refineMeshKeepInterval
+      } else {  // valid refineMeshKeepInterval
         if (value <= 0.0) {
           // cellI 位于 index 颗粒内部
           cellInParticle = true;
@@ -210,7 +203,7 @@ void cfdemCloudIB::setInterface(volScalarField& interface,
             // cellI 目前不在任何颗粒中
             if (refineMeshKeepStep[cellI] > Foam::SMALL && false == cellFirstEntryRefineMeshKeepStep) {
               // refineMeshKeepStep[cellI] > 0.0，则保持 interFace 值
-              cellFirstEntryRefineMeshKeepStep = true; // 确保对每一个 cellI 只执行一次
+              cellFirstEntryRefineMeshKeepStep = true;  // 确保对每一个 cellI 只执行一次
               refineMeshKeepStep[cellI] -= 1.0;
             } else {
               // 设置 interFace 为 0.0
@@ -219,8 +212,8 @@ void cfdemCloudIB::setInterface(volScalarField& interface,
           }
         }
       }
-    } // end of all particles
-  } // end of all cell in current processor
+    }  // end of all particles
+  }    // end of all cell in current processor
 }
 
-} // namespace Foam
+}  // namespace Foam

@@ -35,23 +35,21 @@ Class
 #ifndef __DATA_EXCHANGE_MODEL_H__
 #define __DATA_EXCHANGE_MODEL_H__
 
-#include "cloud/cfdem_cloud.h"
 #include "base/run_time_selection_tables.h"
+#include "cloud/cfdem_cloud.h"
 
 namespace Foam {
 
 class dataExchangeModel {
-
-public:
-
+ public:
   //! \brief Runtime type information
   cfdemTypeName("dataExchangeModel")
 
-  //! \brief Declare runtime constructor selection
-  cfdemDeclareRunTimeSelection(autoPtr, dataExchangeModel, (cfdemCloud& cloud), (cloud))
+      //! \brief Declare runtime constructor selection
+      cfdemDeclareRunTimeSelection(autoPtr, dataExchangeModel, (cfdemCloud & cloud), (cloud))
 
-  //! \brief Selector
-  static autoPtr<dataExchangeModel> New(cfdemCloud& cloud, const dictionary& dict);
+      //! \brief Selector
+      static autoPtr<dataExchangeModel> New(cfdemCloud& cloud, const dictionary& dict);
 
   //! \brief Constructor
   dataExchangeModel(cfdemCloud& cloud);
@@ -61,14 +59,15 @@ public:
 
   //! \brief 耦合时间步计数器
   class CouplingStepCounter {
-  public:
+   public:
     CouplingStepCounter(const dataExchangeModel& model) : model_(model) {}
     ~CouplingStepCounter() { const_cast<dataExchangeModel&>(model_).couplingStep_ += 1; }
     CouplingStepCounter(const CouplingStepCounter&) = delete;
-    CouplingStepCounter& operator= (const CouplingStepCounter&) = delete;
+    CouplingStepCounter& operator=(const CouplingStepCounter&) = delete;
     CouplingStepCounter(CouplingStepCounter&&) = delete;
-    CouplingStepCounter& operator= (CouplingStepCounter&&) = delete;
-  private:
+    CouplingStepCounter& operator=(CouplingStepCounter&&) = delete;
+
+   private:
     const dataExchangeModel& model_;
   };
 
@@ -81,7 +80,8 @@ public:
   void checkTimeStepSize() const;
 
   /*!
-   * \brief 因为耦合时间步长 = 流体时间步长的整数倍，所以 timeStepFraction() 用于计算每个流体时间步在耦合时间步中的所占比例，
+   * \brief 因为耦合时间步长 = 流体时间步长的整数倍，所以 timeStepFraction()
+   * 用于计算每个流体时间步在耦合时间步中的所占比例，
    *        如果 couplingTime() == 3 * CFDts，那么每一个耦合时间步由 3 个流体时间步构成，
    *        那么这三个流体时间步的 timeStepFraction() 分别返回 0, 0.333333, 0.666666
    */
@@ -93,22 +93,20 @@ public:
    */
   bool checkValidCouplingStep() const;
 
-  template<int nDim, typename DType, typename Device, typename Alloc>
-  void free(base::Tensor<nDim, DType, Device, Alloc>& tensor,
-            DType**& pData) const {
+  template <int nDim, typename DType, typename Device, typename Alloc>
+  void free(base::Tensor<nDim, DType, Device, Alloc>& tensor, DType**& pData) const {
     CHECK(2 == nDim || 1 == nDim) << "tensor free: error tensor dimension";
     // 这里不能使用二级配置器 base::default_alloc
     // 使用一级配置器 base::malloc_alloc，因为通过 LIGGGHTS 分配的内存需要一级配置器释放
     CHECK((std::is_same<Alloc, TENSOR_MALLOC_ALLOC(DType)>::value))
-      << "dataExchangeModel::free: please use malloc_alloc because LIGGGHTS using malloc() to allocate memory";
+        << "dataExchangeModel::free: please use malloc_alloc because LIGGGHTS using malloc() to allocate memory";
     if (nullptr == pData && tensor.isEmpty()) {
       // no need to free
       return;
     } else if (nullptr != pData && nullptr != pData[0]) {
       CHECK_EQ(nullptr, tensor.dptr_)
-        << "dataExchangeModel::free: tensor's dptr_ should be nullptr because of using liggghts's memory allocate";
-      CHECK_EQ(pData[0], tensor.optr_)
-        << "dataExchangeModel::free: tensor's optr_ not match with pData[0]";
+          << "dataExchangeModel::free: tensor's dptr_ should be nullptr because of using liggghts's memory allocate";
+      CHECK_EQ(pData[0], tensor.optr_) << "dataExchangeModel::free: tensor's optr_ not match with pData[0]";
       // 释放 pData[0] 指向的内存
       TENSOR_MALLOC_ALLOC(DType)::deallocate(pData[0], tensor.mSize());
       // 释放 pData 指向的内存
@@ -130,10 +128,8 @@ public:
    * \param pData 与该 tensor 强绑定的 pointer
    * \param initVal 初始值
    */
-  template<int nDim, typename DType, typename Device, typename Alloc>
-  void realloc(base::Tensor<nDim, DType, Device, Alloc>& tensor,
-               const base::Shape<nDim>& shape,
-               DType**& pData,
+  template <int nDim, typename DType, typename Device, typename Alloc>
+  void realloc(base::Tensor<nDim, DType, Device, Alloc>& tensor, const base::Shape<nDim>& shape, DType**& pData,
                DType initVal) const {
     CHECK(2 == nDim || 1 == nDim) << "tensor realloc: error tensor dimension";
     this->free(tensor, pData);
@@ -156,9 +152,7 @@ public:
    * \param dataType 数据类型
    * \param array 内存地址（LIGGGHTS code 要求 array 为二级指针）
    */
-  virtual void getData(const std::string& dataName,
-                       const std::string& dataType,
-                       double** array) const = 0;
+  virtual void getData(const std::string& dataName, const std::string& dataType, double** array) const = 0;
 
   /*!
    * \brief 从 LAMMPS 中获取数据（数据类型为 int）
@@ -166,9 +160,7 @@ public:
    * \param dataType 数据类型
    * \param array 内存地址（LIGGGHTS code 要求 array 为二级指针）
    */
-  virtual void getData(const std::string& dataName,
-                       const std::string& dataType,
-                       int** array) const = 0;
+  virtual void getData(const std::string& dataName, const std::string& dataType, int** array) const = 0;
 
   /*!
    * \brief 传递数据到 LAMMPS 中（数据类型为 double）
@@ -177,9 +169,7 @@ public:
    * \param dataType 数据类型
    * \param array 内存地址（LIGGGHTS code 要求 array 为二级指针）
    */
-  virtual void giveData(const std::string& dataName,
-                        const std::string& dataType,
-                        double** field) const = 0;
+  virtual void giveData(const std::string& dataName, const std::string& dataType, double** field) const = 0;
 
   /*!
    * \brief 传递数据到 LAMMPS 中（数据类型为 int）
@@ -187,9 +177,7 @@ public:
    * \param dataType 数据类型
    * \param array 内存地址（LIGGGHTS code 要求 array 为二级指针）
    */
-  virtual void giveData(const std::string& dataName,
-                        const std::string& dataType,
-                        int** field) const = 0;
+  virtual void giveData(const std::string& dataName, const std::string& dataType, int** field) const = 0;
 
   //! \brief Allocate for 2-D double array using liggghts interface
   virtual void liggghtsAllocate(double**& array, int length, int width, double initVal = 0.0) const = 0;
@@ -256,17 +244,14 @@ public:
   }
 
   //! \brief 当前耦合时间步的结束时间（全局时间）
-  inline double TSend() const {
-    return cloud_.mesh().time().startTime().value() + couplingStep_ * couplingTime();
-  }
+  inline double TSend() const { return cloud_.mesh().time().startTime().value() + couplingStep_ * couplingTime(); }
 
   //! \brief 计算指定时间的 DEM 步
   inline int DEMstepsTillT(double t) const {
     return (t - (cloud_.mesh().time().value() - couplingTime()) + SMALL) / DEMts_;
   }
 
-protected:
-
+ protected:
   cfdemCloud& cloud_;
 
   //! \brief 初始化 dataExchangeModel 的时候，即耦合开始的时候，记录当前的流体时间步，通常从 0 开始
@@ -279,6 +264,6 @@ protected:
   scalar DEMts_;
 };
 
-} // namespace Foam
+}  // namespace Foam
 
-#endif // __DATA_EXCHANGE_MODEL_H__
+#endif  // __DATA_EXCHANGE_MODEL_H__

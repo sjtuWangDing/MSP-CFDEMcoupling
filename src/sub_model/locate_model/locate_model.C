@@ -38,19 +38,20 @@ namespace Foam {
 
 cfdemDefineTypeName(locateModel)
 
-cfdemDefineNewFunctionMap(locateModel)
+    cfdemDefineNewFunctionMap(locateModel)
 
-cfdemDefineConstructNewFunctionMap(locateModel)
+        cfdemDefineConstructNewFunctionMap(locateModel)
 
-cfdemDefineDestroyNewFunctionMap(locateModel)
+            cfdemDefineDestroyNewFunctionMap(locateModel)
 
-cfdmeDefineBaseTypeNew(autoPtr, locateModel, (cfdemCloud& cloud, const dictionary& dict), dict, (cloud))
+                cfdmeDefineBaseTypeNew(autoPtr, locateModel, (cfdemCloud & cloud, const dictionary& dict), dict,
+                                       (cloud))
 
-//! \brief Constructor
-locateModel::locateModel(cfdemCloud& cloud)
-  : cloud_(cloud) {}
+    //! \brief Constructor
+    locateModel::locateModel(cfdemCloud& cloud)
+    : cloud_(cloud) {}
 
 //! \brief Destructor
 locateModel::~locateModel() {}
 
-} // namespace Foam
+}  // namespace Foam

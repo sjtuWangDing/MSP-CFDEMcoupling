@@ -13,6 +13,6 @@ namespace base {
 
 void MPI_Barrier(int times = 0.1);
 
-} // namespace base
+}  // namespace base
 
-#endif // __CFDEM_BASE_H__
+#endif  // __CFDEM_BASE_H__

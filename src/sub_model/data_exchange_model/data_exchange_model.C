@@ -38,25 +38,26 @@ namespace Foam {
 
 cfdemDefineTypeName(dataExchangeModel)
 
-cfdemDefineNewFunctionMap(dataExchangeModel)
+    cfdemDefineNewFunctionMap(dataExchangeModel)
 
-cfdemDefineConstructNewFunctionMap(dataExchangeModel)
+        cfdemDefineConstructNewFunctionMap(dataExchangeModel)
 
-cfdemDefineDestroyNewFunctionMap(dataExchangeModel)
+            cfdemDefineDestroyNewFunctionMap(dataExchangeModel)
 
-cfdmeDefineBaseTypeNew(autoPtr, dataExchangeModel, (cfdemCloud& cloud, const dictionary& dict), dict, (cloud))
+                cfdmeDefineBaseTypeNew(autoPtr, dataExchangeModel, (cfdemCloud & cloud, const dictionary& dict), dict,
+                                       (cloud))
 
-//! \brief Constructor
-dataExchangeModel::dataExchangeModel(cfdemCloud& cloud)
-  : cloud_(cloud),
-    // 在初始化 dataExchangeModel 的时候，记录下当前的流体时间步为 time index
-    timeIndexOffset_(cloud.mesh().time().timeIndex()),
-    // 初始化耦合时间步
-    couplingStep_(0),
-    // 初始化 DEM 时间步长，在具体的模型中读入具体的值
-    // twoWayMPI: 通过 LAMMP 读入
-    // twoWayFile: 通过字典文件读入
-    DEMts_(-1.0) {
+    //! \brief Constructor
+    dataExchangeModel::dataExchangeModel(cfdemCloud& cloud)
+    : cloud_(cloud),
+      // 在初始化 dataExchangeModel 的时候，记录下当前的流体时间步为 time index
+      timeIndexOffset_(cloud.mesh().time().timeIndex()),
+      // 初始化耦合时间步
+      couplingStep_(0),
+      // 初始化 DEM 时间步长，在具体的模型中读入具体的值
+      // twoWayMPI: 通过 LAMMP 读入
+      // twoWayFile: 通过字典文件读入
+      DEMts_(-1.0) {
   Info << "dataExchangeMode: timeIndexOffset_ = " << timeIndexOffset_ << endl;
   Info << "dataExchangeMode: couplingStep_ = " << couplingStep_ << endl;
 }
@@ -71,7 +72,7 @@ dataExchangeModel::~dataExchangeModel() {}
  *       (3) 如果耦合时间步长 != CFD 时间步长，则要求 allowUseSubCFDTimeStep() 为 true
  */
 void dataExchangeModel::checkTimeStepSize() const {
-  scalar CFDts = cloud_.mesh().time().deltaT().value(); // 获取 CFD 时间步长
+  scalar CFDts = cloud_.mesh().time().deltaT().value();  // 获取 CFD 时间步长
   Info << "CFD time step size: " << CFDts << endl;
   // 耦合时间步长 >= CFD 时间步长
   if (CFDts > couplingTime() + Foam::SMALL) {
@@ -79,27 +80,30 @@ void dataExchangeModel::checkTimeStepSize() const {
     Info << "DEM time step size = " << DEMts_ << endl;
     Info << "Coupling interval = " << cloud_.cProps().couplingInterval() << endl;
     FatalError << "CFD time-step bigger than coupling time (= DEM time step * coupling interval)!\n"
-      << abort(FatalError);
+               << abort(FatalError);
   }
   // 耦合时间步长应该为 CFD 时间步长的整数倍
   if (std::fabs((std::round(couplingTime() / CFDts) * CFDts) - couplingTime()) > Foam::SMALL) {
     Info << "CFD time step size = " << CFDts << endl;
     Info << "DEM time step size = " << DEMts_ << endl;
     Info << "Coupling interval = " << cloud_.cProps().couplingInterval() << endl;
-    FatalError << "Coupling time (= DEM time step * coupling interval) is not a multiple of  CFD time-step!\n"<< abort(FatalError);
+    FatalError << "Coupling time (= DEM time step * coupling interval) is not a multiple of  CFD time-step!\n"
+               << abort(FatalError);
   }
   // 如果耦合时间步长 != CFD 时间步长
   if (couplingTime() > CFDts + Foam::SMALL) {
     // 如果不允许使用 CFD sub time step 则报错
     if (!cloud_.cProps().allowUseSubCFDTimeStep()) {
-      FatalError << "Your models require: CFD time-step = coupling interval (= DEM time step * coupling interval)! \n" << abort(FatalError);
+      FatalError << "Your models require: CFD time-step = coupling interval (= DEM time step * coupling interval)! \n"
+                 << abort(FatalError);
     }
     Warning << "You are using sub-time-steps (i.e. CFD time-step < coupling time)" << endl;
   }
 }
 
 /*!
- * \brief 因为耦合时间步长 = 流体时间步长的整数倍，所以 timeStepFraction() 用于计算每个流体时间步在耦合时间步中的所占比例，
+ * \brief 因为耦合时间步长 = 流体时间步长的整数倍，所以 timeStepFraction()
+ * 用于计算每个流体时间步在耦合时间步中的所占比例，
  *        如果 couplingTime() == 3 * CFDts，那么每一个耦合时间步由 3 个流体时间步构成，
  *        那么这三个流体时间步的 timeStepFraction() 分别返回 0, 0.333333, 0.666666
  */
@@ -132,4 +136,4 @@ bool dataExchangeModel::checkValidCouplingStep() const {
   return false;
 }
 
-} // namespace Foam
+}  // namespace Foam

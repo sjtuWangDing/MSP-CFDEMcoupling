@@ -31,12 +31,13 @@ namespace Foam {
 
 cfdemDefineTypeName(noVoidFraction)
 
-cfdemCreateNewFunctionAdder(voidFractionModel, noVoidFraction)
+    cfdemCreateNewFunctionAdder(voidFractionModel, noVoidFraction)
 
-//! \brief Constructor
-noVoidFraction::noVoidFraction(cfdemCloud& cloud) : voidFractionModel(cloud) {}
+    //! \brief Constructor
+    noVoidFraction::noVoidFraction(cfdemCloud& cloud)
+    : voidFractionModel(cloud) {}
 
 //! \brief Destructor
 noVoidFraction::~noVoidFraction() {}
 
-} // namespace Foam
+}  // namespace Foam

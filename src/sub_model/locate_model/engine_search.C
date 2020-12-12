@@ -26,7 +26,7 @@ License
 
 Description
   The locateModel “engine” locates the CFD cell and cellID corresponding
-  to a given position. 
+  to a given position.
 
 Syntax
   locateModel engine;
@@ -45,21 +45,22 @@ namespace Foam {
 
 cfdemDefineTypeName(engineSearch)
 
-cfdemCreateNewFunctionAdder(locateModel, engineSearch)
+    cfdemCreateNewFunctionAdder(locateModel, engineSearch)
 
-//! \brief Constructor
-engineSearch::engineSearch(cfdemCloud& cloud, const std::string& derivedTypeName)
-  : locateModel(cloud),
-    subPropsDict_(cloud.couplingPropertiesDict().subDict(derivedTypeName + "Props")),
-    treeSearch_(subPropsDict_.lookupOrDefault<bool>("treeSearch", true)),
+    //! \brief Constructor
+    engineSearch::engineSearch(cfdemCloud& cloud, const std::string& derivedTypeName)
+    : locateModel(cloud),
+      subPropsDict_(cloud.couplingPropertiesDict().subDict(derivedTypeName + "Props")),
+      treeSearch_(subPropsDict_.lookupOrDefault<bool>("treeSearch", true)),
 #if defined(version30)
-    searchEngine_(cloud.mesh(), polyMesh::FACE_PLANES)
+      searchEngine_(cloud.mesh(), polyMesh::FACE_PLANES)
 #elif defined(version21)
-    searchEngine_(cloud.mesh(), polyMesh::FACEPLANES)
+      searchEngine_(cloud.mesh(), polyMesh::FACEPLANES)
 #elif defined(version16ext)
-    searchEngine_(cloud.mesh(), false)
+      searchEngine_(cloud.mesh(), false)
 #endif
-{}
+{
+}
 
 //! \brief Destructor
 engineSearch::~engineSearch() {}
@@ -88,4 +89,4 @@ label engineSearch::findSingleCell(const Foam::vector& position, label oldCellID
   return searchEngine_.findCell(position, oldCellID, treeSearch_);
 }
 
-} // namespace Foam
+}  // namespace Foam

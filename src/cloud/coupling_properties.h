@@ -35,20 +35,17 @@ Class
 #ifndef __COUPLING_PROPERTIES_H__
 #define __COUPLING_PROPERTIES_H__
 
+#include "cloud/cfdem_base.h"
+#include "dictionary.H"
 #include "fvMesh.H"
 #include "vector.H"
-#include "dictionary.H"
-#include "cloud/cfdem_base.h"
 
 namespace Foam {
 
 class CouplingProperties {
-
-public:
-
+ public:
   //! \brief Constructor
-  CouplingProperties(const fvMesh& mesh,
-                     const IOdictionary& couplingPropertiesDict,
+  CouplingProperties(const fvMesh& mesh, const IOdictionary& couplingPropertiesDict,
                      const IOdictionary& liggghtsCommandsDict);
 
   /* --------------------------------- interface used for cfdemCloud -------------------------------------- */
@@ -83,8 +80,7 @@ public:
 
   /* --------------------------------- interface used for cfdemCloudMix ----------------------------------- */
 
-protected:
-
+ protected:
   const fvMesh& mesh_;
 
   //! \note 在当前类中一定要最先声明 couplingPropertiesDict_ 和 liggghtsCommandsDict_
@@ -139,15 +135,13 @@ protected:
 
 #if CFDEM_MIX_CLOUD
 
-public:
-
+ public:
   //! \brief 颗粒尺度系数
   static double fineParticleRatio_;
 
   static double coarseParticleRatio_;
 
-protected:
-
+ protected:
   //! \brief 是否用于求解器 cfdemSolverIB
   bool usedForSolverIB_;
 
@@ -163,27 +157,19 @@ protected:
   //! \brief 来流速度
   vector flowVelocity_;
 
-public:
-
-  inline bool checkCoarseParticle(const double& ratio) const {
-    return ratio > 0 && ratio < coarseParticleRatio_;
-  }
+ public:
+  inline bool checkCoarseParticle(const double& ratio) const { return ratio > 0 && ratio < coarseParticleRatio_; }
   inline bool checkMiddleParticle(const double& ratio) const {
     return ratio > 0 && (coarseParticleRatio_ <= ratio && ratio < fineParticleRatio_);
   }
-  inline bool checkFineParticle(const double& ratio) const {
-    return ratio > 0 && ratio >= fineParticleRatio_;
-  }
-  inline bool checkFineAndMiddleParticle(const double& ratio) const {
-    return !checkCoarseParticle(ratio);
-  }
+  inline bool checkFineParticle(const double& ratio) const { return ratio > 0 && ratio >= fineParticleRatio_; }
+  inline bool checkFineAndMiddleParticle(const double& ratio) const { return !checkCoarseParticle(ratio); }
   /*!
    * \brief 是否需设置 field for coarse particle
    * \param index            <[in] 颗粒索引
    * \param dimensionRatios  <[in] 颗粒尺度比值
    */
-  inline bool needSetFieldForCoarseParticle(const int& index,
-                                            const std::vector<double> dimensionRatios) const {
+  inline bool needSetFieldForCoarseParticle(const int& index, const std::vector<double> dimensionRatios) const {
     if (usedForSolverIB_ || useDynamicRefineMesh_) {
       return true;
     } else if (!dimensionRatios.empty() && !usedForSolverPiso_) {
@@ -197,9 +183,9 @@ public:
   inline bool useDynamicRefineMesh() const { return useDynamicRefineMesh_; }
   inline bool fixedParticle() const { return fixedParticle_; }
   inline const vector& flowVelocity() const { return flowVelocity_; }
-#endif // CFDEM_MIX_CLOUD
+#endif  // CFDEM_MIX_CLOUD
 };
 
-} // namespace Foam
+}  // namespace Foam
 
-#endif // __COUPLING_PROPERTIES_H__
+#endif  // __COUPLING_PROPERTIES_H__

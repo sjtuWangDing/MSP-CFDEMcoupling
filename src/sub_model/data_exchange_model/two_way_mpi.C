@@ -39,19 +39,18 @@ namespace Foam {
 
 cfdemDefineTypeName(twoWayMPI)
 
-cfdemCreateNewFunctionAdder(dataExchangeModel, twoWayMPI)
+    cfdemCreateNewFunctionAdder(dataExchangeModel, twoWayMPI)
 
-twoWayMPI::twoWayMPI(cfdemCloud& cloud)
-  : dataExchangeModel(cloud),
-    lmp_(nullptr),
-    subPropsDict_(cloud.couplingPropertiesDict().subDict(typeName_ + "Props")) {
-
+        twoWayMPI::twoWayMPI(cfdemCloud& cloud)
+    : dataExchangeModel(cloud),
+      lmp_(nullptr),
+      subPropsDict_(cloud.couplingPropertiesDict().subDict(typeName_ + "Props")) {
   Info << "Construct twoWayMPI..." << endl;
   MPI_Comm_dup(MPI_COMM_WORLD, &lgs_comm_);
   lmp_ = new LAMMPS_NS::LAMMPS(0, nullptr, lgs_comm_);
 
   // open LIGGGHTS input script
-  Info << "Starting up LIGGGHTS for first time execution..."<<endl;
+  Info << "Starting up LIGGGHTS for first time execution..." << endl;
   Info << "Output LIGGGHTS input script:" << endl;
   const fileName lgsPath(subPropsDict_.lookup("liggghtsPath"));
   lmp_->input->file(lgsPath.c_str());
@@ -68,7 +67,7 @@ twoWayMPI::~twoWayMPI() {}
 //! \return 当前耦合时间步中颗粒的数量
 int twoWayMPI::couple() {
   Info << "dataExchangeModel " << typeName() << ": Starting up LIGGGHTS..." << endl;
-  for (const std::shared_ptr<liggghtsCommandModel>& model: cloud_.liggghtsCommandModels()) {
+  for (const std::shared_ptr<liggghtsCommandModel>& model : cloud_.liggghtsCommandModels()) {
     liggghtsCommandModel* lgs = model.get();
     // 在 runCommand 中会判断当前的 couplingStep_ 是否满足时间步的要求
     if (lgs->runCommand(couplingStep_)) {
@@ -85,4 +84,4 @@ int twoWayMPI::couple() {
   return liggghts_get_maxtag(lmp_);
 }
 
-} // namespace Foam
+}  // namespace Foam

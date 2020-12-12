@@ -8,4 +8,4 @@ void MPI_Barrier(int times) {
   MPI_Barrier(MPI_COMM_WORLD);
 }
 
-} // namespace base
+}  // namespace base

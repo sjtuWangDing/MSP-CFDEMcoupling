@@ -26,7 +26,7 @@ License
 
 Description
   The locateModel “engine” locates the CFD cell and cellID corresponding
-  to a given position. 
+  to a given position.
 
 Syntax
   locateModel engine;
@@ -44,17 +44,15 @@ Class
 
 namespace Foam {
 
-class engineSearch: public locateModel {
-
-public:
-
+class engineSearch : public locateModel {
+ public:
   //! \brief Runtime type information
   cfdemTypeName("engine")
 
-  cfdemDefineNewFunctionAdder(locateModel, engineSearch)
+      cfdemDefineNewFunctionAdder(locateModel, engineSearch)
 
-  //! \brief Constructor
-  engineSearch(cfdemCloud& cloud, const std::string& derivedTypeName = cTypeName());
+      //! \brief Constructor
+      engineSearch(cfdemCloud& cloud, const std::string& derivedTypeName = cTypeName());
 
   //! \brief Destructor
   ~engineSearch();
@@ -75,8 +73,7 @@ public:
   //! \brief 如果网格更新，则调用该函数修正 searchEngine_
   virtual void correctSearchEngine() { searchEngine_.correct(); }
 
-protected:
-
+ protected:
   dictionary subPropsDict_;
 
   //! \brief 是否开启 octree 搜索，default - true
@@ -85,4 +82,4 @@ protected:
   Foam::meshSearch searchEngine_;
 };
 
-} // namespace Foam
+}  // namespace Foam

@@ -67,21 +67,18 @@ Class
 namespace Foam {
 
 class IBVoidFraction : public voidFractionModel {
-
-public:
-
+ public:
   cfdemTypeName("IB")
 
-  cfdemDefineNewFunctionAdder(voidFractionModel, IBVoidFraction)
+      cfdemDefineNewFunctionAdder(voidFractionModel, IBVoidFraction)
 
-  //! \brief Constructor
-  IBVoidFraction(cfdemCloud& cloud);
+      //! \brief Constructor
+      IBVoidFraction(cfdemCloud& cloud);
 
   //! \brief Destructor
   virtual ~IBVoidFraction();
 
-protected:
-
+ protected:
   /*!
    * \brief 设置单个颗粒的体积分数场
    * \param index 颗粒索引
@@ -96,16 +93,14 @@ protected:
    * \param radius         <[in] 颗粒半径
    * \param hashSett       <[in, out] 需要构建的哈希集
    */
-  void buildLabelHashSetForVolumeFraction(const label cellID,
-                                          const Foam::vector& particleCentre,
-                                          const double radius,
+  void buildLabelHashSetForVolumeFraction(const label cellID, const Foam::vector& particleCentre, const double radius,
                                           labelHashSet& hashSett);
 
   /*!
    * \brief 计算距离系数，对任意一个网格, 如果网格中心 c 在颗粒内部, 但是它的某个角点 p
    *   不在颗粒内部, 则计算 c 与 p 的连线与颗粒表面的交点 i 到网格中心 c 的距离, 即
    *   求解 x 的二元一次方程
-   *   (x * (vector_p - vector_c) - vector_particle) & 
+   *   (x * (vector_p - vector_c) - vector_particle) &
    *   (x * (vector_p - vector_c) - vector_particle) == radius * radius
    *   等价于函数体中定义的: a*(x^2) - b*x + c = 0
    * \param radius         <[in] 颗粒半径
@@ -113,9 +108,7 @@ protected:
    * \param pointInside    <[in] 网格中心
    * \param pointOutside   <[in] 网格角点
    */
-  double segmentParticleIntersection(double radius,
-                                     const Foam::vector& particleCentre,
-                                     const Foam::vector& pointInside,
+  double segmentParticleIntersection(double radius, const Foam::vector& particleCentre, const Foam::vector& pointInside,
                                      const Foam::vector& pointOutside) const;
 
   /*!
@@ -127,11 +120,10 @@ protected:
    * \param cellCentre      <[in] 指定网格中心
    * \param corona          <[in] 指定网格的等效半径
    */
-  Foam::vector getCoronaPointPosition(const Foam::vector& particleCentre,
-                                      const Foam::vector& cellCentre,
+  Foam::vector getCoronaPointPosition(const Foam::vector& particleCentre, const Foam::vector& cellCentre,
                                       const scalar corona) const;
 
-private:
+ private:
   dictionary subPropsDict_;
 
   const double alphaMin_;
@@ -139,6 +131,6 @@ private:
   const double alphaMax_;
 };
 
-} // namespace Foam
+}  // namespace Foam
 
-#endif // __IB_VOID_FRACTION_H__
+#endif  // __IB_VOID_FRACTION_H__

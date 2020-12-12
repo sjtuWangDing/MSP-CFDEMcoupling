@@ -2,13 +2,13 @@
 #define __LOGGING_H__
 
 #include <inttypes.h>
-#include <time.h>
-#include <stdarg.h> // va_list
-#include <iostream>
-#include <cstdlib>  // abort()
-#include <sys/types.h>
-#include <unistd.h>
 #include <pthread.h>
+#include <stdarg.h>  // va_list
+#include <sys/types.h>
+#include <time.h>
+#include <unistd.h>
+#include <cstdlib>  // abort()
+#include <iostream>
 
 #define NONE "\033[m"
 #define RED "\033[1;31m"
@@ -18,7 +18,7 @@
 namespace base {
 
 class Logger {
-public:
+ public:
   //! \brief 日志等级 - 调试
   static const int LEVEL_DBG = 0;
   //! \brief 日志等级 - 信息
@@ -37,20 +37,14 @@ public:
    *        error   - 一般错误
    *        crt     - 致命错误
    */
-  static constexpr const char *LEVELS[] = {
-    "debug",
-    "info",
-    "warning",
-    "error",
-    "crt"
-  };
+  static constexpr const char* LEVELS[] = {"debug", "info", "warning", "error", "crt"};
 
   //! \brief 获取文件名
   inline static std::string getFileName(const std::string& path) {
     char ch = '/';
 #ifdef _WIN32
     ch = '\\';
-#endif // _WIN32
+#endif  // _WIN32
     std::string::size_type pos = path.rfind(ch);
     if (std::string::npos == pos) {
       return path;
@@ -66,77 +60,67 @@ public:
    * \param format 格式
    * \param logLevel 日志等级
    */
-  inline static void traceDebug(const char* filePath,
-                                int line,
-                                const char* format,
-                                int logLevel,
-                                ...) {
-//    // 格式化当期系统日期和时间字符串
-//    char dataTime[128];
-//    time_t now = time((time_t*)nullptr);
-//    strftime(dataTime, sizeof(dataTime), "%Y-%m-%d %H:%M:%S", localtime(&now));
-//
-//    fprintf(stdout, "[%s][%s][pid = %u][tid = %lu][%s : %d]\n",
-//            dataTime, LEVELS[logLevel], getpid(), pthread_self(), getFileName(filePath).c_str(), line);
-//    switch (logLevel) {
-//      case LEVEL_CRT:
-//        fprintf(stdout, RED "%s: " NONE, "Critical Error");
-//        break;
-//      case LEVEL_ERR:
-//        fprintf(stdout, RED "%s: " NONE, "Error");
-//        break;
-//      case LEVEL_WAR:
-//        fprintf(stdout, YELLOW "%s: " NONE, "Warming");
-//        break;
-//      case LEVEL_DBG:
-//        fprintf(stdout, GREEN "%s: " NONE, "Debug");
-//        break;
-//      default:
-//        fprintf(stdout, NONE "%s: " NONE, "Info");
-//    }
-//    va_list args; // 变长参数表
-//    va_start(args, format); // 用format以后的参数初始化变长参数表
-//    vfprintf(stdout, format, args); // 按format格式打印变长参数表中的内容
-//    va_end(args); // 销毁变长参数表
-//    fprintf (stdout, "\n\n");
+  inline static void traceDebug(const char* filePath, int line, const char* format, int logLevel, ...) {
+    //    // 格式化当期系统日期和时间字符串
+    //    char dataTime[128];
+    //    time_t now = time((time_t*)nullptr);
+    //    strftime(dataTime, sizeof(dataTime), "%Y-%m-%d %H:%M:%S", localtime(&now));
+    //
+    //    fprintf(stdout, "[%s][%s][pid = %u][tid = %lu][%s : %d]\n",
+    //            dataTime, LEVELS[logLevel], getpid(), pthread_self(), getFileName(filePath).c_str(), line);
+    //    switch (logLevel) {
+    //      case LEVEL_CRT:
+    //        fprintf(stdout, RED "%s: " NONE, "Critical Error");
+    //        break;
+    //      case LEVEL_ERR:
+    //        fprintf(stdout, RED "%s: " NONE, "Error");
+    //        break;
+    //      case LEVEL_WAR:
+    //        fprintf(stdout, YELLOW "%s: " NONE, "Warming");
+    //        break;
+    //      case LEVEL_DBG:
+    //        fprintf(stdout, GREEN "%s: " NONE, "Debug");
+    //        break;
+    //      default:
+    //        fprintf(stdout, NONE "%s: " NONE, "Info");
+    //    }
+    //    va_list args; // 变长参数表
+    //    va_start(args, format); // 用format以后的参数初始化变长参数表
+    //    vfprintf(stdout, format, args); // 按format格式打印变长参数表中的内容
+    //    va_end(args); // 销毁变长参数表
+    //    fprintf (stdout, "\n\n");
   }
 };
 
 #ifndef __TRACE_DEBUG
 #define __TRACE_DEBUG(...) base::Logger::traceDebug(__FILE__, __LINE__, __FUNCION__, __VA_ARGS__);
-#endif // __TRACE_DEBUG
+#endif  // __TRACE_DEBUG
 
 class LogMessage {
-public:
-  LogMessage(const char* file, int line): log_stream_(std::cerr) {
-    log_stream_ << file << ": " << line << ": ";
-  }
+ public:
+  LogMessage(const char* file, int line) : log_stream_(std::cerr) { log_stream_ << file << ": " << line << ": "; }
 
-  ~LogMessage() {
-    log_stream_ << std::endl;
-  }
+  ~LogMessage() { log_stream_ << std::endl; }
 
   inline std::ostream& stream() { return log_stream_; }
 
-protected:
+ protected:
   std::ostream& log_stream_;
 
-private:
+ private:
   LogMessage(const LogMessage&);
-  LogMessage& operator= (const LogMessage&);
+  LogMessage& operator=(const LogMessage&);
 };
 
-class LogMessageFatal: public LogMessage {
-public:
-  LogMessageFatal(const char* file, int line): LogMessage(file, line) {}
+class LogMessageFatal : public LogMessage {
+ public:
+  LogMessageFatal(const char* file, int line) : LogMessage(file, line) {}
 
-  ~LogMessageFatal() {
-    abort();
-  }
+  ~LogMessageFatal() { abort(); }
 
-private:
+ private:
   LogMessageFatal(const LogMessageFatal&);
-  LogMessageFatal& operator= (const LogMessageFatal&);
+  LogMessageFatal& operator=(const LogMessageFatal&);
 };
 
 /*! \brief double type that will be used in default by cfdem */
@@ -158,7 +142,7 @@ struct gpu {
   static const int kDevMask = 1 << 1;
 };
 
-} // namespace base
+}  // namespace base
 
 /*! \brief type that will be used for index */
 #ifndef CFDEM_INT64_TENSOR_SIZE
@@ -182,16 +166,18 @@ typedef int32_t index_t;
 #endif
 
 #define CHECK(x)                                                                                           \
-if (!(x))                                                                                                  \
-base::LogMessageFatal(base::Logger::getFileName(__FILE__).c_str(), __LINE__).stream()                      \
-  << "Check (" << #x << ") faild! "
+  if (!(x))                                                                                                \
+  base::LogMessageFatal(base::Logger::getFileName(__FILE__).c_str(), __LINE__).stream() << "Check (" << #x \
+                                                                                        << ") faild! "
 #define CHECK_GT(x, y) CHECK((x) > (y))
 #define CHECK_LE(x, y) CHECK((x) <= (y))
 #define CHECK_GE(x, y) CHECK((x) >= (y))
 #define CHECK_EQ(x, y) CHECK((x) == (y))
 #define CHECK_NE(x, y) CHECK((x) != (y))
-#define CHECK_NOTNULL(x)                                                                                   \
-((x) == NULL ? base::LogMessageFatal(base::Logger::getFileName(__FILE__).c_str(), __LINE__).stream()       \
-  << "Check not null failed: " #x, (x) : (x))
+#define CHECK_NOTNULL(x)                                                                   \
+  ((x) == NULL                                                                             \
+   ? base::LogMessageFatal(base::Logger::getFileName(__FILE__).c_str(), __LINE__).stream() \
+         << "Check not null failed: " #x,                                                  \
+   (x) : (x))
 
-#endif // __LOGGING_H__
+#endif  // __LOGGING_H__

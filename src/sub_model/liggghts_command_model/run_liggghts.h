@@ -40,16 +40,14 @@ Class
 namespace Foam {
 
 class runLiggghts : public liggghtsCommandModel {
-
-public:
-
+ public:
   //! \brief Runtime type information
   cfdemTypeName("runLiggghts")
 
-  cfdemDefineNewFunctionAdder(liggghtsCommandModel, runLiggghts)
+      cfdemDefineNewFunctionAdder(liggghtsCommandModel, runLiggghts)
 
-  //! \brief Constructor
-  runLiggghts(cfdemCloud& cloud);
+      //! \brief Constructor
+      runLiggghts(cfdemCloud& cloud);
 
   //! \brief Destructor
   ~runLiggghts();
@@ -60,8 +58,7 @@ public:
 
   std::string createCommand(const std::string& cmd, int interval = 0);
 
-private:
-
+ private:
   static const std::string baseCommand_;
 
   dictionary subPropsDict_;
@@ -69,6 +66,6 @@ private:
 
 const std::string runLiggghts::baseCommand_ = "run";
 
-} // namespace Foam
+}  // namespace Foam
 
-#endif // __RUN_LIGGGHTS_H__
+#endif  // __RUN_LIGGGHTS_H__

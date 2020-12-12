@@ -66,12 +66,7 @@ namespace Foam {
  *    true - 使用用户自定义动力粘度 nu 进行阻力计算
  *    false - 使用 transport dict 指定的动力粘度
  */
-enum ESwitch {
-  kTreadForceExplicitInMomEquation = 0,
-  kTreatForceBothCFDAndDEM,
-  kTreatDEMForceImplicit,
-  kVerbose
-};
+enum ESwitch { kTreadForceExplicitInMomEquation = 0, kTreatForceBothCFDAndDEM, kTreatDEMForceImplicit, kVerbose };
 
 /*!
  * \brief force type
@@ -80,12 +75,7 @@ enum ESwitch {
  * kResolved - force used for resolved method
  * kMix - force used for mix method
  */
-enum EForceType {
-  kUnResolved = 0,
-  kSemiResolved,
-  kResolved,
-  kMix
-};
+enum EForceType { kUnResolved = 0, kSemiResolved, kResolved, kMix };
 
 /*!
  * \brief The force sub model is designed to hold the settings a force model can have.
@@ -93,9 +83,7 @@ enum EForceType {
  *        kTreatDEMForceImplicit and kVerbose option.
  */
 class forceSubModel {
-
-public:
-
+ public:
   //! \brief Constructor
   forceSubModel(cfdemCloud& cloud, forceModel& forceModel, const dictionary& subPropsDict);
 
@@ -103,12 +91,12 @@ public:
   ~forceSubModel();
 
   class Switches {
-  public:
+   public:
     static const int kNum;
     static const char* kNameList[];
-    Switches(): value_(0) {}
+    Switches() : value_(0) {}
     inline void setTrue(ESwitch value) {
-      switch(value) {
+      switch (value) {
         case kTreadForceExplicitInMomEquation:
           value_ |= (1 << kTreadForceExplicitInMomEquation);
           break;
@@ -122,12 +110,11 @@ public:
           value_ |= (1 << kVerbose);
           break;
         default:
-          FatalError << "Error: illegal switch enum: " << value << " in forceSubModel"
-            << abort(FatalError);
+          FatalError << "Error: illegal switch enum: " << value << " in forceSubModel" << abort(FatalError);
       }
     }
     inline bool isTrue(ESwitch value) const {
-      switch(value) {
+      switch (value) {
         case kTreadForceExplicitInMomEquation:
           return value_ & (1 << kTreadForceExplicitInMomEquation);
         case kTreatForceBothCFDAndDEM:
@@ -137,15 +124,13 @@ public:
         case kVerbose:
           return value_ & (1 << kVerbose);
         default:
-          FatalError << "Error: illegal switch enum: " << value << " in forceSubModel"
-            << abort(FatalError);
+          FatalError << "Error: illegal switch enum: " << value << " in forceSubModel" << abort(FatalError);
       }
       return false;
     }
-    inline bool isFalse(ESwitch value) const {
-      return !isTrue(value);
-    }
-  private:
+    inline bool isFalse(ESwitch value) const { return !isTrue(value); }
+
+   private:
     unsigned int value_;
   };
 
@@ -156,11 +141,8 @@ public:
    * \param Ufluid = vector::zero  <[in] 索引为 index 的颗粒中心处流体速度(可以指定是否使用插值模型计算)
    * \param scalar Cd = 0          <[in] 颗粒阻力系数
    */
-  void partToArray(const int& index,
-                   const Foam::vector& dragTot,
-                   const Foam::vector& dragEx,
-                   const Foam::vector& Ufluid = Foam::vector::zero,
-                   scalar Cd = scalar(0)) const;
+  void partToArray(const int& index, const Foam::vector& dragTot, const Foam::vector& dragEx,
+                   const Foam::vector& Ufluid = Foam::vector::zero, scalar Cd = scalar(0)) const;
 
   /*!
    * \param index                  <[in] 颗粒索引
@@ -212,8 +194,7 @@ public:
 
   inline bool verbose() const { return switches_.isTrue(kVerbose); }
 
-protected:
-
+ protected:
   cfdemCloud& cloud_;
 
   forceModel& forceModel_;
@@ -228,6 +209,6 @@ protected:
   const volScalarField rho_;
 };
 
-} // namespace Foam
+}  // namespace Foam
 
-#endif // __FORCE_SUB_MODEL_H__
+#endif  // __FORCE_SUB_MODEL_H__

@@ -39,9 +39,7 @@ Class
 namespace Foam {
 
 class cfdemCloudIB : public cfdemCloud {
-
-public:
-
+ public:
   //! \brief Constructed from mesh
   cfdemCloudIB(const fvMesh& mesh);
 
@@ -54,8 +52,7 @@ public:
    * \param volumeFraction  <[in, out] 大颗粒体积分数
    * \param interFace       <[in, out] 界面场，用于 dynamic mesh
    */
-  void evolve(volScalarField& volumeFraction,
-              volScalarField& interface);
+  void evolve(volScalarField& volumeFraction, volScalarField& interface);
 
   //! \brief 重新分配内存
   void reallocate();
@@ -78,11 +75,9 @@ public:
   void setInterface(volScalarField& interface) const;
 
   //! @brief 确定颗粒周围 refined 网格的区域(每个方向的尺寸都是颗粒尺寸的两倍)
-  void setInterface(volScalarField& interface,
-                    volScalarField& refineMeshKeepStep) const;
+  void setInterface(volScalarField& interface, volScalarField& refineMeshKeepStep) const;
 
-public:
-
+ public:
   inline double refineMeshSkin() const { return cProps_.refineMeshSkin(); }
 
   inline int refineMeshKeepInterval() const { return cProps_.refineMeshKeepInterval(); }
@@ -91,8 +86,7 @@ public:
 
   inline void setMeshHasUpdated(bool meshHasUpdated) { meshHasUpdated_ = meshHasUpdated; }
 
-protected:
-
+ protected:
   /*!
    * \brief 判断 mesh 是否被更新过
    * \note 在求解器中使用 dynamic mesh，如果 mesh 更新，则 mesh.update() 返回 true，否则返回 false
@@ -100,6 +94,6 @@ protected:
   bool meshHasUpdated_;
 };
 
-} // namespace Foam
+}  // namespace Foam
 
-#endif // __CFDEM_CLOUD_IB_H__
+#endif  // __CFDEM_CLOUD_IB_H__

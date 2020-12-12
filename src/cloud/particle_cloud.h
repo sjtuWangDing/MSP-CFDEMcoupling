@@ -44,21 +44,19 @@ class cfdemCloud;
 
 //! \brief The basic class for particles
 class ParticleCloud {
-
   friend class cfdemCloud;
 
-public:
-
+ public:
   ParticleCloud(int numberOfParticles = -1)
-    : numberOfParticles_(numberOfParticles),
-      numberOfParticlesChanged_(false),
-      radiiPtr_(nullptr),
-      cdsPtr_(nullptr),
-      positionsPtr_(nullptr),
-      velocitiesPtr_(nullptr),
-      DEMForcesPtr_(nullptr),
-      DEMTorquesPtr_(nullptr),
-      fluidVelPtr_(nullptr) {}
+      : numberOfParticles_(numberOfParticles),
+        numberOfParticlesChanged_(false),
+        radiiPtr_(nullptr),
+        cdsPtr_(nullptr),
+        positionsPtr_(nullptr),
+        velocitiesPtr_(nullptr),
+        DEMForcesPtr_(nullptr),
+        DEMTorquesPtr_(nullptr),
+        fluidVelPtr_(nullptr) {}
 
   inline int& numberOfParticles() { return numberOfParticles_; }
 
@@ -116,16 +114,19 @@ public:
 
   inline Foam::vector getPosition(int index) const {
     CHECK_EQ(numberOfParticles_, static_cast<int>(positions_.size(0)))
-      << "getPosition: Number of particle is not match";
+        << "getPosition: Number of particle is not match";
     Foam::vector pos = Foam::vector::zero;
-    #pragma unroll
-    for (int i = 0; i < 3; ++i) { pos[i] = positions_[index][i]; }
+#pragma unroll
+    for (int i = 0; i < 3; ++i) {
+      pos[i] = positions_[index][i];
+    }
     return pos;
   }
 
   inline double getRadius(int index) const {
     CHECK_EQ(numberOfParticles_, static_cast<int>(radii_.size(0))) << "getRadius: Number of particle is not match";
-    CHECK_GT(radii_[index], Foam::SMALL) << "getRadius: Radius of particle " << index << " is < " << "Foam::SMALL";
+    CHECK_GT(radii_[index], Foam::SMALL) << "getRadius: Radius of particle " << index << " is < "
+                                         << "Foam::SMALL";
     return radii_[index];
   }
 
@@ -135,8 +136,7 @@ public:
     numberOfParticles_ = number;
   }
 
-private:
-
+ private:
   //! \brief 颗粒总数
   int numberOfParticles_;
   //! \brief 颗粒总数是否发生变化
@@ -177,7 +177,7 @@ private:
   double** volumes_;
 
   //! \brief 颗粒阻力系数
-  //         当 forceSubModel implForceDEM 为 true 时候，该 cds_ 和 fluidVel_ 传递给 DEM 求解器， 
+  //         当 forceSubModel implForceDEM 为 true 时候，该 cds_ 和 fluidVel_ 传递给 DEM 求解器，
   //         DEM 求解器使用颗粒中心处的流体速度与阻力系数一起计算颗粒受到的阻力
   //! \note cds_[index][0]
   double** cds_;
@@ -191,7 +191,7 @@ private:
   double** velocities_;
 
   //! \brief 小颗粒的中心处的流体速度
-  //         当 forceSubModel implForceDEM 为 true 时候，该 cds_ 和 fluidVel_ 传递给 DEM 求解器， 
+  //         当 forceSubModel implForceDEM 为 true 时候，该 cds_ 和 fluidVel_ 传递给 DEM 求解器，
   //         DEM 求解器使用颗粒中心处的流体速度与阻力系数一起计算颗粒受到的阻力
   //! \note fluidVel_[index][0 ~ 2]
   double** fluidVel_;
@@ -231,9 +231,9 @@ private:
   //         只要有一个颗粒标志点在网格中，particleVolumes_[index][subcell] += (1.0 / 29.0) * 颗粒体积
   //! \note particleVolumes_[index][subcell]
   double** particleVolumes_;
-#endif // CFDEM_CLOUD_USE_TENSOR
+#endif  // CFDEM_CLOUD_USE_TENSOR
 };
 
-} // namespace Foam
+}  // namespace Foam
 
-#endif // __PARTICLE_CLOUD_H__
+#endif  // __PARTICLE_CLOUD_H__

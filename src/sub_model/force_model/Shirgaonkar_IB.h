@@ -59,24 +59,21 @@ Restrictions
 namespace Foam {
 
 class ShirgaonkarIB : public forceModel {
-
-public:
-
+ public:
   //! \brief Runtime type information
   cfdemTypeName("ShirgaonkarIB")
 
-  cfdemDefineNewFunctionAdder(forceModel, ShirgaonkarIB)
+      cfdemDefineNewFunctionAdder(forceModel, ShirgaonkarIB)
 
-  //! \brief Constructor
-  ShirgaonkarIB(cfdemCloud& cloud);
+      //! \brief Constructor
+      ShirgaonkarIB(cfdemCloud& cloud);
 
   //! \brief Destructor
   ~ShirgaonkarIB();
 
   void setForce();
 
-private:
-
+ private:
   //! \note subPropsDict_ should be declared in front of other members
   dictionary subPropsDict_;
 
@@ -93,6 +90,6 @@ private:
   bool useTorque_;
 };
 
-} // namespace Foam
+}  // namespace Foam
 
-#endif // __SHIRGAONKAR_IB_H__
+#endif  // __SHIRGAONKAR_IB_H__

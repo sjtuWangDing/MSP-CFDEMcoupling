@@ -32,30 +32,23 @@ Class
   forceSubModel
 \*---------------------------------------------------------------------------*/
 
-#include "./force_sub_model.h"
 #include "./force_model.h"
+#include "./force_sub_model.h"
 
 namespace Foam {
 
 const int forceSubModel::Switches::kNum = 4;
 
-const char* forceSubModel::Switches::kNameList[] = {
-  "treatForceExplicit",
-  "treatForceDEM",
-  "implForceDEM",
-  "verbose"
-};
+const char* forceSubModel::Switches::kNameList[] = {"treatForceExplicit", "treatForceDEM", "implForceDEM", "verbose"};
 
 //! \brief Constructor
-forceSubModel::forceSubModel(cfdemCloud& cloud,
-                             forceModel& forceModel,
-                             const dictionary& subPropsDict)
-  : cloud_(cloud),
-    forceModel_(forceModel),
-    subPropsDict_(subPropsDict),
-    switches_(),
-    densityFieldName_(subPropsDict.lookupOrDefault<Foam::word>("densityFieldName", "rho").c_str()),
-    rho_(cloud.mesh().lookupObject<volScalarField>(densityFieldName_)) {}
+forceSubModel::forceSubModel(cfdemCloud& cloud, forceModel& forceModel, const dictionary& subPropsDict)
+    : cloud_(cloud),
+      forceModel_(forceModel),
+      subPropsDict_(subPropsDict),
+      switches_(),
+      densityFieldName_(subPropsDict.lookupOrDefault<Foam::word>("densityFieldName", "rho").c_str()),
+      rho_(cloud.mesh().lookupObject<volScalarField>(densityFieldName_)) {}
 
 //! \brief Destructor
 forceSubModel::~forceSubModel() {}
@@ -67,41 +60,39 @@ forceSubModel::~forceSubModel() {}
  * \param Ufluid = vector::zero  <[in] 索引为 index 的颗粒中心处流体速度(可以指定是否使用插值模型计算)
  * \param scalar Cd = 0          <[in] 颗粒阻力系数
  */
-void forceSubModel::partToArray(const int& index,
-                                const Foam::vector& dragTot,
-                                const Foam::vector& dragEx,
-                                const Foam::vector& Ufluid,
-                                scalar Cd) const {
+void forceSubModel::partToArray(const int& index, const Foam::vector& dragTot, const Foam::vector& dragEx,
+                                const Foam::vector& Ufluid, scalar Cd) const {
   if (switches_.isTrue(kTreatForceBothCFDAndDEM)) {
     // CFD 与 DEM 求解器都考虑耦合力
     if (switches_.isTrue(kTreadForceExplicitInMomEquation)) {
-      // 耦合力为显式力
-      #pragma unroll
+// 耦合力为显式力
+#pragma unroll
       for (int j = 0; j < 3; ++j) {
         // 将耦合力累加到 expFoces_
         cloud_.expForces()[index][j] += dragTot[j];
       }
     } else {
-      // 耦合力为隐式力
-      #pragma unroll
+// 耦合力为隐式力
+#pragma unroll
       for (int j = 0; j < 3; ++j) {
         // 将耦合力累加到 impForces_ 和 expFoces_
-        cloud_.impForces()[index][j] += dragTot[j] - dragEx[j]; // 隐式力 = dragTot[j] - dragEx[j]
+        cloud_.impForces()[index][j] += dragTot[j] - dragEx[j];  // 隐式力 = dragTot[j] - dragEx[j]
         cloud_.expForces()[index][j] += dragEx[j];
       }
     }
   }
   if (switches_.isTrue(kTreatDEMForceImplicit)) {
-    // 颗粒中心处的流体速度和阻力系数都被传递到 DEM 中，从而在每个 DEM 时间步中，使用阻力系数和流体速度，与当前颗粒速度一起计算颗粒受到的阻力
-    #pragma unroll
+// 颗粒中心处的流体速度和阻力系数都被传递到 DEM 中，从而在每个 DEM
+// 时间步中，使用阻力系数和流体速度，与当前颗粒速度一起计算颗粒受到的阻力
+#pragma unroll
     for (int j = 0; j < 3; j++) {
       cloud_.fluidVel()[index][j] = Ufluid[j];
     }
     cloud_.cds()[index] = Cd;
   } else {
-    // 直接将总阻力传递给 DEMForces_[index]
-    // usually used for ArchimedesIB and ShirgaonkarIB force model
-    #pragma unroll
+// 直接将总阻力传递给 DEMForces_[index]
+// usually used for ArchimedesIB and ShirgaonkarIB force model
+#pragma unroll
     for (int j = 0; j < 3; j++) {
       cloud_.DEMForces()[index][j] = dragTot[j];
     }
@@ -112,7 +103,7 @@ void forceSubModel::partToArray(const int& index,
  * \param index                  <[in] 颗粒索引
  * \param torque = vector::zero  <[in] 索引为 index 的颗粒受到的力矩
  */
-void forceSubModel::addTorque(int index, const Foam::vector& torque/* = Foam::vector::zero */) const {
+void forceSubModel::addTorque(int index, const Foam::vector& torque /* = Foam::vector::zero */) const {
   for (int i = 0; i < 3; ++i) {
     cloud_.DEMTorques()[index][i] += torque[i];
   }
@@ -143,7 +134,7 @@ void forceSubModel::readSwitches() {
  * \param forceType force type, Eg: kUnResolved
  */
 void forceSubModel::checkSwitches(EForceType forceType) const {
-  switch(forceType) {
+  switch (forceType) {
     case kUnResolved:
       break;
     case kSemiResolved:
@@ -176,4 +167,4 @@ const volVectorField& forceSubModel::IBDrag(const volVectorField& U, const volSc
 #endif
 }
 
-} // namespace Foam
+}  // namespace Foam

@@ -53,24 +53,21 @@ Restrictions
 namespace Foam {
 
 class ArchimedesIBTest : public forceModel {
-
-public:
-
+ public:
   //! \brief Runtime type information
   cfdemTypeName("ArchimedesIBTest")
 
-  cfdemDefineNewFunctionAdder(forceModel, ArchimedesIBTest)
+      cfdemDefineNewFunctionAdder(forceModel, ArchimedesIBTest)
 
-  //! \brief Constructor
-  ArchimedesIBTest(cfdemCloud& cloud);
+      //! \brief Constructor
+      ArchimedesIBTest(cfdemCloud& cloud);
 
   //! \brief Destructor
   ~ArchimedesIBTest();
 
   void setForce();
 
-private:
-
+ private:
   //! \note subPropsDict_ should be declared in front of other members
   dictionary subPropsDict_;
 
@@ -84,6 +81,6 @@ private:
 #endif
 };
 
-} // namespace Foam
+}  // namespace Foam
 
-#endif // __ARCHIMEDES_IB_H__
+#endif  // __ARCHIMEDES_IB_H__

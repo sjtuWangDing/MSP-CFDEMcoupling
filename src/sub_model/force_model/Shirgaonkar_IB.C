@@ -38,20 +38,20 @@ namespace Foam {
 
 cfdemDefineTypeName(ShirgaonkarIB)
 
-cfdemCreateNewFunctionAdder(forceModel, ShirgaonkarIB)
+    cfdemCreateNewFunctionAdder(forceModel, ShirgaonkarIB)
 
-/*!
- * \brief Constructor
- * \note The initialization list should be in the same order as the variable declaration
- */
-ShirgaonkarIB::ShirgaonkarIB(cfdemCloud& cloud)
-  : forceModel(cloud),
-    subPropsDict_(cloud.couplingPropertiesDict().subDict(typeName_ + "Props")),
-    velFieldName_(subPropsDict_.lookupOrDefault<Foam::word>("velFieldName", "U").c_str()),
-    pressureFieldName_(subPropsDict_.lookupOrDefault<Foam::word>("pressureFieldName", "p").c_str()),
-    U_(cloud.mesh().lookupObject<volVectorField>(velFieldName_)),
-    p_(cloud.mesh().lookupObject<volScalarField>(pressureFieldName_)),
-    useTorque_(subPropsDict_.lookupOrDefault<bool>("useTorque", false)) {
+    /*!
+     * \brief Constructor
+     * \note The initialization list should be in the same order as the variable declaration
+     */
+    ShirgaonkarIB::ShirgaonkarIB(cfdemCloud& cloud)
+    : forceModel(cloud),
+      subPropsDict_(cloud.couplingPropertiesDict().subDict(typeName_ + "Props")),
+      velFieldName_(subPropsDict_.lookupOrDefault<Foam::word>("velFieldName", "U").c_str()),
+      pressureFieldName_(subPropsDict_.lookupOrDefault<Foam::word>("pressureFieldName", "p").c_str()),
+      U_(cloud.mesh().lookupObject<volVectorField>(velFieldName_)),
+      p_(cloud.mesh().lookupObject<volScalarField>(pressureFieldName_)),
+      useTorque_(subPropsDict_.lookupOrDefault<bool>("useTorque", false)) {
   createForceSubModels(subPropsDict_, kResolved);
 }
 
@@ -73,7 +73,7 @@ void ShirgaonkarIB::setForce() {
     // loop all mesh of current particle
     for (int subCell = 0; subCell < cloud_.particleOverMeshNumber()[index]; ++subCell) {
       label cellI = cloud_.cellIDs()[index][subCell];
-      if (cellI > -1) { // cell Found
+      if (cellI > -1) {  // cell Found
         cellPos = cloud_.mesh().C()[cellI];
         drag += IBDrag[cellI] * IBDrag.mesh().V()[cellI];
         torque += (cellPos - particleCenterPos) ^ IBDrag[cellI] * IBDrag.mesh().V()[cellI];
@@ -85,8 +85,7 @@ void ShirgaonkarIB::setForce() {
     forceSubModel_->partToArray(index, drag, Foam::vector::zero, Foam::vector::zero, 0);
 
     if (forceSubModel_->verbose()) {
-      Info << "drag on particle " << index << ": ["
-        << drag[0] << ", " << drag[1] << ", " << drag[2] << "]" << endl;
+      Info << "drag on particle " << index << ": [" << drag[0] << ", " << drag[1] << ", " << drag[2] << "]" << endl;
     }
 
     if (useTorque_) {
@@ -95,4 +94,4 @@ void ShirgaonkarIB::setForce() {
   }
 }
 
-} // namespace Foam
+}  // namespace Foam

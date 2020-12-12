@@ -34,80 +34,59 @@ Class
 #include "cloud/cfdem_cloud.h"
 #include "cloud/coupling_properties.h"
 #include "cloud/particle_cloud.h"
-#include "sub_model/data_exchange_model/data_exchange_model.h"
-#include "sub_model/liggghts_command_model/liggghts_command_model.h"
 #include "sub_model/averaging_model/averaging_model.h"
-#include "sub_model/void_fraction_model/void_fraction_model.h"
+#include "sub_model/data_exchange_model/data_exchange_model.h"
 #include "sub_model/force_model/force_model.h"
+#include "sub_model/liggghts_command_model/liggghts_command_model.h"
 #include "sub_model/locate_model/locate_model.h"
+#include "sub_model/void_fraction_model/void_fraction_model.h"
 
 namespace Foam {
 
 cfdemCloud::cfdemCloud(const fvMesh& mesh)
-  : mesh_(mesh),
-    couplingPropertiesDict_(
-      IOobject(
-        "couplingProperties", // coupling properties file name
-        mesh.time().constant(),
-        mesh,
-        IOobject::MUST_READ,
-        IOobject::NO_WRITE
-      )
-    ),
-    liggghtsCommandsDict_(
-      IOobject(
-        "liggghtsCommands", // liggghts commands file name
-        mesh.time().constant(),
-        mesh,
-        IOobject::MUST_READ,
-        IOobject::NO_WRITE
-      )
-    ),
-    cProps_(mesh, couplingPropertiesDict_, liggghtsCommandsDict_),
-    parCloud_(0),
-    dataExchangeModel_(dataExchangeModel::New(*this, couplingPropertiesDict_)),
-    voidFractionModel_(voidFractionModel::New(*this, couplingPropertiesDict_)),
-    locateModel_(locateModel::New(*this, couplingPropertiesDict_)),
+    : mesh_(mesh),
+      couplingPropertiesDict_(IOobject("couplingProperties",  // coupling properties file name
+                                       mesh.time().constant(), mesh, IOobject::MUST_READ, IOobject::NO_WRITE)),
+      liggghtsCommandsDict_(IOobject("liggghtsCommands",  // liggghts commands file name
+                                     mesh.time().constant(), mesh, IOobject::MUST_READ, IOobject::NO_WRITE)),
+      cProps_(mesh, couplingPropertiesDict_, liggghtsCommandsDict_),
+      parCloud_(0),
+      dataExchangeModel_(dataExchangeModel::New(*this, couplingPropertiesDict_)),
+      voidFractionModel_(voidFractionModel::New(*this, couplingPropertiesDict_)),
+      locateModel_(locateModel::New(*this, couplingPropertiesDict_)),
 #if defined(version24Dev)
-    turbulence_(mesh.lookupObject<turbulenceModel>(cProps_.turbulenceModelType())),
+      turbulence_(mesh.lookupObject<turbulenceModel>(cProps_.turbulenceModelType())),
 #elif defined(version21) || defined(version16ext)
 #ifdef compre
-    turbulence_(mesh.lookupObject<compressible::turbulenceModel>(cProps_.turbulenceModelType())),
+      turbulence_(mesh.lookupObject<compressible::turbulenceModel>(cProps_.turbulenceModelType())),
 #else
-    turbulence_(mesh.lookupObject<incompressible::turbulenceModel>(cProps_.turbulenceModelType())),
+      turbulence_(mesh.lookupObject<incompressible::turbulenceModel>(cProps_.turbulenceModelType())),
 #endif
 #elif defined(version15)
-    turbulence_(mesh.lookupObject<incompressible::RASModel>(cProps_.turbulenceModelType())),
+      turbulence_(mesh.lookupObject<incompressible::RASModel>(cProps_.turbulenceModelType())),
 #endif
-    turbulenceMultiphase_(
-      IOobject(
-        "turbulenceMultiphase",
-        mesh.time().timeName(),
-        mesh,
-        IOobject::NO_READ,
-        IOobject::AUTO_WRITE
-      ),
-      mesh,
+      turbulenceMultiphase_(
+          IOobject("turbulenceMultiphase", mesh.time().timeName(), mesh, IOobject::NO_READ, IOobject::AUTO_WRITE), mesh,
 #ifdef compre
-      dimensionedScalar("zero", dimensionSet(1, -1, -1, 0, 0), 0)  // kg/m/s
+          dimensionedScalar("zero", dimensionSet(1, -1, -1, 0, 0), 0)  // kg/m/s
 #else
-      dimensionedScalar("zero", dimensionSet(0, 2, -1, 0, 0), 0)  // m²/s
+          dimensionedScalar("zero", dimensionSet(0, 2, -1, 0, 0), 0)  // m²/s
 #endif
-    ) {
+          ) {
   // create liggghts command model
-  for (const auto& name: liggghtsCommandModelList()) {
+  for (const auto& name : liggghtsCommandModelList()) {
     // liggghtsCommandModel::New() 函数返回的是 std::unique_ptr
     liggghtsCommandModels_.emplace_back(liggghtsCommandModel::New(*this, liggghtsCommandsDict_, name));
   }
   // create force model
-  for (const auto& name: forceModelList()) {
+  for (const auto& name : forceModelList()) {
     forceModels_.emplace_back(forceModel::New(*this, couplingPropertiesDict_, name));
   }
   // check periodic
   if (checkPeriodicCells() != checkSimulationFullyPeriodic()) {
     FatalError << "checkSimulationFullyPeriodic(): " << (checkSimulationFullyPeriodic() ? true : false)
-      << ", but from dictionary read checkPeriodicCells: " << (checkPeriodicCells() ? true : false)
-      << abort(FatalError);
+               << ", but from dictionary read checkPeriodicCells: " << (checkPeriodicCells() ? true : false)
+               << abort(FatalError);
   }
 }
 
@@ -135,9 +114,7 @@ void cfdemCloud::reallocate() {
  * \param Us     <[in, out] 局部平均小颗粒速度场
  * \param U      <[in] 流体速度场
  */
-void cfdemCloud::evolve(volScalarField& VoidF,
-                        volVectorField& Us,
-                        volVectorField& U) {
+void cfdemCloud::evolve(volScalarField& VoidF, volVectorField& Us, volVectorField& U) {
   // Info << "\nFoam::cfdemCloud::evolve(), used for cfdemSolverPiso......\n" << endl;
   // if (!writeTimePassed_ && mesh_.time().outputTime()) {
   //   writeTimePassed_ = true;
@@ -168,10 +145,10 @@ void cfdemCloud::evolve(volScalarField& VoidF,
  */
 bool cfdemCloud::checkSimulationFullyPeriodic() {
   const polyBoundaryMesh& patches = mesh_.boundaryMesh();
-  int nPatchesCyclic = 0;    // 周期边界数量
-  int nPatchesNonCyclic = 0; // 非周期边界数量
+  int nPatchesCyclic = 0;     // 周期边界数量
+  int nPatchesNonCyclic = 0;  // 非周期边界数量
   for (const polyPatch& patch : patches) {
-    // 统计 nPatchesCyclic 和 nPatchesNonCyclic
+// 统计 nPatchesCyclic 和 nPatchesNonCyclic
 #if defined(versionExt32)
     if (isA<cyclicPolyPatch>(patch)) {
       nPatchesCyclic += 1;
@@ -189,4 +166,4 @@ bool cfdemCloud::checkSimulationFullyPeriodic() {
   return nPatchesNonCyclic == 0;
 }
 
-} // namespace Foam
+}  // namespace Foam

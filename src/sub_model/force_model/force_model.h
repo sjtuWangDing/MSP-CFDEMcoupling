@@ -35,27 +35,23 @@ Class
 #ifndef __FORCE_MODEL_H__
 #define __FORCE_MODEL_H__
 
-#include "cloud/cfdem_cloud.h"
-#include "base/run_time_selection_tables.h"
 #include "./force_sub_model.h"
+#include "base/run_time_selection_tables.h"
+#include "cloud/cfdem_cloud.h"
 
 namespace Foam {
 
 //! \brief forceModel
 class forceModel {
-
-public:
-
+ public:
   //! \brief Runtime type information
   cfdemTypeName("forceModel")
 
-  //! \brief Declare runtime constructor selection
-  cfdemDeclareRunTimeSelection(std::unique_ptr, forceModel, (cfdemCloud& cloud), (cloud))
+      //! \brief Declare runtime constructor selection
+      cfdemDeclareRunTimeSelection(std::unique_ptr, forceModel, (cfdemCloud & cloud), (cloud))
 
-  //! \brief Selector
-  static std::unique_ptr<forceModel> New(cfdemCloud& cloud,
-                                         const dictionary& dict,
-                                         const std::string& modelName);
+      //! \brief Selector
+      static std::unique_ptr<forceModel> New(cfdemCloud& cloud, const dictionary& dict, const std::string& modelName);
 
   //! \brief Constructor
   forceModel(cfdemCloud& cloud);
@@ -65,7 +61,7 @@ public:
 
   virtual void setForce() {
     FatalError << "forceModel:setForce(): using base class function, please use derived class function\n"
-      << abort(FatalError);
+               << abort(FatalError);
   }
 
   // virtual void setMixForce(const std::vector<double>& dimensionRatios) {
@@ -90,8 +86,7 @@ public:
 
   // inline const base::CDTensor1& cds() const { return cloud_.pCloud().cds(); }
 
-protected:
-
+ protected:
   cfdemCloud& cloud_;
 
   //! \brief 当前 force model 的 forceSubModel
@@ -107,6 +102,6 @@ protected:
   volVectorField expParticleForces_;
 };
 
-} // namespace Foam
+}  // namespace Foam
 
-#endif // __FORCE_MODEL_H__
+#endif  // __FORCE_MODEL_H__

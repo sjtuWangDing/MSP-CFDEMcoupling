@@ -39,30 +39,29 @@ namespace Foam {
 
 cfdemDefineTypeName(liggghtsCommandModel)
 
-cfdemDefineNewFunctionMap(liggghtsCommandModel)
+    cfdemDefineNewFunctionMap(liggghtsCommandModel)
 
-cfdemDefineConstructNewFunctionMap(liggghtsCommandModel)
+        cfdemDefineConstructNewFunctionMap(liggghtsCommandModel)
 
-cfdemDefineDestroyNewFunctionMap(liggghtsCommandModel)
+            cfdemDefineDestroyNewFunctionMap(liggghtsCommandModel)
 
-cfdmeDefineBaseTypeNewWithTypeName(
-  std::unique_ptr,
-  liggghtsCommandModel,
-  (
-    cfdemCloud& cloud,
-    const dictionary& dict,
-    const std::string& modelName
-  ),
-  modelName,
-  (cloud)
-)
+                cfdmeDefineBaseTypeNewWithTypeName(std::unique_ptr, liggghtsCommandModel,
+                                                   (cfdemCloud & cloud, const dictionary& dict,
+                                                    const std::string& modelName),
+                                                   modelName, (cloud))
 
-//! \brief Constructor
-liggghtsCommandModel::liggghtsCommandModel(cfdemCloud& cloud)
-  : cloud_(cloud), command_("notDefined"), commandLines_(1), verbose_(false),
-    runFirst_(false), runLast_(false),
-    runEveryCouplingStep_(false), runEveryWriteStep_(false),
-    nextRun_(-1), lastRun_(-1) {}
+    //! \brief Constructor
+    liggghtsCommandModel::liggghtsCommandModel(cfdemCloud& cloud)
+    : cloud_(cloud),
+      command_("notDefined"),
+      commandLines_(1),
+      verbose_(false),
+      runFirst_(false),
+      runLast_(false),
+      runEveryCouplingStep_(false),
+      runEveryWriteStep_(false),
+      nextRun_(-1),
+      lastRun_(-1) {}
 
 //! \brief Destructor
 liggghtsCommandModel::~liggghtsCommandModel() {}
@@ -82,7 +81,7 @@ void liggghtsCommandModel::checkTimeMode(const dictionary& subPropsDict) {
       }
     }
   }
-  if(verbose_) {
+  if (verbose_) {
     Info << "runFirst = " << runFirst_ << endl;
     Info << "runLast = " << runLast_ << endl;
     Info << "runEveryCouplingStep = " << runEveryCouplingStep_ << endl;
@@ -103,7 +102,8 @@ void liggghtsCommandModel::checkTimeSettings(const dictionary& subPropsDict) {
       cmdRunTime_.couplingStartTime_ = cloud_.mesh().time().endTime().value() - simuStartTime;
       cmdRunTime_.couplingEndTime_ = cmdRunTime_.couplingStartTime_;
       cmdRunTime_.couplingIntervalTime_ = -1.0;
-      cmdRunTime_.firstCouplingStep_ = (int)(cmdRunTime_.couplingStartTime_ - CFDts + SMALL) / cloud_.dataExchangeM().couplingTime();
+      cmdRunTime_.firstCouplingStep_ =
+          (int)(cmdRunTime_.couplingStartTime_ - CFDts + SMALL) / cloud_.dataExchangeM().couplingTime();
       cmdRunTime_.lastCouplingStep_ = cmdRunTime_.firstCouplingStep_;
       cmdRunTime_.couplingStepInterval_ = -1;
     } else {
@@ -118,18 +118,20 @@ void liggghtsCommandModel::checkTimeSettings(const dictionary& subPropsDict) {
           cmdRunTime_.couplingEndTime_ = readScalar(subPropsDict.lookup("endTime"));
           cmdRunTime_.couplingIntervalTime_ = readScalar(subPropsDict.lookup("timeInterval"));
           cmdRunTime_.firstCouplingStep_ =
-            floor((cmdRunTime_.couplingStartTime_ + SMALL - simuStartTime) / cloud_.dataExchangeM().couplingTime());
-          cmdRunTime_.lastCouplingStep_ =
-            floor((cmdRunTime_.couplingEndTime_ + SMALL - simuStartTime - CFDts) / cloud_.dataExchangeM().couplingTime());
+              floor((cmdRunTime_.couplingStartTime_ + SMALL - simuStartTime) / cloud_.dataExchangeM().couplingTime());
+          cmdRunTime_.lastCouplingStep_ = floor((cmdRunTime_.couplingEndTime_ + SMALL - simuStartTime - CFDts) /
+                                                cloud_.dataExchangeM().couplingTime());
           cmdRunTime_.couplingStepInterval_ =
-            floor((cmdRunTime_.couplingIntervalTime_ + SMALL) / cloud_.dataExchangeM().couplingTime());
+              floor((cmdRunTime_.couplingIntervalTime_ + SMALL) / cloud_.dataExchangeM().couplingTime());
         } else {
-          FatalError << "Error: With "
-            << "runFirst = " << runFirst_ << ", " << "runLast = " << runLast_ << ", "
-            << "runEveryCouplingStep = " << runEveryCouplingStep_ << ", "
-            << "runEveryWriteStep = " << runEveryWriteStep_
-            << " Please specify run liggghts command time in sub properties dict: startTime, endTime and timeInterval"
-            << abort(FatalError);
+          FatalError
+              << "Error: With "
+              << "runFirst = " << runFirst_ << ", "
+              << "runLast = " << runLast_ << ", "
+              << "runEveryCouplingStep = " << runEveryCouplingStep_ << ", "
+              << "runEveryWriteStep = " << runEveryWriteStep_
+              << " Please specify run liggghts command time in sub properties dict: startTime, endTime and timeInterval"
+              << abort(FatalError);
         }
       }
     }
@@ -141,14 +143,17 @@ void liggghtsCommandModel::checkTimeSettings(const dictionary& subPropsDict) {
 
 bool liggghtsCommandModel::runThisCommand(int couplingStep) {
   if (verbose_) {
-    Info << "run command: " << "'" << command_ << "'" << " at coupling step " << couplingStep << endl;
+    Info << "run command: "
+         << "'" << command_ << "'"
+         << " at coupling step " << couplingStep << endl;
   }
   bool run = false;
   if (couplingStep >= nextRun_) {
     // 在开源版本中，使用 writeTimePassed()，个人认为应该使用 outputTime()
     // outputTime() return true if current cfd step is write step
     if ((runEveryWriteStep_ && cloud_.mesh().time().outputTime()) ||
-        (!runEveryWriteStep_ && cmdRunTime_.firstCouplingStep_ <= couplingStep && couplingStep <= cmdRunTime_.lastCouplingStep_)) {
+        (!runEveryWriteStep_ && cmdRunTime_.firstCouplingStep_ <= couplingStep &&
+         couplingStep <= cmdRunTime_.lastCouplingStep_)) {
       run = true;
       nextRun_ = couplingStep + cmdRunTime_.couplingStepInterval_;
       lastRun_ = couplingStep;
@@ -157,4 +162,4 @@ bool liggghtsCommandModel::runThisCommand(int couplingStep) {
   return run;
 }
 
-} // namespace Foam
+}  // namespace Foam

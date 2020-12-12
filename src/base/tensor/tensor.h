@@ -1,10 +1,10 @@
 #ifndef __TENSOR_H__
 #define __TENSOR_H__
 
-#include "base/logging.h"
-#include "base/tensor/expression.h"
-#include "base/memory/x_alloc.h"
 #include <initializer_list>
+#include "base/logging.h"
+#include "base/memory/x_alloc.h"
+#include "base/tensor/expression.h"
 
 /*! \brief default data type for tensor string */
 #ifndef TENSOR_DEFAULT_DTYPE
@@ -37,9 +37,9 @@ namespace base {
  * \brief shape of a tensor
  * \tparam dimension dimension of tensor
  */
-template<int dimension>
+template <int dimension>
 class Shape {
-public:
+ public:
   /*! \brief dimension of current shape */
   static const int kDim = dimension;
   /*! \brief dimension of current shape minus one */
@@ -50,7 +50,7 @@ public:
   inline Shape(void) {}
   /*! \brief constuctor */
   inline Shape(const Shape<kDim>& s) {
-    #pragma unroll
+#pragma unroll
     for (int i = 0; i < kDim; ++i) {
       this->shape_[i] = s.shape_[i];
     }
@@ -68,11 +68,11 @@ public:
    * \param idx dimension index
    * \return the corresponding dimension size
    */
-  inline index_t& operator[] (int idx) {
+  inline index_t& operator[](int idx) {
     CHECK(idx >= 0 && idx < kDim);
     return shape_[idx];
   }
-  inline index_t operator[] (int idx) const {
+  inline index_t operator[](int idx) const {
     CHECK(idx >= 0 && idx < kDim);
     return shape_[idx];
   }
@@ -80,10 +80,12 @@ public:
    * \return whether two shape equals
    * \param s the shape to compare against
    */
-  inline bool operator== (const Shape<kDim> &s) const {
-    #pragma unroll
+  inline bool operator==(const Shape<kDim>& s) const {
+#pragma unroll
     for (int i = 0; i < kDim; ++i) {
-      if (s.shape_[i] != this->shape_[i]) { return false; }
+      if (s.shape_[i] != this->shape_[i]) {
+        return false;
+      }
     }
     return true;
   }
@@ -91,16 +93,14 @@ public:
    * \return whether two shape not equal
    * \param s the shape to compare against
    */
-  inline bool operator!= (const Shape<kDim>& s) const {
-    return !(*this == s);
-  }
+  inline bool operator!=(const Shape<kDim>& s) const { return !(*this == s); }
   /*!
    * \brief get subshape that takes off largest dimension
    * \return subshape
    */
   inline Shape<kSubdim> subShape() const {
     Shape<kSubdim> s;
-    #pragma unroll
+#pragma unroll
     for (int i = 0; i < kSubdim; ++i) {
       s.shape_[i] = this->operator[](i + 1);
     }
@@ -116,12 +116,12 @@ public:
     return s;
   }
   /*! \brief allow string printing of the shape */
-  template<int dim>
-  friend std::ostream& operator<< (std::ostream& os, const Shape<dim>& shape);
+  template <int dim>
+  friend std::ostream& operator<<(std::ostream& os, const Shape<dim>& shape);
 };
 
-template<int dim>
-std::ostream& operator<< (std::ostream& os, const Shape<dim>& shape) {
+template <int dim>
+std::ostream& operator<<(std::ostream& os, const Shape<dim>& shape) {
   os << "(";
   for (int i = 0; i < dim; ++i) {
     if (i != 0) os << ", ";
@@ -160,7 +160,7 @@ inline Shape<2> makeShape2(index_t s0, index_t s1) {
  * \param li initialize list
  * \return the shape construction
  */
-template<index_t dimension>
+template <index_t dimension>
 Shape<dimension> makeShape(const std::initializer_list<index_t>& li) {
   CHECK_EQ(dimension, li.size());
   Shape<dimension> temp;
@@ -178,11 +178,10 @@ Shape<dimension> makeShape(const std::initializer_list<index_t>& li) {
  * \tparam Device which device the tensor is on
  * \tparam Alloc memory allocator
  */
-template<int dimension, typename DType = TENSOR_DEFAULT_DTYPE,
-         typename Device = TENSOR_DEFAULT_DEVICE,
-         typename Alloc = TENSOR_DEFAULT_ALLOC(DType)>
-class Tensor: public base::Exp<Tensor<dimension, DType, Device, Alloc>, DType> {
-public:
+template <int dimension, typename DType = TENSOR_DEFAULT_DTYPE, typename Device = TENSOR_DEFAULT_DEVICE,
+          typename Alloc = TENSOR_DEFAULT_ALLOC(DType)>
+class Tensor : public base::Exp<Tensor<dimension, DType, Device, Alloc>, DType> {
+ public:
   /*! \brief shape type of the tensor */
   typedef Shape<dimension> TShape;
   /*! \brief whether current type lies in cpu */
@@ -190,7 +189,7 @@ public:
   /*! \brief dimension */
   static const int kDim = dimension;
   /*! \brief dimension of subtype */
-  static const int  kSubdim = dimension - 1;
+  static const int kSubdim = dimension - 1;
   /*! \brief pointer to the data memory allocated by self */
   DType* dptr_;
   /*! \brief pointer to the data memory allocated by other */
@@ -204,11 +203,10 @@ public:
   index_t stride_;
 
   /*! \brief default constructor */
-  inline Tensor(): dptr_(nullptr), optr_(nullptr), shape_(), stride_(0) {}
+  inline Tensor() : dptr_(nullptr), optr_(nullptr), shape_(), stride_(0) {}
 
   /*! \brief constructor from shape */
-  inline Tensor(const TShape& shape)
-  : dptr_(nullptr), optr_(nullptr), shape_(shape), stride_(shape[kSubdim]) {
+  inline Tensor(const TShape& shape) : dptr_(nullptr), optr_(nullptr), shape_(shape), stride_(shape[kSubdim]) {
     CHECK_GE(shape.size(), 0) << "Error shape size";
     // allocate memory
     dptr_ = Alloc::allocate(shape.size());
@@ -216,7 +214,7 @@ public:
 
   /*! \brief constructor from shape and initial value */
   inline Tensor(const TShape& shape, DType initVal)
-  : dptr_(nullptr), optr_(nullptr), shape_(shape), stride_(shape[kSubdim]) {
+      : dptr_(nullptr), optr_(nullptr), shape_(shape), stride_(shape[kSubdim]) {
     CHECK_GE(shape.size(), 0) << "Error shape size";
     // allocate memory
     dptr_ = Alloc::allocate(shape.size());
@@ -224,17 +222,19 @@ public:
   }
 
   /*! \brief constructor from data pointer and shape, without stride */
-  inline Tensor(DType *optr, const TShape& shape)
-  : dptr_(nullptr), optr_(optr), shape_(shape), stride_(shape[kSubdim]) {}
+  inline Tensor(DType* optr, const TShape& shape)
+      : dptr_(nullptr), optr_(optr), shape_(shape), stride_(shape[kSubdim]) {}
 
   /*! \brief constructor from data pointer and shape */
-  inline Tensor(DType *optr, const TShape& shape, index_t stride)
-  : dptr_(nullptr), optr_(optr), shape_(shape), stride_(stride) {}
+  inline Tensor(DType* optr, const TShape& shape, index_t stride)
+      : dptr_(nullptr), optr_(optr), shape_(shape), stride_(stride) {}
 
   /*! \brief deconstructor */
   inline ~Tensor() {
     optr_ = nullptr;
-    if (dptr_) { Alloc::deallocate(dptr_, mSize()); }
+    if (dptr_) {
+      Alloc::deallocate(dptr_, mSize());
+    }
     dptr_ = nullptr;
   }
 
@@ -242,7 +242,7 @@ public:
   inline Tensor(const Tensor<dimension, DType, Device, Alloc>& that) = delete;
 
   /*! \brief delete copy assignment */
-  inline Tensor& operator= (const Tensor<dimension, DType, Device, Alloc>& that) = delete;
+  inline Tensor& operator=(const Tensor<dimension, DType, Device, Alloc>& that) = delete;
 
   /*! \brief move constructor */
   inline Tensor(Tensor<dimension, DType, Device, Alloc>&& that) {
@@ -261,7 +261,7 @@ public:
   }
 
   /*! \brief implement the assignment of same type */
-  inline Tensor<dimension, DType, Device, Alloc>& operator= (Tensor<dimension, DType, Device, Alloc>&& that) {
+  inline Tensor<dimension, DType, Device, Alloc>& operator=(Tensor<dimension, DType, Device, Alloc>&& that) {
 #if TENSOR_VERBOSE
     std::cout << "Tensor::operator=(Tensor&&)" << std::endl;
 #endif
@@ -286,11 +286,13 @@ public:
    * \return memory cost of the tensor, including the aligned x dimension
    * \tparam startDim the starting dimension
    */
-  template<int startDim>
+  template <int startDim>
   inline index_t memSize() const {
-    if (nullptr == dptr_ && nullptr == optr_) { return 0; }
+    if (nullptr == dptr_ && nullptr == optr_) {
+      return 0;
+    }
     index_t res = this->stride_;
-    #pragma unroll
+#pragma unroll
     for (int i = startDim; i < kSubdim; ++i) {
       res *= this->shape_[i];
     }
@@ -298,30 +300,24 @@ public:
   }
 
   /*! \return whether the tensor's memory is continuous */
-  inline bool isContinus() const {
-    return this->shape_[kSubdim] == stride_;
-  }
+  inline bool isContinus() const { return this->shape_[kSubdim] == stride_; }
 
   /*! \return memory cost of the tensor, including the aligned x dimension */
-  inline index_t mSize() const {
-    return this->memSize<0>();
-  }
+  inline index_t mSize() const { return this->memSize<0>(); }
 
   /*!
    * \brief return size of i-th dimension, start counting from highest dimension
    * \param idx the dimension count from the highest dimensin
    * \return the size
    */
-  inline index_t size(int idx) const {
-    return shape_[idx];
-  }
+  inline index_t size(int idx) const { return shape_[idx]; }
 
   /*!
    * \brief get a element of dimension - 1
    * \param idx index
    * \return the result tensor
    */
-  inline Tensor<kSubdim, DType, Device, Alloc> operator[] (int idx) const {
+  inline Tensor<kSubdim, DType, Device, Alloc> operator[](int idx) const {
     CHECK(idx >= 0 && idx < static_cast<int>(shape_[0]));
     // Note: not use std::move() here, because this will force invoke move constructor
     // and diable return value optimization(RVO)
@@ -330,9 +326,9 @@ public:
 };
 
 /*! \brief respecialized class Tensor1D, thei is due to different implementation in operator[] */
-template<typename DType, typename Device, typename Alloc>
-class Tensor<1, DType, Device, Alloc>: public base::Exp<Tensor<1, DType, Device, Alloc>, DType> {
-public:
+template <typename DType, typename Device, typename Alloc>
+class Tensor<1, DType, Device, Alloc> : public base::Exp<Tensor<1, DType, Device, Alloc>, DType> {
+ public:
   typedef Shape<1> TShape;
   static const int kDim = 1;
   static const int kSubdim = 0;
@@ -341,38 +337,38 @@ public:
   Shape<1> shape_;
   index_t stride_;
 
-  inline Tensor(): dptr_(nullptr), optr_(nullptr), shape_(), stride_(0) {}
+  inline Tensor() : dptr_(nullptr), optr_(nullptr), shape_(), stride_(0) {}
 
-  inline Tensor(const Shape<1>& shape)
-  : dptr_(nullptr), optr_(nullptr), shape_(shape), stride_(shape[0]) {
+  inline Tensor(const Shape<1>& shape) : dptr_(nullptr), optr_(nullptr), shape_(shape), stride_(shape[0]) {
     CHECK_GE(shape.size(), 0) << "Error shape size";
     // allocate memory
     dptr_ = Alloc::allocate(shape.size());
   }
 
   inline Tensor(const Shape<1>& shape, DType initVal)
-  : dptr_(nullptr), optr_(nullptr), shape_(shape), stride_(shape[0]) {
+      : dptr_(nullptr), optr_(nullptr), shape_(shape), stride_(shape[0]) {
     CHECK_GE(shape.size(), 0) << "Error shape size";
     // allocate memory
     dptr_ = Alloc::allocate(shape.size());
     std::fill_n(dptr_, shape.size(), initVal);
   }
 
-  inline Tensor(DType *optr, const Shape<1> &shape)
-  : dptr_(nullptr), optr_(optr), shape_(shape), stride_(shape[0]) {}
-  
-  inline Tensor(DType *optr, const Shape<1> &shape, index_t stride)
-  : dptr_(nullptr), optr_(optr), shape_(shape), stride_(stride) {}
+  inline Tensor(DType* optr, const Shape<1>& shape) : dptr_(nullptr), optr_(optr), shape_(shape), stride_(shape[0]) {}
+
+  inline Tensor(DType* optr, const Shape<1>& shape, index_t stride)
+      : dptr_(nullptr), optr_(optr), shape_(shape), stride_(stride) {}
 
   inline ~Tensor() {
     optr_ = nullptr;
-    if (dptr_) { Alloc::deallocate(dptr_, mSize()); }
+    if (dptr_) {
+      Alloc::deallocate(dptr_, mSize());
+    }
     dptr_ = nullptr;
   }
 
   inline Tensor(const Tensor<1, DType, Device, Alloc>& that) = delete;
 
-  inline Tensor& operator= (const Tensor<1, DType, Device, Alloc>& that) = delete;
+  inline Tensor& operator=(const Tensor<1, DType, Device, Alloc>& that) = delete;
 
   inline Tensor(Tensor<1, DType, Device, Alloc>&& that) {
     if (nullptr != &that) {
@@ -386,7 +382,7 @@ public:
     }
   }
 
-  inline Tensor& operator= (Tensor<1, DType, Device, Alloc>&& that) {
+  inline Tensor& operator=(Tensor<1, DType, Device, Alloc>&& that) {
     if (this != &that) {
       // that 为右值引用，但是本身是左值，使用 move 将其转为右值匹配移动构造
       Tensor<1, DType, Device, Alloc> tmp = std::move(that);
@@ -405,27 +401,25 @@ public:
   inline bool isEmpty() const { return nullptr == dptr_ && nullptr == optr_; }
 
   // member function
-  template<int startDim>
+  template <int startDim>
   inline index_t memSize() const {
-    if (nullptr == dptr_ && nullptr == optr_) { return 0; }
+    if (nullptr == dptr_ && nullptr == optr_) {
+      return 0;
+    }
     CHECK_EQ(startDim, 0);
     return stride_;
   }
 
-  inline bool isContinus() const {
-    return stride_ == shape_[0];
-  }
+  inline bool isContinus() const { return stride_ == shape_[0]; }
 
-  inline index_t mSize() const {
-    return shape_[0];
-  }
+  inline index_t mSize() const { return shape_[0]; }
 
   inline index_t size(int idx) const {
     CHECK(idx >= 0 && idx < static_cast<int>(mSize()));
     return shape_[idx];
   }
 
-  inline DType& operator[] (int idx) const {
+  inline DType& operator[](int idx) const {
     CHECK(idx >= 0 && idx < static_cast<int>(mSize()));
     return ptr()[idx];
   }
@@ -441,6 +435,6 @@ using CDTensor2 = Tensor<2, double, cpu, TENSOR_DEFAULT_ALLOC(double)>;
 using CDExTensor1 = Tensor<1, double, cpu, TENSOR_MALLOC_ALLOC(double)>;
 using CDExTensor2 = Tensor<2, double, cpu, TENSOR_MALLOC_ALLOC(double)>;
 
-} // namespace base
+}  // namespace base
 
-#endif // __TENSOR_H__
+#endif  // __TENSOR_H__

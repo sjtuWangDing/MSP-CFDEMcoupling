@@ -38,11 +38,11 @@ namespace Foam {
 
 cfdemDefineTypeName(runLiggghts)
 
-cfdemCreateNewFunctionAdder(liggghtsCommandModel, runLiggghts)
+    cfdemCreateNewFunctionAdder(liggghtsCommandModel, runLiggghts)
 
-//! \brief Constructor
-runLiggghts::runLiggghts(cfdemCloud& cloud):
-  liggghtsCommandModel(cloud), subPropsDict_(cloud.liggghtsCommandsDict()) {
+    //! \brief Constructor
+    runLiggghts::runLiggghts(cfdemCloud& cloud)
+    : liggghtsCommandModel(cloud), subPropsDict_(cloud.liggghtsCommandsDict()) {
   std::string dictName = typeName_ + "Props";
   if (cloud.liggghtsCommandsDict().found(dictName)) {
     subPropsDict_ = cloud.liggghtsCommandsDict().subDict(dictName);
@@ -57,9 +57,7 @@ runLiggghts::runLiggghts(cfdemCloud& cloud):
 //! \brief Destructor
 runLiggghts::~runLiggghts() {}
 
-std::string runLiggghts::getCommand(int index) const {
-  return command_;
-}
+std::string runLiggghts::getCommand(int index) const { return command_; }
 
 std::string runLiggghts::createCommand(const std::string& cmd, int interval) {
   return cmd + " " + std::to_string(interval);
@@ -70,4 +68,4 @@ bool runLiggghts::runCommand(int couplingStep) {
   return runThisCommand(couplingStep);
 }
 
-} // namespace Foam
+}  // namespace Foam

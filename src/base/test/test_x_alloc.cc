@@ -45,7 +45,7 @@ void test03() {
   p = 0;
 }
 
-int main(int argc, const char * argv[]) {
+int main(int argc, const char* argv[]) {
   test01();
   test02();
   test03();

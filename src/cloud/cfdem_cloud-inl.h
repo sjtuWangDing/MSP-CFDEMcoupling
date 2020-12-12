@@ -34,22 +34,22 @@ Class
 #ifndef __CFDEM_CLOUD_INL_H__
 #define __CFDEM_CLOUD_INL_H__
 
-#include <vector>
 #include <memory>
+#include <vector>
 
 #if defined(version21) || defined(version16ext)
-  #include "turbulenceModel.H"
+#include "turbulenceModel.H"
 #elif defined(version15)
-  #include "RASModel.H"
+#include "RASModel.H"
 #endif
 
 // Need include header files of class which uses Foam::autoPtr to
 // wrap model For liggghtsCommandModel, forceModel and momCoupleModel,
 // not need to include header because they use share_ptr
-#include "sub_model/data_exchange_model/data_exchange_model.h"
 #include "sub_model/averaging_model/averaging_model.h"
-#include "sub_model/void_fraction_model/void_fraction_model.h"
+#include "sub_model/data_exchange_model/data_exchange_model.h"
 #include "sub_model/locate_model/locate_model.h"
+#include "sub_model/void_fraction_model/void_fraction_model.h"
 
 namespace Foam {
 
@@ -57,9 +57,7 @@ inline const std::vector<std::shared_ptr<liggghtsCommandModel>>& cfdemCloud::lig
   return liggghtsCommandModels_;
 }
 
-inline const std::vector<std::shared_ptr<forceModel>>& cfdemCloud::forceModels() const {
-  return forceModels_;
-}
+inline const std::vector<std::shared_ptr<forceModel>>& cfdemCloud::forceModels() const { return forceModels_; }
 
 inline const std::vector<std::shared_ptr<momCoupleModel>>& cfdemCloud::momCoupleModels() const {
   return momCoupleModels_;
@@ -67,7 +65,8 @@ inline const std::vector<std::shared_ptr<momCoupleModel>>& cfdemCloud::momCouple
 
 inline std::shared_ptr<forceModel> cfdemCloud::forceM(int index) const {
   if (index < 0 || index >= static_cast<int>(forceModels_.size())) {
-    FatalError << "forceM(): " << "index " << index << " out of boundary" << abort(FatalError);
+    FatalError << "forceM(): "
+               << "index " << index << " out of boundary" << abort(FatalError);
   }
   return forceModels_[index];
 }
@@ -100,6 +99,6 @@ inline const incompressible::RASModel& cfdemCloud::turbulence() const
   return turbulence_;
 }
 
-} // namespace Foam
+}  // namespace Foam
 
-#endif // __CFDEM_CLOUD_INL_H__
+#endif  // __CFDEM_CLOUD_INL_H__

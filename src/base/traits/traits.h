@@ -15,15 +15,15 @@
 
 namespace base {
 
-template<typename PrimitiveType>
-class Traits: public PrimitiveType {
-public:
+template <typename PrimitiveType>
+class Traits : public PrimitiveType {
+ public:
   //! \brief Construct from primitive type
-  Traits(const PrimitiveType& p): PrimitiveType(p) {}
+  Traits(const PrimitiveType& p) : PrimitiveType(p) {}
   //! \brief Construct from Istream
-  Traits(std::istream& is): PrimitiveType(is) {}
+  Traits(std::istream& is) : PrimitiveType(is) {}
 };
 
-} // namespace base
+}  // namespace base
 
-#endif // __TRAITS_H__
+#endif  // __TRAITS_H__

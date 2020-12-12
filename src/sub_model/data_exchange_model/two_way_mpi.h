@@ -35,30 +35,28 @@ Class
 #ifndef __TWO_WAY_MPI_H__
 #define __TWO_WAY_MPI_H__
 
-#include "mpi.h"
-#include <lammps.h>
-#include <input.h>
 #include <atom.h>
-#include <library.h>
 #include <error.h>
-#include <update.h>
+#include <input.h>
+#include <lammps.h>
+#include <library.h>
 #include <library_cfd_coupling.h>
+#include <update.h>
+#include "mpi.h"
 
 #include "./data_exchange_model.h"
 
 namespace Foam {
 
 class twoWayMPI : public dataExchangeModel {
-
-public:
-
+ public:
   //! \brief Runtime type information
   cfdemTypeName("twoWayMPI")
 
-  cfdemDefineNewFunctionAdder(dataExchangeModel, twoWayMPI)
+      cfdemDefineNewFunctionAdder(dataExchangeModel, twoWayMPI)
 
-  //! \brief Constructor
-  twoWayMPI(cfdemCloud& cloud);
+      //! \brief Constructor
+      twoWayMPI(cfdemCloud& cloud);
 
   //! \brief Destructor
   ~twoWayMPI();
@@ -91,9 +89,7 @@ public:
    * \param dataType 数据类型
    * \param array 内存地址（LIGGGHTS code 要求 array 为二级指针）
    */
-  void getData(const std::string& dataName,
-               const std::string& dataType,
-               double** array) const {
+  void getData(const std::string& dataName, const std::string& dataType, double** array) const {
     // 虽然这里将 array 转为了 void*，但是在 LIGGGHTS code 中会将其转为 double**
     void* p = static_cast<void*>(array);
     data_liggghts_to_of(dataName.c_str(), dataType.c_str(), lmp_, p, (const char*)"double");
@@ -105,9 +101,7 @@ public:
    * \param dataType 数据类型
    * \param array 内存地址（LIGGGHTS code 要求 array 为二级指针）
    */
-  void getData(const std::string& dataName,
-               const std::string& dataType,
-               int** array) const {
+  void getData(const std::string& dataName, const std::string& dataType, int** array) const {
     // 虽然这里将 array 转为了 void*，但是在 LIGGGHTS code 中会将其转为 int**
     void* p = static_cast<void*>(array);
     data_liggghts_to_of(dataName.c_str(), dataType.c_str(), lmp_, p, (const char*)"int");
@@ -120,9 +114,7 @@ public:
    * \param dataType 数据类型
    * \param array 内存地址（LIGGGHTS code 要求 array 为二级指针）
    */
-  void giveData(const std::string& dataName,
-                const std::string& dataType,
-                double** field) const {
+  void giveData(const std::string& dataName, const std::string& dataType, double** field) const {
     data_of_to_liggghts(dataName.c_str(), dataType.c_str(), lmp_, (void*)field, (const char*)"double");
   }
 
@@ -132,9 +124,7 @@ public:
    * \param dataType 数据类型
    * \param array 内存地址（LIGGGHTS code 要求 array 为二级指针）
    */
-  void giveData(const std::string& dataName,
-                const std::string& dataType,
-                int** field) const {
+  void giveData(const std::string& dataName, const std::string& dataType, int** field) const {
     data_of_to_liggghts(dataName.c_str(), dataType.c_str(), lmp_, (void*)field, (const char*)"int");
   }
 
@@ -148,8 +138,7 @@ public:
     allocate_external_int(array, width, length, initVal, lmp_);
   }
 
-private:
-
+ private:
   LAMMPS_NS::LAMMPS* lmp_;
 
   MPI_Comm lgs_comm_;
@@ -157,6 +146,6 @@ private:
   dictionary subPropsDict_;
 };
 
-} // namespace Foam
+}  // namespace Foam
 
-#endif // __TWO_WAY_MPI_H__
+#endif  // __TWO_WAY_MPI_H__

@@ -31,14 +31,14 @@ namespace Foam {
 
 cfdemDefineTypeName(IBVoidFraction)
 
-cfdemCreateNewFunctionAdder(voidFractionModel, IBVoidFraction)
+    cfdemCreateNewFunctionAdder(voidFractionModel, IBVoidFraction)
 
-//! \brief Constructor
-IBVoidFraction::IBVoidFraction(cfdemCloud& cloud)
-  : voidFractionModel(cloud),
-    subPropsDict_(cloud.couplingPropertiesDict().subDict(typeName_ + "Props")),
-    alphaMin_(subPropsDict_.lookupOrDefault<double>("alphaMin", 0.0)),
-    alphaMax_(subPropsDict_.lookupOrDefault<double>("alphaMax", 1.0)) {
+    //! \brief Constructor
+    IBVoidFraction::IBVoidFraction(cfdemCloud& cloud)
+    : voidFractionModel(cloud),
+      subPropsDict_(cloud.couplingPropertiesDict().subDict(typeName_ + "Props")),
+      alphaMin_(subPropsDict_.lookupOrDefault<double>("alphaMin", 0.0)),
+      alphaMax_(subPropsDict_.lookupOrDefault<double>("alphaMax", 1.0)) {
   // 单个颗粒覆盖最多网格数量
   maxCellsNumPerCoarseParticle_ = subPropsDict_.lookupOrDefault<int>("maxCellsNumPerCoarseParticle", 1000);
 }
@@ -61,7 +61,7 @@ void IBVoidFraction::setVolumeFractionForSingleParticle(const int index) {
   // 获取到在当前 processor 上颗粒覆盖的某一个网格编号
   label firstCellID = cloud_.cellIDs()[index][0];
 
-  if (firstCellID >= 0) { // particle centre is in domain
+  if (firstCellID >= 0) {  // particle centre is in domain
     // 获取网格中心坐标
     Foam::vector cellCentre = cloud_.mesh().C()[firstCellID];
     // 判断网格中心是否在颗粒中
@@ -79,7 +79,7 @@ void IBVoidFraction::setVolumeFractionForSingleParticle(const int index) {
       const labelList& vertexPoints = cloud_.mesh().cellPoints()[firstCellID];
       double ratio = 0.125;
       // 遍历当前网格的所有角点
-      forAll (vertexPoints, i) {
+      forAll(vertexPoints, i) {
         // 获取第 i 角点坐标
         vector vertexPosition = cloud_.mesh().points()[vertexPoints[i]];
         // 判断角点是否在颗粒中
@@ -99,14 +99,16 @@ void IBVoidFraction::setVolumeFractionForSingleParticle(const int index) {
           double lambda = segmentParticleIntersection(radius, particleCentre, vertexPosition, cellCentre);
           volumeFractionNext_[firstCellID] -= ratio * lambda;
         }
-      } // End of loop of vertexPoints
+      }  // End of loop of vertexPoints
     }
     // 颗粒中心所在网格的体积分数已经计算完成, 下面开始递归构建相邻网格
     labelHashSet hashSett;
     // 构建哈希集合
     buildLabelHashSetForVolumeFraction(firstCellID, particleCentre, radius, hashSett);
     if (hashSett.size() > maxCellsNumPerCoarseParticle_) {  // 如果集合中元素个数大于颗粒覆盖网格数限制
-      FatalError << "Big particle found " << hashSett.size() << " cells more than permittd maximun number of cells per paticle " << maxCellsNumPerCoarseParticle_ << abort(FatalError);
+      FatalError << "Big particle found " << hashSett.size()
+                 << " cells more than permittd maximun number of cells per paticle " << maxCellsNumPerCoarseParticle_
+                 << abort(FatalError);
     } else if (hashSett.size() > 0) {
       // 将颗粒覆盖的当前处理器的网格数保存到 particleOverMeshNumber 中
       cloud_.particleOverMeshNumber()[index] = hashSett.size();
@@ -123,18 +125,18 @@ void IBVoidFraction::setVolumeFractionForSingleParticle(const int index) {
  * \param radius         <[in] 颗粒半径
  * \param hashSett       <[in, out] 需要构建的哈希集
  */
-void IBVoidFraction::buildLabelHashSetForVolumeFraction(const label cellID,
-                                                        const Foam::vector& particleCentre,
-                                                        const double radius,
-                                                        labelHashSet& hashSett) {
+void IBVoidFraction::buildLabelHashSetForVolumeFraction(const label cellID, const Foam::vector& particleCentre,
+                                                        const double radius, labelHashSet& hashSett) {
   hashSett.insert(cellID);
   // 获取 cellID 网格的所有 neighbour cell 的链表
   const labelList& nc = cloud_.mesh().cellCells()[cellID];
   // 遍历 cellID 的 neighbour cell
-  forAll (nc, i) {
+  forAll(nc, i) {
     // 获取相邻网格索引, 以及网格中心坐标
     label neighbour = nc[i];
-    if (neighbour < 0) { continue; }
+    if (neighbour < 0) {
+      continue;
+    }
     // 获取相邻网格中心坐标
     Foam::vector neighbourCentre = cloud_.mesh().C()[neighbour];
     // 判断相邻网格中心是否在颗粒中
@@ -160,22 +162,22 @@ void IBVoidFraction::buildLabelHashSetForVolumeFraction(const label cellID,
         // 获取 neighbour 网格的角点集合
         const labelList& vertexPoints = cloud_.mesh().cellPoints()[neighbour];
         /// 遍历网格 neighbour 的角点
-        forAll (vertexPoints, j) {
+        forAll(vertexPoints, j) {
           // 获取角点坐标
           Foam::vector vertexPosition = cloud_.mesh().points()[vertexPoints[j]];
           // 判断角点是否在颗粒中
           scalar fv = pointInParticle(particleCentre, vertexPosition, radius);
-          if (fc < 0.0 && fv < 0.0) { // 如果网格 neighbour 中心在颗粒中, 角点 j 也在颗粒中
+          if (fc < 0.0 && fv < 0.0) {  // 如果网格 neighbour 中心在颗粒中, 角点 j 也在颗粒中
             scale -= ratio;
-          } else if (fc < 0.0 && fv > 0.0) { // 如果网格 neighbour 中心在颗粒中, 角点 j 不在颗粒中
+          } else if (fc < 0.0 && fv > 0.0) {  // 如果网格 neighbour 中心在颗粒中, 角点 j 不在颗粒中
             // 计算角点对空隙率的影响系数 lambda
             scalar lambda = segmentParticleIntersection(radius, particleCentre, neighbourCentre, vertexPosition);
             scale -= lambda * ratio;
-          } else if (fc > 0.0 && fv < 0.0) { // 如果网格 neighbour 中心不在颗粒中, 角点 j 在颗粒中
+          } else if (fc > 0.0 && fv < 0.0) {  // 如果网格 neighbour 中心不在颗粒中, 角点 j 在颗粒中
             scalar lambda = segmentParticleIntersection(radius, particleCentre, vertexPosition, neighbourCentre);
             scale -= lambda * ratio;
           }
-        } // End of loop vertexPoints
+        }  // End of loop vertexPoints
         // 保证体积分数 >= 0
         scale = scale < 0.0 ? 0.0 : scale;
         scale = scale > 1.0 ? 1.0 : scale;
@@ -193,8 +195,8 @@ void IBVoidFraction::buildLabelHashSetForVolumeFraction(const label cellID,
           buildLabelHashSetForVolumeFraction(neighbour, particleCentre, radius, hashSett);
         }
       }
-    } // not found neighbour in hashSett
-  } // End of loop neighbour cell
+    }  // not found neighbour in hashSett
+  }    // End of loop neighbour cell
 }
 
 /*!
@@ -206,15 +208,14 @@ void IBVoidFraction::buildLabelHashSetForVolumeFraction(const label cellID,
  * \param cellCentre      <[in] 指定网格中心
  * \param corona          <[in] 指定网格的等效半径
  */
-Foam::vector IBVoidFraction::getCoronaPointPosition(const Foam::vector& particleCentre,
-                                                    const Foam::vector& cellCentre,
+Foam::vector IBVoidFraction::getCoronaPointPosition(const Foam::vector& particleCentre, const Foam::vector& cellCentre,
                                                     const scalar corona) const {
   // 计算网格中心到颗粒中心的距离
   scalar centreDist = mag(cellCentre - particleCentre);
   vector coronaPoint = cellCentre;
-  if(centreDist > 0.0) {
-    coronaPoint = cellCentre + (cellCentre - particleCentre) * (corona / centreDist); 
-    return coronaPoint; 
+  if (centreDist > 0.0) {
+    coronaPoint = cellCentre + (cellCentre - particleCentre) * (corona / centreDist);
+    return coronaPoint;
   }
   return coronaPoint;
 }
@@ -223,7 +224,7 @@ Foam::vector IBVoidFraction::getCoronaPointPosition(const Foam::vector& particle
  * \brief 计算距离系数，对任意一个网格, 如果网格中心 c 在颗粒内部, 但是它的某个角点 p
  *   不在颗粒内部, 则计算 c 与 p 的连线与颗粒表面的交点 i 到网格中心 c 的距离, 即
  *   求解 x 的二元一次方程
- *   (x * (vector_p - vector_c) - vector_particle) & 
+ *   (x * (vector_p - vector_c) - vector_particle) &
  *   (x * (vector_p - vector_c) - vector_particle) == radius * radius
  *   等价于函数体中定义的: a*(x^2) - b*x + c = 0
  * \param radius         <[in] 颗粒半径
@@ -231,8 +232,7 @@ Foam::vector IBVoidFraction::getCoronaPointPosition(const Foam::vector& particle
  * \param pointInside    <[in] 网格中心
  * \param pointOutside   <[in] 网格角点
  */
-double IBVoidFraction::segmentParticleIntersection(double radius,
-                                                   const Foam::vector& particleCentre,
+double IBVoidFraction::segmentParticleIntersection(double radius, const Foam::vector& particleCentre,
                                                    const Foam::vector& pointInside,
                                                    const Foam::vector& pointOutside) const {
   // 计算方程系数 a*(x^2) - b*x + c = 0
@@ -266,4 +266,4 @@ double IBVoidFraction::segmentParticleIntersection(double radius,
   return lambda;
 }
 
-} // namespace Foam
+}  // namespace Foam

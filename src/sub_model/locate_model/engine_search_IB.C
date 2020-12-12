@@ -32,19 +32,18 @@ namespace Foam {
 
 cfdemDefineTypeName(engineSearchIB)
 
-cfdemCreateNewFunctionAdder(locateModel, engineSearchIB)
+    cfdemCreateNewFunctionAdder(locateModel, engineSearchIB)
 
-//! \brief Constructor
-engineSearchIB::engineSearchIB(cfdemCloud& cloud, const std::string& derivedTypeName)
-  : engineSearch(cloud, derivedTypeName),
-    coef_(2.0) {
+    //! \brief Constructor
+    engineSearchIB::engineSearchIB(cfdemCloud& cloud, const std::string& derivedTypeName)
+    : engineSearch(cloud, derivedTypeName), coef_(2.0) {
   // read properties from dictionary
   verbose_ = subPropsDict_.lookupOrDefault<bool>("verbose", false);
   zSplit_ = subPropsDict_.lookupOrDefault<int>("zSplit", 8);
   xySplit_ = subPropsDict_.lookupOrDefault<int>("xySplit", 16);
   if (zSplit_ < 2 || xySplit_ < 1) {
-    FatalError << "Erorr: (zSplit_ < 2 || xySplit_ < 1) with zSplit_ = " << zSplit_
-      << ", and xySplit_ = " << xySplit_ << abort(FatalError);
+    FatalError << "Erorr: (zSplit_ < 2 || xySplit_ < 1) with zSplit_ = " << zSplit_ << ", and xySplit_ = " << xySplit_
+               << abort(FatalError);
   }
   Info << "xySplit: " << xySplit_ << ", zSplit_: " << zSplit_ << endl;
 
@@ -131,9 +130,10 @@ void engineSearchIB::findCell(const base::CITensor1& findCellIDs) const {
       }
     } else {
       findCellIDs[index] = -1;
-      Pout << "Found particle " << index << " not in the CFD domian, this could means that the particle and fluid has no coupling." << endl;
+      Pout << "Found particle " << index
+           << " not in the CFD domian, this could means that the particle and fluid has no coupling." << endl;
     }
-  } // end loop of particle
+  }  // end loop of particle
 }
 
 /*!
@@ -178,11 +178,10 @@ Foam::vector engineSearchIB::generateSatellitePoint(int index) const {
  * \param index particle index
  * \param satellitePointIndex satellite point index
  */
-inline Foam::vector engineSearchIB::getSatellitePointPos(int index,
-                                                         int satellitePointIndex) const {
+inline Foam::vector engineSearchIB::getSatellitePointPos(int index, int satellitePointIndex) const {
   double radius = cloud_.getRadius(index);
   Foam::vector particleCenterPos = cloud_.getPosition(index);
   return particleCenterPos + radius * satellitePoints_[satellitePointIndex];
 }
 
-} // namespace Foam
+}  // namespace Foam

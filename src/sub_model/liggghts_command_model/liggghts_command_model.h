@@ -35,24 +35,21 @@ Class
 #ifndef __LIGGGHTS_COMMAND_MODEL_H__
 #define __LIGGGHTS_COMMAND_MODEL_H__
 
-#include "cloud/cfdem_cloud.h"
 #include "base/run_time_selection_tables.h"
+#include "cloud/cfdem_cloud.h"
 
 namespace Foam {
 
 class liggghtsCommandModel {
-
-public:
-
+ public:
   //! \brief Runtime type information
   cfdemTypeName("liggghtsCommandModel");
 
   //! \brief Declare runtime constructor selection
-  cfdemDeclareRunTimeSelection(std::unique_ptr, liggghtsCommandModel, (cfdemCloud& cloud), (cloud));
+  cfdemDeclareRunTimeSelection(std::unique_ptr, liggghtsCommandModel, (cfdemCloud & cloud), (cloud));
 
   //! \brief Selector
-  static std::unique_ptr<liggghtsCommandModel> New(cfdemCloud& cloud,
-                                                   const dictionary& dict,
+  static std::unique_ptr<liggghtsCommandModel> New(cfdemCloud& cloud, const dictionary& dict,
                                                    const std::string& modelName);
 
   //! \brief Constructor
@@ -68,9 +65,13 @@ public:
     int firstCouplingStep_;
     int lastCouplingStep_;
     int couplingStepInterval_;
-    CmdRunTime():
-      couplingStartTime_(-1.0), couplingEndTime_(-1.0), couplingIntervalTime_(0.0),
-      firstCouplingStep_(-1), lastCouplingStep_(-1), couplingStepInterval_(0) {}
+    CmdRunTime()
+        : couplingStartTime_(-1.0),
+          couplingEndTime_(-1.0),
+          couplingIntervalTime_(0.0),
+          firstCouplingStep_(-1),
+          lastCouplingStep_(-1),
+          couplingStepInterval_(0) {}
   };
 
   //! \brief 根据 index 获取 command 的内容
@@ -87,8 +88,7 @@ public:
 
   inline int commandLines() const { return commandLines_; }
 
-protected:
-
+ protected:
   cfdemCloud& cloud_;
 
   std::string command_;
@@ -116,6 +116,6 @@ protected:
   int lastRun_;
 };
 
-} // namespace Foam
+}  // namespace Foam
 
-#endif // __LIGGGHTS_COMMAND_MODEL_H__
+#endif  // __LIGGGHTS_COMMAND_MODEL_H__
