@@ -19,8 +19,8 @@ EXE_INC = \
   $(PINC) \
   $(MSP_CFDEM_ADD_INCOMPTURBMOD_PATHS) \
   -I$(LIB_SRC)/finiteVolume/lnInclude \
-  -I$(LIB_SRC)/transportModels \
   -I$(LIB_SRC)/meshTools/lnInclude \
+  -I$(LIB_SRC)/fvOptions/lnInclude \
   -I$(LIB_SRC)/dynamicFvMesh/lnInclude \
   -I$(LIB_SRC)/dynamicMesh/lnInclude \
   -I$(LIB_SRC)/dynamicMesh/dynamicFvMesh/lnInclude \
@@ -28,15 +28,15 @@ EXE_INC = \
   -I$(LIB_SRC)/lagrangian/basic/lnInclude \
   -I$(LIB_SRC)/OpenFOAM/containers/HashTables/labelHashSet \
   -I$(LIGGGHTS_SRC_DIR) \
-  -I$(MSP_CFDEM_SRC_DIR) \
+  -I$(MSP_CFDEM_SRC_DIR)
 
 LIB_LIBS = \
   $(PLIBS) \
   $(MSP_CFDEM_ADD_INCOMPTURBMOD_LIBS) \
-  -L$(MSP_CFDEM_LIB_DIR) \
-  -Wl,--whole-archive -l$(LIGGGHTS_LIB_NAME) -Wl,--no-whole-archive \
   -lfiniteVolume \
+  -lfvOptions \
   -lmeshTools \
   -llagrangian \
   -ldynamicFvMesh \
-  -ldynamicMesh
+  -ldynamicMesh \
+  -L$(MSP_CFDEM_LIB_DIR) -Wl,--whole-archive -l$(LIGGGHTS_LIB_NAME) -Wl,--no-whole-archive

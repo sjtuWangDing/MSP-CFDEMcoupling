@@ -9,13 +9,12 @@ PFLAGS += -Wno-unknown-pragmas
 PFLAGS += -Wunused-variable
 PFLAGS += -fno-elide-constructors
 
-UDEF_CFDEM_SRC_DIR=$(CFDEM_SRC_DIR)/cfdem
-UDEF_CFDEM_INCLUDE=$(CFDEM_SRC_DIR)/cfdem/lnInclude
+MSP_CFDEM_LIB_NAME=MSP-CFDEMcoupling-5.x_1.0
 
 EXE_INC = \
   $(PFLAGS) \
   $(PINC) \
-  $(CFDEM_ADD_INCOMPTURBMOD_PATHS) \
+  $(MSP_CFDEM_ADD_INCOMPTURBMOD_PATHS) \
   -I$(LIB_SRC)/transportModels \
   -I$(LIB_SRC)/transportModels/incompressible/singlePhaseTransportModel \
   -I$(LIB_SRC)/finiteVolume/lnInclude \
@@ -25,16 +24,14 @@ EXE_INC = \
   -I$(LIB_SRC)/dynamicMesh/lnInclude \
   -I$(LIB_SRC)/dynamicMesh/dynamicFvMesh/lnInclude \
   -I$(LIB_SRC)/dynamicMesh/dynamicMesh/lnInclude \
-  -I$(UDEF_CFDEM_INCLUDE) \
-  -I$(UDEF_CFDEM_SRC_DIR)
-
-UDEF_CFDEM_LIB_NAME=lagrangianCFDEM-PUBLIC-5.x-1.0
+  -I$(MSP_CFDEM_SRC_DIR) \
+  -I$(MSP_CFDEM_SOLVERS_DIR)/cfdem_solver_IB
 
 EXE_LIBS = \
-  -L$(CFDEM_LIB_DIR)\
-  $(CFDEM_ADD_INCOMPTURBMOD_LIBS) \
+  $(PLIBS) \
+  $(MSP_CFDEM_ADD_INCOMPTURBMOD_LIBS) \
   -lincompressibleTransportModels \
   -lfiniteVolume \
   -ldynamicFvMesh \
   -ldynamicMesh \
-  -l$(UDEF_CFDEM_LIB_NAME)
+  -L$(MSP_CFDEM_LIB_DIR) -l$(MSP_CFDEM_LIB_NAME)

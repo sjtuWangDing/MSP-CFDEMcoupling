@@ -24,13 +24,12 @@ MSP_CFDEM_SPRAY_LIBS = \
 MSP_CFDEM_ADD_INCOMPTURBMOD_PATHS = \
   -I$(LIB_SRC)/TurbulenceModels/turbulenceModels/lnInclude \
   -I$(LIB_SRC)/TurbulenceModels/incompressible/lnInclude \
-  -I$(LIB_SRC)/fvOptions/lnInclude \
+
 
 # libs for turbulence models to use
 MSP_CFDEM_ADD_INCOMPTURBMOD_LIBS = \
   -lturbulenceModels \
   -lincompressibleTurbulenceModels \
-  -lfvOptions \
 
 #----------------------------------------------------------------
 # compressible turbulence model settings
@@ -40,8 +39,6 @@ MSP_CFDEM_ADD_INCOMPTURBMOD_LIBS = \
 MSP_CFDEM_ADD_COMPTURBMOD_PATHS = \
   -I$(LIB_SRC)/TurbulenceModels/turbulenceModels/lnInclude \
   -I$(LIB_SRC)/TurbulenceModels/compressible/lnInclude \
-  -I$(LIB_SRC)/transportModels/compressible/lnInclude \
-  -I$(LIB_SRC)/thermophysicalModels/radiation/lnInclude \
 
 # libs for turbulence models to use
 MSP_CFDEM_ADD_COMPTURBMOD_LIBS = \

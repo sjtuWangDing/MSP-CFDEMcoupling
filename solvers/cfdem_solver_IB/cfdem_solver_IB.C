@@ -35,13 +35,13 @@ Description
   movement information, gained from LIGGGHTS, are incorporated.
 \*---------------------------------------------------------------------------*/
 
-#include "cloud/cfdemCloudIB.H"
-#include "cloud/OFVersion.H"
-
 #include "fvCFD.H"
 #include "dynamicFvMesh.H"
-
 #include "singlePhaseTransportModel.H"
+
+#include "cloud/of_version.h"
+#include "cloud/cfdem_cloud_IB.h"
+
 #if defined(version30)
   #include "turbulentTransportModel.H"
   #include "pisoControl.H"
@@ -53,16 +53,14 @@ int main(int argc, char* argv[]) {
   #include "setRootCase.H"
   #include "createTime.H"
   #include "createDynamicFvMesh.H"
-
 #if defined(version30)
   pisoControl piso(mesh);
   #include "createTimeControls.H"
 #endif
+  #include "./create_fields.h"
 
-  #include "./createFields.h"
   // create cfdemCloud
   Foam::cfdemCloudIB particleCloud(mesh);
-
   Info << "\nStarting time loop\n" << endl;
   while(runTime.loop()) {
     Info << "Starting current loop..." << endl;
