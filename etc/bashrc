@@ -40,9 +40,15 @@ echo_()
 
 add_path_()
 {
-  for path in "$@"
-  do
+  for path in "$@"; do
     export PATH="$path":"$PATH"
+  done
+}
+
+add_ld_lib_path_()
+{
+  for path in "$@"; do
+    export LD_LIBRARY_PATH="$path":"$LD_LIBRARY_PATH"
   done
 }
 
@@ -65,7 +71,6 @@ set_var_ LIGGGHTS_DIR $HOME/LIGGGHTS/LIGGGHTS-PUBLIC
 set_var_ LIGGGHTS_SRC_DIR $LIGGGHTS_DIR/src
 set_var_ LPP_DIR $HOME/LIGGGHTS/lpp
 
-set_var_ MSP_CFDEM_BIN_DIR $MSP_CFDEM_PROJECT_DIR/bin
 set_var_ MSP_CFDEM_ETC_DIR $MSP_CFDEM_PROJECT_DIR/etc
 set_var_ MSP_CFDEM_SOLVES_DIR $MSP_CFDEM_PROJECT_DIR/solvers
 set_var_ MSP_CFDEM_SRC_DIR $MSP_CFDEM_PROJECT_DIR/src
@@ -73,6 +78,15 @@ set_var_ MSP_CFDEM_TEST_DIR $MSP_CFDEM_PROJECT_DIR/test
 set_var_ MSP_CFDEM_TOOLS_DIR $MSP_CFDEM_PROJECT_DIR/tools
 set_var_ LIGGGHTS_MAKEFILE_NAME "auto"
 set_var_ LIGGGHTS_MAKEFILE_POSTFIX ""
+
+#- MSP-CFDEM lib name
+export MSP_CFDEM_LIB_DIR=$MSP_CFDEM_PROJECT_DIR/platforms/$WM_OPTIONS/lib
+export MSP_CFDEM_BIN_DIR=$MSP_CFDEM_PROJECT_DIR/platforms/$WM_OPTIONS/bin
+
+#- Important! add lib dir to $LD_LIBRARY_PATH
+# If not add lib dir to $LD_LIBRARY_PATH, loader will not find dynamic lib file and report error:
+# "cannot open shared object file: No such file or directory"
+add_ld_lib_path_ $MSP_CFDEM_LIB_DIR
 
 #check if default lammps lib path should be used
 set_var_ LAMMPS_LIB_DIR $LIGGGHTS_DIR/lib
@@ -94,10 +108,6 @@ set_var_ LIGGGHTS_EXEC $LIGGGHTS_LIB_NAME
 
 #- LAMMPS lib path
 set_var_ LAMMPS_LIB_PATH $LIGGGHTS_DIR/lib
-
-#- MSP-CFDEM lib name
-export MSP_CFDEM_LIB_DIR=$MSP_CFDEM_PROJECT_DIR/platforms/$WM_OPTIONS/lib
-export MSP_CFDEM_BIN_DIR=$MSP_CFDEM_PROJECT_DIR/platforms/$WM_OPTIONS/bin
 
 alias mspCfdemCompLIG='bash $MSP_CFDEM_ETC_DIR/compile_LIGGGHTS.sh'
 alias mspCfdemCompSrc='bash $MSP_CFDEM_ETC_DIR/compile_MSP_CFDEMcoupling_src.sh'

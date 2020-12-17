@@ -1,7 +1,7 @@
 sinclude /home/dw/OpenFOAM/OpenFOAM-5.x/wmake/rules/General/mplibSYSTEMOPENMPI
 include /home/dw/CFDEM/MSP-CFDEMcoupling-5.x/etc/libs/libs_5.x
 
-$(shell if [ ! -e "$(CFDEM_LIB_DIR)" ]; then mkdir -p "$(CFDEM_LIB_DIR)"; fi)
+$(shell if [ ! -d "$(MSP_CFDEM_BIN_DIR)" ]; then mkdir -p "$(MSP_CFDEM_BIN_DIR)"; fi)
 
 PFLAGS+= -DMSP_CFDEM_WM_PROJECT_VERSION="$(MSP_CFDEM_WM_PROJECT_VERSION)"
 PFLAGS += -Wno-old-style-cast

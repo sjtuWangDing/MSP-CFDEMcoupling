@@ -1,0 +1,11 @@
+# .gitignore file for test case
+
+# mesh and result from every processor
+*/CFD/processor*/
+
+# polyMesh from every case
+*/CFD/constant/polyMesh/
+
+# DEM data from every case
+*/DEM/post/restart/*
+*/DEM/post/*
