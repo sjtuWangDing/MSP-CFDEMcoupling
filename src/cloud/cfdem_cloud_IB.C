@@ -32,10 +32,10 @@ Class
 \*---------------------------------------------------------------------------*/
 
 #include <mutex>
-#include "cloud/cfdem_cloud_IB.h"
 #include "dynamicRefineFvMesh.H"
-#include "subModels/dataExchangeModel/dataExchangeModel.H"
-#include "subModels/forceModel/forceModel.H"
+#include "cloud/cfdem_cloud_IB.h"
+#include "sub_model/data_exchange_model/data_exchange_model.h"
+#include "sub_model/force_model/force_model.h"
 
 namespace Foam {
 

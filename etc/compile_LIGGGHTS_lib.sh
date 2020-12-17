@@ -4,8 +4,6 @@
 # Description: Compile LIGGGHTS libraries
 # Author: Wang Ding
 #===================================================================#
- 
-#- include functions
 
 #- get time
 timeNow="$(date +"%Y-%m-%d-%H:%M")"

@@ -26,7 +26,7 @@
 
 #export MSP_CFDEM_PROJECT_DIR=$HOME/CFDEM/MSP-CFDEMcoupling-$WM_PROJECT_VERSION
 #export MSP_CFDEM_SRC_DIR=$MSP_CFDEM_PROJECT_DIR/src
-#export MSP_CFDEM_bashrc=$MSP_CFDEM_PROJECT_DIR/etc/bashrc
+#export MSP_CFDEM_bashrc=$MSP_CFDEM_PROJECT_DIR/etc/bashrc.sh
 #. $MSP_CFDEM_bashrc
 
 ## source other env vars which will be used in ". $MSP_CFDEM_bashrc"
@@ -35,7 +35,7 @@
 
 echo_()
 {
-  if [[ ! $MSP_CFDEM_VERBOSE == "false" ]]; then echo "$1"; fi
+  if [ "false" = $MSP_CFDEM_VERBOSE ]; then echo "$1"; fi
 }
 
 add_path_()
@@ -43,14 +43,6 @@ add_path_()
   for path in "$@"
   do
     export PATH="$path":"$PATH"
-  done
-}
-
-add_LDLib_()
-{
-  for path in "$@"
-  do
-    export LD_LIBRARY_PATH="$path":"$LD_LIBRARY_PATH"
   done
 }
 
@@ -63,22 +55,22 @@ set_var_() {
   if [[ "$cur_value" == "" ]]; then
     # not set for env variable and use defualt value
     eval export $env_variable="$default_value"
-    echo "using default $env_variable = $default_value"
+    echo_ "using default $env_variable = $default_value"
   else
-    echo "using user defined $env_variable = $cur_value"
+    echo_ "using user defined $env_variable = $cur_value"
   fi
 }
 
-echo_ "************************************"
 set_var_ LIGGGHTS_DIR $HOME/LIGGGHTS/LIGGGHTS-PUBLIC
 set_var_ LIGGGHTS_SRC_DIR $LIGGGHTS_DIR/src
 set_var_ LPP_DIR $HOME/LIGGGHTS/lpp
+
 set_var_ MSP_CFDEM_BIN_DIR $MSP_CFDEM_PROJECT_DIR/bin
 set_var_ MSP_CFDEM_ETC_DIR $MSP_CFDEM_PROJECT_DIR/etc
+set_var_ MSP_CFDEM_SOLVES_DIR $MSP_CFDEM_PROJECT_DIR/solvers
 set_var_ MSP_CFDEM_SRC_DIR $MSP_CFDEM_PROJECT_DIR/src
 set_var_ MSP_CFDEM_TEST_DIR $MSP_CFDEM_PROJECT_DIR/test
 set_var_ MSP_CFDEM_TOOLS_DIR $MSP_CFDEM_PROJECT_DIR/tools
-echo_ "************************************"
 set_var_ LIGGGHTS_MAKEFILE_NAME "auto"
 set_var_ LIGGGHTS_MAKEFILE_POSTFIX ""
 
@@ -104,8 +96,64 @@ set_var_ LIGGGHTS_EXEC $LIGGGHTS_LIB_NAME
 set_var_ LAMMPS_LIB_PATH $LIGGGHTS_DIR/lib
 
 #- MSP-CFDEM lib name
-export MSP_CFDEM_LIB_NAME=MSP-CFDEMcoupling-OF$WM_PROJECT_VERSION
-
-echo_ "************************************"
+export MSP_CFDEM_LIB_DIR=$MSP_CFDEM_PROJECT_DIR/platforms/$WM_OPTIONS/lib
+export MSP_CFDEM_BIN_DIR=$MSP_CFDEM_PROJECT_DIR/platforms/$WM_OPTIONS/bin
 
 alias mspCfdemCompLIG='bash $MSP_CFDEM_ETC_DIR/compile_LIGGGHTS.sh'
+alias mspCfdemCompSrc='bash $MSP_CFDEM_ETC_DIR/compile_MSP_CFDEMcoupling_src.sh'
+
+# detect OF version
+if [[ $WM_PROJECT_VERSION == 5.* ]]; then
+  export MSP_CFDEM_WM_PROJECT_VERSION=50
+elif [[ $WM_PROJECT_VERSION == 4.* ]]; then
+  export MSP_CFDEM_WM_PROJECT_VERSION=40
+  echo "WARNING from your MSP-CFDEM code!"
+  echo "WARNING: Coupling with your OpenFOAM(R) version is not officially supported!"
+  echo "Switch to OpenFOAM(R) 5.x."
+  sleep 1
+elif [[ $WM_PROJECT_VERSION = 3.0.* ]]; then
+  export MSP_CFDEM_WM_PROJECT_VERSION=30
+  echo "WARNING from your MSP-CFDEM code!"
+  echo "WARNING: Coupling with your OpenFOAM(R) version is not officially supported!"
+  echo "Switch to OpenFOAM(R) 5.x."
+  sleep 1
+elif [[ $WM_PROJECT_VERSION = v1606+ ]]; then
+  export MSP_CFDEM_WM_PROJECT_VERSION=1606
+  echo "WARNING from your MSP-CFDEM code!"
+  echo "WARNING: Coupling with your OpenFOAM(R) version is not officially supported!"
+  echo "Switch to OpenFOAM(R) 5.x."
+  sleep 1
+elif [[ $WM_PROJECT_VERSION = v1612+ ]]; then
+  export MSP_CFDEM_WM_PROJECT_VERSION=1612
+  echo "WARNING from your MSP-CFDEM code!"
+  echo "WARNING: Coupling with your OpenFOAM(R) version is not officially supported!"
+  echo "Switch to OpenFOAM(R) 5.x."
+  sleep 1
+elif [[ $WM_PROJECT_VERSION = v1706 ]]; then
+  export MSP_CFDEM_WM_PROJECT_VERSION=1706
+  echo "WARNING from your MSP-CFDEM code!"
+  echo "WARNING: Coupling with your OpenFOAM(R) version is not officially supported!"
+  echo "Switch to OpenFOAM(R) 5.x."
+  sleep 1
+elif [[ $WM_PROJECT_VERSION = 2.4.* ]]; then
+  export MSP_CFDEM_WM_PROJECT_VERSION=24
+  echo "WARNING from your MSP-CFDEM code!"
+  echo "WARNING: Coupling with your OpenFOAM(R) version is not officially supported!"
+  echo "Switch to OpenFOAM(R) 5.x."
+  sleep 1
+elif [[ $WM_PROJECT_VERSION == "3.2" && $WM_FORK == "extend" ]]; then
+  export MSP_CFDEM_WM_PROJECT_VERSION=132
+  echo "WARNING from your MSP-CFDEM code!"
+  echo "WARNING: Coupling with your OpenFOAM(R) version is not officially supported!"
+  echo "Switch to OpenFOAM(R) 5.x."
+  sleep 1
+else
+  echo "ERROR from your CFDEM code!"
+  echo "ERROR: your OpenFOAM(R) version is not supported!"
+  echo "Switch to OpenFOAM(R) 5.x."
+  sleep 2
+fi
+
+unset echo_
+unset add_path_
+unset set_var_

@@ -1,21 +1,21 @@
 #ifndef __OF_VERSION_H__
 #define __OF_VERSION_H__
 
-#if (CFDEMWMPROJECTVERSION == 50)
+#if (MSP_CFDEM_WM_PROJECT_VERSION == 50)
 #define version50
-#elif (CFDEMWMPROJECTVERSION == 40)
+#elif (MSP_CFDEM_WM_PROJECT_VERSION == 40)
 #define version40
-#elif (CFDEMWMPROJECTVERSION == 24)
+#elif (MSP_CFDEM_WM_PROJECT_VERSION == 24)
 #define version24
-#elif (CFDEMWMPROJECTVERSION == 30)
+#elif (MSP_CFDEM_WM_PROJECT_VERSION == 30)
 #define version30
-#elif (CFDEMWMPROJECTVERSION == 132)
+#elif (MSP_CFDEM_WM_PROJECT_VERSION == 132)
 #define versionExt32
-#elif (CFDEMWMPROJECTVERSION == 1606)
+#elif (MSP_CFDEM_WM_PROJECT_VERSION == 1606)
 #define versionv1606plus
-#elif (CFDEMWMPROJECTVERSION == 1612)
+#elif (MSP_CFDEM_WM_PROJECT_VERSION == 1612)
 #define versionv1612plus
-#elif (CFDEMWMPROJECTVERSION == 1706)
+#elif (MSP_CFDEM_WM_PROJECT_VERSION == 1706)
 #define versionv1706
 #endif
 

@@ -1,29 +1,25 @@
 sinclude /home/dw/OpenFOAM/OpenFOAM-5.x/wmake/rules/General/mplibSYSTEMOPENMPI
-include /home/dw/CFDEM/MSP-CFDEMcoupling/etc/libs/libs_5.x
+include /home/dw/CFDEM/MSP-CFDEMcoupling-5.x/etc/libs/libs_5.x
 
-$(shell if [ ! -e "$(CFDEM_LIB_DIR)" ]; then mkdir -p "$(CFDEM_LIB_DIR)"; fi)
-$(shell ln -sf $(CFDEM_LIGGGHTS_LIB_PATH)/lib$(CFDEM_LIGGGHTS_LIB_NAME).so $(CFDEM_LIB_DIR)/)
+$(shell if [ ! -d "$(MSP_CFDEM_LIB_DIR)" ]; then mkdir -p "$(MSP_CFDEM_LIB_DIR)"; fi)
+$(shell ln -sf "$(LIGGGHTS_LIB_PATH)"/lib"$(LIGGGHTS_LIB_NAME)".so "$(MSP_CFDEM_LIB_DIR)")
 
 GIT_VERSION := $(shell git describe --dirty --always --tags)
+
+PFLAGS+= -DMSP_CFDEM_WM_PROJECT_VERSION="$(MSP_CFDEM_WM_PROJECT_VERSION)"
 PFLAGS += -DGITVERSION=\"$(GIT_VERSION)\"
 PFLAGS += -DDEBUGFLAG=\"$(WM_COMPILE_OPTION)\"
-PFLAGS += -DCFDEMWMPROJECTVERSION="$(CFDEM_WM_PROJECT_VERSION)"
-
 PFLAGS += -Wno-old-style-cast
 PFLAGS += -Wno-unknown-pragmas
 PFLAGS += -Wunused-variable
-
 PFLAGS += -fno-elide-constructors
-
-UDEF_CFDEM_SRC_DIR = $(CFDEM_SRC_DIR)/cfdem
-MAKE_DIR = $(UDEF_CFDEM_SRC_DIR)/Make
 
 EXE_INC = \
   $(PFLAGS) \
   $(PINC) \
+  $(MSP_CFDEM_ADD_INCOMPTURBMOD_PATHS) \
   -I$(LIB_SRC)/finiteVolume/lnInclude \
   -I$(LIB_SRC)/transportModels \
-  $(CFDEM_ADD_INCOMPTURBMOD_PATHS) \
   -I$(LIB_SRC)/meshTools/lnInclude \
   -I$(LIB_SRC)/dynamicFvMesh/lnInclude \
   -I$(LIB_SRC)/dynamicMesh/lnInclude \
@@ -31,17 +27,16 @@ EXE_INC = \
   -I$(LIB_SRC)/dynamicMesh/dynamicMesh/lnInclude \
   -I$(LIB_SRC)/lagrangian/basic/lnInclude \
   -I$(LIB_SRC)/OpenFOAM/containers/HashTables/labelHashSet \
-  -I$(CFDEM_LIGGGHTS_SRC_DIR) \
-  -I$(UDEF_CFDEM_SRC_DIR) \
-  -I$(MAKE_DIR)/cfdem
+  -I$(LIGGGHTS_SRC_DIR) \
+  -I$(MSP_CFDEM_SRC_DIR) \
 
 LIB_LIBS = \
   $(PLIBS) \
+  $(MSP_CFDEM_ADD_INCOMPTURBMOD_LIBS) \
+  -L$(MSP_CFDEM_LIB_DIR) \
+  -Wl,--whole-archive -l$(LIGGGHTS_LIB_NAME) -Wl,--no-whole-archive \
   -lfiniteVolume \
   -lmeshTools \
   -llagrangian \
   -ldynamicFvMesh \
-  -ldynamicMesh \
-  $(CFDEM_ADD_INCOMPTURBMOD_LIBS) \
-  -L$(CFDEM_LIB_DIR) \
-  -Wl,--whole-archive -l$(CFDEM_LIGGGHTS_LIB_NAME) -Wl,--no-whole-archive
+  -ldynamicMesh

@@ -29,4 +29,4 @@ $(sub_model)/void_fraction_model/void_fraction_model.C
 $(sub_model)/void_fraction_model/no_void_fraction.C
 $(sub_model)/void_fraction_model/IB_void_fraction.C
 
-LIB = ./xxxxxx
+LIB = $(MSP_CFDEM_LIB_DIR)/libMSP-CFDEM-5.x_1.0
