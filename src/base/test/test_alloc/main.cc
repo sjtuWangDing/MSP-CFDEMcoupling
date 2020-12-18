@@ -1,5 +1,5 @@
 #include <iostream>
-#include "../memory/x_alloc.h"
+#include "base/memory/x_alloc.h"
 using namespace std;
 
 union Obj {
@@ -46,8 +46,8 @@ void test03() {
 }
 
 int main(int argc, const char* argv[]) {
-  test01();
-  test02();
-  test03();
+  // test01();
+  // test02();
+  // test03();
   return 0;
 }

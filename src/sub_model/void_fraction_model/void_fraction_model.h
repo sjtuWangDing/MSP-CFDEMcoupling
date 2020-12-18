@@ -63,7 +63,8 @@ class voidFractionModel {
   virtual ~voidFractionModel();
 
   //! \brief 计算颗粒尺寸与其周围网格平均尺寸的比值, 并将颗粒索引按照颗粒尺寸归类
-  void getDimensionRatios(const base::CITensor1& findCellIDs, const base::CDTensor1& dimensionRatios) const;
+  void getDimensionRatios(const base::CITensor1& findCellIDs, const base::CDTensor1& dimensionRatios,
+                          const base::CITensor1& particleOverMeshNumber, const double scale = 1.0) const;
 
   //! \brief 重置空隙率
   inline void resetVoidFraction() {

@@ -57,6 +57,9 @@ class cfdemCloudIB : public cfdemCloud {
   //! \brief 重新分配内存
   void reallocate();
 
+  //! \brief 重新分配内存
+  void reallocateTensorVector();
+
   //! \brief 从 DEM 获取数据
   void getDEMData();
 
@@ -72,7 +75,7 @@ class cfdemCloudIB : public cfdemCloud {
   void updateMesh(volScalarField& interface);
 
   //! @brief 确定颗粒周围 refined 网格的区域
-  void setInterface(volScalarField& interface) const;
+  void setInterface(volScalarField& interface, const double scale = 1.0) const;
 
   //! @brief 确定颗粒周围 refined 网格的区域(每个方向的尺寸都是颗粒尺寸的两倍)
   void setInterface(volScalarField& interface, volScalarField& refineMeshKeepStep) const;
@@ -87,12 +90,15 @@ class cfdemCloudIB : public cfdemCloud {
   inline void setMeshHasUpdated(bool meshHasUpdated) { meshHasUpdated_ = meshHasUpdated; }
 
  protected:
+  static const double particleMeshScale_;
   /*!
    * \brief 判断 mesh 是否被更新过
    * \note 在求解器中使用 dynamic mesh，如果 mesh 更新，则 mesh.update() 返回 true，否则返回 false
    */
   bool meshHasUpdated_;
 };
+
+const double cfdemCloudIB::particleMeshScale_ = 1.5;
 
 }  // namespace Foam
 

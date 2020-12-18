@@ -84,6 +84,8 @@ class ParticleCloud {
 
   inline std::vector<base::CDTensor1>& voidFractions() { return voidFractions_; }
 
+  inline std::vector<base::CDTensor1>& volumeFractions() { return volumeFractions_; }
+
   inline double**& radiiPtr() { return radiiPtr_; }
 
   inline double**& cdsPtr() { return cdsPtr_; }
@@ -153,6 +155,7 @@ class ParticleCloud {
   base::CDTensor2 particleVolumes_;
   std::vector<base::CITensor1> cellIDs_;
   std::vector<base::CDTensor1> voidFractions_;
+  std::vector<base::CDTensor1> volumeFractions_;
   double** radiiPtr_;
   double** cdsPtr_;
   double** positionsPtr_;

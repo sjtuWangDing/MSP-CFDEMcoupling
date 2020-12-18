@@ -63,6 +63,18 @@ void cfdemCloudIB::reallocate() {
   parCloud_.dimensionRatios() = std::move(base::CDTensor1(base::makeShape1(number), 0.0));
 }
 
+void cfdemCloudIB::reallocateTensorVector() {
+  int number = numberOfParticles();
+  // allocate memory of tensor inside vector
+  parCloud_.cellIDs().clear();
+  parCloud_.volumeFractions().clear();
+  for (int index = 0; index < number; ++index) {
+    int meshNumber = particleOverMeshNumber()[index];
+    parCloud_.cellIDs().emplace_back(base::makeShape1(meshNumber), -1);
+    parCloud_.volumeFractions().emplace_back(base::makeShape1(meshNumber), 0.0);
+  }
+}
+
 void cfdemCloudIB::getDEMData() {
   dataExchangeM().getData("radius", "scalar-atom", parCloud_.radiiPtr());
   dataExchangeM().getData("x", "vector-atom", parCloud_.positionsPtr());
@@ -78,8 +90,8 @@ void cfdemCloudIB::getDEMData() {
 void cfdemCloudIB::giveDEMData() const { dataExchangeM().giveData("dragforce", "vector-atom", DEMForcesPtr()); }
 
 /*!
- * \brief 更新网格，如果 mesh 是 Foam::dynamicRefineFvMesh 类型，则更新网格，
- *   如果是 Foam::staticFvMesh 或者其他类型，则不更新
+ * \brief 更新网格，如果 mesh 是 Foam::dynamicRefineFvMesh 类型，则更新网格，如果是 Foam::staticFvMesh
+ * 或者其他类型，则不更新
  * \note 如果网格更新，则一定要修正 searchEngine
  */
 void cfdemCloudIB::updateMesh(volScalarField& interface) {
@@ -90,7 +102,7 @@ void cfdemCloudIB::updateMesh(volScalarField& interface) {
     Foam::dynamicRefineFvMesh& dyMesh = dynamic_cast<Foam::dynamicRefineFvMesh&>(mesh);
     Info << "use " << dyMesh.type() << endl;
     // 设置 interface
-    setInterface(interface);
+    setInterface(interface, particleMeshScale_);
     interface.correctBoundaryConditions();
     // 如果 dyMesh.update() 返回 true，则表明 mesh 被更新了
     meshHasUpdated_ = dyMesh.update();
@@ -130,7 +142,10 @@ void cfdemCloudIB::evolve(volScalarField& volumeFraction, volScalarField& interf
     // 获取到在当前 processor 上颗粒覆盖的某一个网格编号，如果获取到的网格编号为 -1，则表示颗粒不覆盖当前 processor
     locateM().findCell(parCloud_.findCellIDs());
     // 计算颗粒的 dimensionRatios
-    voidFractionM().getDimensionRatios(parCloud_.findCellIDs(), parCloud_.dimensionRatios());
+    voidFractionM().getDimensionRatios(parCloud_.findCellIDs(), parCloud_.dimensionRatios(),
+                                       parCloud_.particleOverMeshNumber(), particleMeshScale_);
+    // 根据particleOverMeshNumber分配内存
+    reallocateTensorVector();
     // reset forces
     std::fill_n(parCloud_.DEMForces().ptr(), parCloud_.DEMForces().mSize(), 0.0);
     // set particles forces
@@ -149,13 +164,13 @@ void cfdemCloudIB::evolve(volScalarField& volumeFraction, volScalarField& interf
 }
 
 //! @brief 确定颗粒周围 refined 网格的区域
-void cfdemCloudIB::setInterface(volScalarField& interface) const {
+void cfdemCloudIB::setInterface(volScalarField& interface, const double scale /* = 1.0 */) const {
   interface = dimensionedScalar("zero", interface.dimensions(), 0.0);
   for (int index = 0; index < numberOfParticles(); ++index) {
     Foam::vector particlePos = getPosition(index);
     double radius = getRadius(index);
     forAll(mesh_.C(), cellI) {
-      double value = voidFractionM().pointInParticle(mesh_.C()[cellI], particlePos, radius, 1.8);
+      double value = voidFractionM().pointInParticle(mesh_.C()[cellI], particlePos, radius, scale);
       if (value <= 0.0) {
         interface[cellI] = value + 1.0;
       }

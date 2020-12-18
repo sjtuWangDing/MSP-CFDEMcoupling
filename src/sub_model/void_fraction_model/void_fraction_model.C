@@ -111,11 +111,18 @@ void voidFractionModel::buildLabelHashSetForCoveredCell(labelHashSet& hashSett, 
 }
 
 //! \brief 计算颗粒尺寸与其周围网格平均尺寸的比值, 并将颗粒索引按照颗粒尺寸归类
-void voidFractionModel::getDimensionRatios(const base::CITensor1& findCellIDs,
-                                           const base::CDTensor1& dimensionRatios) const {
+void voidFractionModel::getDimensionRatios(const base::CITensor1& findCellIDs, const base::CDTensor1& dimensionRatios,
+                                           const base::CITensor1& particleOverMeshNumber,
+                                           const double scale /* = 1.0 */) const {
   std::fill_n(dimensionRatios.ptr(), dimensionRatios.mSize(), 0.0);
   for (int index = 0; index < cloud_.numberOfParticles(); ++index) {
+    // init
+    particleOverMeshNumber[index] = 0;
+    dimensionRatios[index] = 0.0;
     int findCellID = findCellIDs[index];
+    if (findCellID < 0) {
+      continue;
+    }
     // 获取颗粒半径
     double radius = cloud_.getRadius(index);
     // 获取颗粒中心位置
@@ -123,11 +130,11 @@ void voidFractionModel::getDimensionRatios(const base::CITensor1& findCellIDs,
     // 定义哈希集合
     labelHashSet initHashSett;
     // 构建初始化哈希集合
-    buildLabelHashSetForCoveredCell(initHashSett, findCellID, particlePos, radius, 1.0);
+    buildLabelHashSetForCoveredCell(initHashSett, findCellID, particlePos, radius, scale);
     // 计算颗粒周围网格的平均尺寸
-    Pout << "particleCenterCellID: " << findCellID << ", " << initHashSett.size() << endl;
+    // Pout << "particleCenterCellID: " << findCellID << ", " << initHashSett.size() << endl;
+    particleOverMeshNumber[index] = initHashSett.size();
   }  // end loop of particles
-  base::MPI_Barrier(0.5);
 }
 
 }  // namespace Foam
