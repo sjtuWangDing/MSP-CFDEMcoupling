@@ -53,15 +53,15 @@ Restrictions
 
 namespace Foam {
 
-cfdemDefineTypeName(ArchimedesIB)
+cfdemDefineTypeName(ArchimedesIB);
 
-    cfdemCreateNewFunctionAdder(forceModel, ArchimedesIB)
+cfdemCreateNewFunctionAdder(forceModel, ArchimedesIB);
 
-    /*!
-     * \brief Constructor
-     * \note The initialization list should be in the same order as the variable declaration
-     */
-    ArchimedesIB::ArchimedesIB(cfdemCloud& cloud)
+/*!
+ * \brief Constructor
+ * \note The initialization list should be in the same order as the variable declaration
+ */
+ArchimedesIB::ArchimedesIB(cfdemCloud& cloud)
     : forceModel(cloud),
       subPropsDict_(cloud.couplingPropertiesDict().subDict(typeName_ + "Props")),
       volumeFractionFieldName_(

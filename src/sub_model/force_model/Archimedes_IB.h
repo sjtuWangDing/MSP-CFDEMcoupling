@@ -59,12 +59,12 @@ namespace Foam {
 class ArchimedesIB : public forceModel {
  public:
   //! \brief Runtime type information
-  cfdemTypeName("ArchimedesIB")
+  cfdemTypeName("ArchimedesIB");
 
-      cfdemDefineNewFunctionAdder(forceModel, ArchimedesIB)
+  cfdemDefineNewFunctionAdder(forceModel, ArchimedesIB);
 
-      //! \brief Constructor
-      ArchimedesIB(cfdemCloud& cloud);
+  //! \brief Constructor
+  ArchimedesIB(cfdemCloud& cloud);
 
   //! \brief Destructor
   ~ArchimedesIB();

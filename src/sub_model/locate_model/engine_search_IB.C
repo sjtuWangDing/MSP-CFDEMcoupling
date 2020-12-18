@@ -30,12 +30,12 @@ License
 
 namespace Foam {
 
-cfdemDefineTypeName(engineSearchIB)
+cfdemDefineTypeName(engineSearchIB);
 
-    cfdemCreateNewFunctionAdder(locateModel, engineSearchIB)
+cfdemCreateNewFunctionAdder(locateModel, engineSearchIB);
 
-    //! \brief Constructor
-    engineSearchIB::engineSearchIB(cfdemCloud& cloud, const std::string& derivedTypeName)
+//! \brief Constructor
+engineSearchIB::engineSearchIB(cfdemCloud& cloud, const std::string& derivedTypeName)
     : engineSearch(cloud, derivedTypeName), coef_(2.0) {
   // read properties from dictionary
   verbose_ = subPropsDict_.lookupOrDefault<bool>("verbose", false);

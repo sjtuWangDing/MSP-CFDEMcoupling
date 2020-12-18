@@ -37,21 +37,20 @@ Class
 
 namespace Foam {
 
-cfdemDefineTypeName(liggghtsCommandModel)
+cfdemDefineTypeName(liggghtsCommandModel);
 
-    cfdemDefineNewFunctionMap(liggghtsCommandModel)
+cfdemDefineNewFunctionMap(liggghtsCommandModel);
 
-        cfdemDefineConstructNewFunctionMap(liggghtsCommandModel)
+cfdemDefineConstructNewFunctionMap(liggghtsCommandModel);
 
-            cfdemDefineDestroyNewFunctionMap(liggghtsCommandModel)
+cfdemDefineDestroyNewFunctionMap(liggghtsCommandModel);
 
-                cfdmeDefineBaseTypeNewWithTypeName(std::unique_ptr, liggghtsCommandModel,
-                                                   (cfdemCloud & cloud, const dictionary& dict,
-                                                    const std::string& modelName),
-                                                   modelName, (cloud))
+cfdmeDefineBaseTypeNewWithTypeName(std::unique_ptr, liggghtsCommandModel,
+                                   (cfdemCloud & cloud, const dictionary& dict, const std::string& modelName),
+                                   modelName, (cloud));
 
-    //! \brief Constructor
-    liggghtsCommandModel::liggghtsCommandModel(cfdemCloud& cloud)
+//! \brief Constructor
+liggghtsCommandModel::liggghtsCommandModel(cfdemCloud& cloud)
     : cloud_(cloud),
       command_("notDefined"),
       commandLines_(1),

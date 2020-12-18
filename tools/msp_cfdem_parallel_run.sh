@@ -39,14 +39,14 @@ mspCfdemParallelRun() {
   # 如果既想把输出保存到文件中，又想在屏幕上看到输出内容，就可以使用 tee 命令
   # tee -a file: 输出到标准输出的同时，追加到文件file中。如果文件不存在，则创建；如果已经存在，就在末尾追加内容，而不是覆盖
   # 如果不加 &1 直接 echo 2>1  就变成重定向输出到 1 这个文件里去了，如果没有 1，系统就自动创建一个文件 1
+  echo -n "Log path: " 2>&1 | tee -a /$logPath/$logFileName
+  echo "$logPath/$logFileName" 2>&1 | tee -a /$logPath/$logFileName
+  echo
   echo "\
 /*---------------------------------------------------------------------------*\\
 |                            Run Log Content                                 |
 \*---------------------------------------------------------------------------*/
 " 2>&1 | tee -a /$logPath/$logFileName
-  echo -n "Log path: " 2>&1 | tee -a /$logPath/$logFileName
-  echo "$logPath/$logFileName" 2>&1 | tee -a /$logPath/$logFileName
-  echo
 
   if [ "none" = $machineFileName ]; then
     mpirun -np $numberOfProcs $solver -parallel 2>&1 | tee -a $logPath/$logFileName

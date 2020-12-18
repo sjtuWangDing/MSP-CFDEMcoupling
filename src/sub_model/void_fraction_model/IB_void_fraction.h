@@ -68,12 +68,12 @@ namespace Foam {
 
 class IBVoidFraction : public voidFractionModel {
  public:
-  cfdemTypeName("IB")
+  cfdemTypeName("IB");
 
-      cfdemDefineNewFunctionAdder(voidFractionModel, IBVoidFraction)
+  cfdemDefineNewFunctionAdder(voidFractionModel, IBVoidFraction);
 
-      //! \brief Constructor
-      IBVoidFraction(cfdemCloud& cloud);
+  //! \brief Constructor
+  IBVoidFraction(cfdemCloud& cloud);
 
   //! \brief Destructor
   virtual ~IBVoidFraction();

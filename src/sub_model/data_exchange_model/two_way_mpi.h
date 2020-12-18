@@ -51,12 +51,12 @@ namespace Foam {
 class twoWayMPI : public dataExchangeModel {
  public:
   //! \brief Runtime type information
-  cfdemTypeName("twoWayMPI")
+  cfdemTypeName("twoWayMPI");
 
-      cfdemDefineNewFunctionAdder(dataExchangeModel, twoWayMPI)
+  cfdemDefineNewFunctionAdder(dataExchangeModel, twoWayMPI);
 
-      //! \brief Constructor
-      twoWayMPI(cfdemCloud& cloud);
+  //! \brief Constructor
+  twoWayMPI(cfdemCloud& cloud);
 
   //! \brief Destructor
   ~twoWayMPI();

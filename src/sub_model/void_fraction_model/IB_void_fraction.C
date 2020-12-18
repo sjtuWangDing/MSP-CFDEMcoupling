@@ -29,12 +29,12 @@ License
 
 namespace Foam {
 
-cfdemDefineTypeName(IBVoidFraction)
+cfdemDefineTypeName(IBVoidFraction);
 
-    cfdemCreateNewFunctionAdder(voidFractionModel, IBVoidFraction)
+cfdemCreateNewFunctionAdder(voidFractionModel, IBVoidFraction);
 
-    //! \brief Constructor
-    IBVoidFraction::IBVoidFraction(cfdemCloud& cloud)
+//! \brief Constructor
+IBVoidFraction::IBVoidFraction(cfdemCloud& cloud)
     : voidFractionModel(cloud),
       subPropsDict_(cloud.couplingPropertiesDict().subDict(typeName_ + "Props")),
       alphaMin_(subPropsDict_.lookupOrDefault<double>("alphaMin", 0.0)),

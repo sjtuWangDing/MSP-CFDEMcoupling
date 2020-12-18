@@ -32,8 +32,8 @@ Class
 \*---------------------------------------------------------------------------*/
 
 #include <mutex>
-#include "dynamicRefineFvMesh.H"
 #include "cloud/cfdem_cloud_IB.h"
+#include "dynamicRefineFvMesh.H"
 #include "sub_model/data_exchange_model/data_exchange_model.h"
 #include "sub_model/force_model/force_model.h"
 
@@ -99,7 +99,7 @@ void cfdemCloudIB::updateMesh(volScalarField& interface) {
       locateM().correctSearchEngine();
     }
   } catch (const std::bad_cast& ex2) {
-    Info << "Not use Foam::dynamicRefineFvMesh" << endl;
+    Info << "Not use dynamicRefineFvMesh, no need to update mesh" << endl;
     return;
   }
 }

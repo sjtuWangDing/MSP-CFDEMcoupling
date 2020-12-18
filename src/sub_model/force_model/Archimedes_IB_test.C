@@ -29,15 +29,15 @@ License
 
 namespace Foam {
 
-cfdemDefineTypeName(ArchimedesIBTest)
+cfdemDefineTypeName(ArchimedesIBTest);
 
-    cfdemCreateNewFunctionAdder(forceModel, ArchimedesIBTest)
+cfdemCreateNewFunctionAdder(forceModel, ArchimedesIBTest);
 
-    /*!
-     * \brief Constructor
-     * \note The initialization list should be in the same order as the variable declaration
-     */
-    ArchimedesIBTest::ArchimedesIBTest(cfdemCloud& cloud)
+/*!
+ * \brief Constructor
+ * \note The initialization list should be in the same order as the variable declaration
+ */
+ArchimedesIBTest::ArchimedesIBTest(cfdemCloud& cloud)
     : forceModel(cloud),
       subPropsDict_(cloud.couplingPropertiesDict().subDict(typeName_ + "Props")),
       gravityFieldName_(subPropsDict_.lookupOrDefault<Foam::word>("gravityFieldName", "g").c_str()),

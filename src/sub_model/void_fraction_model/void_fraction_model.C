@@ -36,19 +36,18 @@ Class
 
 namespace Foam {
 
-cfdemDefineTypeName(voidFractionModel)
+cfdemDefineTypeName(voidFractionModel);
 
-    cfdemDefineNewFunctionMap(voidFractionModel)
+cfdemDefineNewFunctionMap(voidFractionModel);
 
-        cfdemDefineConstructNewFunctionMap(voidFractionModel)
+cfdemDefineConstructNewFunctionMap(voidFractionModel);
 
-            cfdemDefineDestroyNewFunctionMap(voidFractionModel)
+cfdemDefineDestroyNewFunctionMap(voidFractionModel);
 
-                cfdmeDefineBaseTypeNew(autoPtr, voidFractionModel, (cfdemCloud & cloud, const dictionary& dict), dict,
-                                       (cloud))
+cfdmeDefineBaseTypeNew(autoPtr, voidFractionModel, (cfdemCloud & cloud, const dictionary& dict), dict, (cloud));
 
-    //! \brief Constructor
-    voidFractionModel::voidFractionModel(cfdemCloud& cloud)
+//! \brief Constructor
+voidFractionModel::voidFractionModel(cfdemCloud& cloud)
     : cloud_(cloud),
       voidFractionPrev_(IOobject("voidFractionPrev", cloud.mesh().time().timeName(), cloud.mesh(),
                                  IOobject::READ_IF_PRESENT,  // or MUST_READ,

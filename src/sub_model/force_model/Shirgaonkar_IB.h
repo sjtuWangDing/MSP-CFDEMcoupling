@@ -61,12 +61,12 @@ namespace Foam {
 class ShirgaonkarIB : public forceModel {
  public:
   //! \brief Runtime type information
-  cfdemTypeName("ShirgaonkarIB")
+  cfdemTypeName("ShirgaonkarIB");
 
-      cfdemDefineNewFunctionAdder(forceModel, ShirgaonkarIB)
+  cfdemDefineNewFunctionAdder(forceModel, ShirgaonkarIB);
 
-      //! \brief Constructor
-      ShirgaonkarIB(cfdemCloud& cloud);
+  //! \brief Constructor
+  ShirgaonkarIB(cfdemCloud& cloud);
 
   //! \brief Destructor
   ~ShirgaonkarIB();

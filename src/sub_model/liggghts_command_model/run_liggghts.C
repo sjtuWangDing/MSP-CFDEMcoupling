@@ -36,13 +36,12 @@ Class
 
 namespace Foam {
 
-cfdemDefineTypeName(runLiggghts)
+cfdemDefineTypeName(runLiggghts);
 
-    cfdemCreateNewFunctionAdder(liggghtsCommandModel, runLiggghts)
+cfdemCreateNewFunctionAdder(liggghtsCommandModel, runLiggghts);
 
-    //! \brief Constructor
-    runLiggghts::runLiggghts(cfdemCloud& cloud)
-    : liggghtsCommandModel(cloud), subPropsDict_(cloud.liggghtsCommandsDict()) {
+//! \brief Constructor
+runLiggghts::runLiggghts(cfdemCloud& cloud) : liggghtsCommandModel(cloud), subPropsDict_(cloud.liggghtsCommandsDict()) {
   std::string dictName = typeName_ + "Props";
   if (cloud.liggghtsCommandsDict().found(dictName)) {
     subPropsDict_ = cloud.liggghtsCommandsDict().subDict(dictName);

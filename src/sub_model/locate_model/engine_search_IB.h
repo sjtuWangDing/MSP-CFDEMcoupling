@@ -66,12 +66,12 @@ namespace Foam {
 class engineSearchIB : public engineSearch {
  public:
   //! \brief Runtime type information
-  cfdemTypeName("engineIB")
+  cfdemTypeName("engineIB");
 
-      cfdemDefineNewFunctionAdder(locateModel, engineSearchIB)
+  cfdemDefineNewFunctionAdder(locateModel, engineSearchIB);
 
-      //! \brief Constructor
-      engineSearchIB(cfdemCloud& cloud, const std::string& typeName = cTypeName());
+  //! \brief Constructor
+  engineSearchIB(cfdemCloud& cloud, const std::string& typeName = cTypeName());
 
   //! \brief Destructor
   ~engineSearchIB();

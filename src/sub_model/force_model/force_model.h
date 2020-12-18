@@ -45,13 +45,13 @@ namespace Foam {
 class forceModel {
  public:
   //! \brief Runtime type information
-  cfdemTypeName("forceModel")
+  cfdemTypeName("forceModel");
 
-      //! \brief Declare runtime constructor selection
-      cfdemDeclareRunTimeSelection(std::unique_ptr, forceModel, (cfdemCloud & cloud), (cloud))
+  //! \brief Declare runtime constructor selection
+  cfdemDeclareRunTimeSelection(std::unique_ptr, forceModel, (cfdemCloud & cloud), (cloud));
 
-      //! \brief Selector
-      static std::unique_ptr<forceModel> New(cfdemCloud& cloud, const dictionary& dict, const std::string& modelName);
+  //! \brief Selector
+  static std::unique_ptr<forceModel> New(cfdemCloud& cloud, const dictionary& dict, const std::string& modelName);
 
   //! \brief Constructor
   forceModel(cfdemCloud& cloud);

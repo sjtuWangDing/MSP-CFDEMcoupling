@@ -48,13 +48,13 @@ namespace Foam {
 class voidFractionModel {
  public:
   //! \brief Runtime type information
-  cfdemTypeName("voidFractionModel")
+  cfdemTypeName("voidFractionModel");
 
-      //! \brief Declare runtime constructor selection
-      cfdemDeclareRunTimeSelection(autoPtr, voidFractionModel, (cfdemCloud & cloud), (cloud))
+  //! \brief Declare runtime constructor selection
+  cfdemDeclareRunTimeSelection(autoPtr, voidFractionModel, (cfdemCloud & cloud), (cloud));
 
-      //! \brief Selector
-      static autoPtr<voidFractionModel> New(cfdemCloud& cloud, const dictionary& dict);
+  //! \brief Selector
+  static autoPtr<voidFractionModel> New(cfdemCloud& cloud, const dictionary& dict);
 
   //! \brief Constructor
   voidFractionModel(cfdemCloud& cloud);

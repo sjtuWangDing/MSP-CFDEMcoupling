@@ -36,19 +36,18 @@ Class
 
 namespace Foam {
 
-cfdemDefineTypeName(dataExchangeModel)
+cfdemDefineTypeName(dataExchangeModel);
 
-    cfdemDefineNewFunctionMap(dataExchangeModel)
+cfdemDefineNewFunctionMap(dataExchangeModel);
 
-        cfdemDefineConstructNewFunctionMap(dataExchangeModel)
+cfdemDefineConstructNewFunctionMap(dataExchangeModel);
 
-            cfdemDefineDestroyNewFunctionMap(dataExchangeModel)
+cfdemDefineDestroyNewFunctionMap(dataExchangeModel);
 
-                cfdmeDefineBaseTypeNew(autoPtr, dataExchangeModel, (cfdemCloud & cloud, const dictionary& dict), dict,
-                                       (cloud))
+cfdmeDefineBaseTypeNew(autoPtr, dataExchangeModel, (cfdemCloud & cloud, const dictionary& dict), dict, (cloud));
 
-    //! \brief Constructor
-    dataExchangeModel::dataExchangeModel(cfdemCloud& cloud)
+//! \brief Constructor
+dataExchangeModel::dataExchangeModel(cfdemCloud& cloud)
     : cloud_(cloud),
       // 在初始化 dataExchangeModel 的时候，记录下当前的流体时间步为 time index
       timeIndexOffset_(cloud.mesh().time().timeIndex()),

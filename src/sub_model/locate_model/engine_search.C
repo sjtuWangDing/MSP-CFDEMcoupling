@@ -43,12 +43,12 @@ Class
 
 namespace Foam {
 
-cfdemDefineTypeName(engineSearch)
+cfdemDefineTypeName(engineSearch);
 
-    cfdemCreateNewFunctionAdder(locateModel, engineSearch)
+cfdemCreateNewFunctionAdder(locateModel, engineSearch);
 
-    //! \brief Constructor
-    engineSearch::engineSearch(cfdemCloud& cloud, const std::string& derivedTypeName)
+//! \brief Constructor
+engineSearch::engineSearch(cfdemCloud& cloud, const std::string& derivedTypeName)
     : locateModel(cloud),
       subPropsDict_(cloud.couplingPropertiesDict().subDict(derivedTypeName + "Props")),
       treeSearch_(subPropsDict_.lookupOrDefault<bool>("treeSearch", true)),

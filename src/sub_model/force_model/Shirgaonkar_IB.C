@@ -36,15 +36,15 @@ Class
 
 namespace Foam {
 
-cfdemDefineTypeName(ShirgaonkarIB)
+cfdemDefineTypeName(ShirgaonkarIB);
 
-    cfdemCreateNewFunctionAdder(forceModel, ShirgaonkarIB)
+cfdemCreateNewFunctionAdder(forceModel, ShirgaonkarIB);
 
-    /*!
-     * \brief Constructor
-     * \note The initialization list should be in the same order as the variable declaration
-     */
-    ShirgaonkarIB::ShirgaonkarIB(cfdemCloud& cloud)
+/*!
+ * \brief Constructor
+ * \note The initialization list should be in the same order as the variable declaration
+ */
+ShirgaonkarIB::ShirgaonkarIB(cfdemCloud& cloud)
     : forceModel(cloud),
       subPropsDict_(cloud.couplingPropertiesDict().subDict(typeName_ + "Props")),
       velFieldName_(subPropsDict_.lookupOrDefault<Foam::word>("velFieldName", "U").c_str()),

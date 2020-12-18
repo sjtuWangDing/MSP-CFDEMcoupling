@@ -37,11 +37,11 @@ Class
 
 namespace Foam {
 
-cfdemDefineTypeName(twoWayMPI)
+cfdemDefineTypeName(twoWayMPI);
 
-    cfdemCreateNewFunctionAdder(dataExchangeModel, twoWayMPI)
+cfdemCreateNewFunctionAdder(dataExchangeModel, twoWayMPI);
 
-        twoWayMPI::twoWayMPI(cfdemCloud& cloud)
+twoWayMPI::twoWayMPI(cfdemCloud& cloud)
     : dataExchangeModel(cloud),
       lmp_(nullptr),
       subPropsDict_(cloud.couplingPropertiesDict().subDict(typeName_ + "Props")) {

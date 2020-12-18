@@ -42,12 +42,12 @@ namespace Foam {
 class runLiggghts : public liggghtsCommandModel {
  public:
   //! \brief Runtime type information
-  cfdemTypeName("runLiggghts")
+  cfdemTypeName("runLiggghts");
 
-      cfdemDefineNewFunctionAdder(liggghtsCommandModel, runLiggghts)
+  cfdemDefineNewFunctionAdder(liggghtsCommandModel, runLiggghts);
 
-      //! \brief Constructor
-      runLiggghts(cfdemCloud& cloud);
+  //! \brief Constructor
+  runLiggghts(cfdemCloud& cloud);
 
   //! \brief Destructor
   ~runLiggghts();

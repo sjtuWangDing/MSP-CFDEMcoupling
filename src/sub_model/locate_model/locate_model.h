@@ -48,13 +48,13 @@ namespace Foam {
 class locateModel {
  public:
   //! \brief Runtime type information
-  cfdemTypeName("locateModel")
+  cfdemTypeName("locateModel");
 
-      //! \brief Declare runtime constructor selection
-      cfdemDeclareRunTimeSelection(autoPtr, locateModel, (cfdemCloud & cloud), (cloud))
+  //! \brief Declare runtime constructor selection
+  cfdemDeclareRunTimeSelection(autoPtr, locateModel, (cfdemCloud & cloud), (cloud));
 
-      //! \brief Selector
-      static autoPtr<locateModel> New(cfdemCloud& cloud, const dictionary& dict);
+  //! \brief Selector
+  static autoPtr<locateModel> New(cfdemCloud& cloud, const dictionary& dict);
 
   //! \brief Constructor
   locateModel(cfdemCloud& cloud);

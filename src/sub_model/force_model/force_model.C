@@ -36,21 +36,20 @@ Class
 
 namespace Foam {
 
-cfdemDefineTypeName(forceModel)
+cfdemDefineTypeName(forceModel);
 
-    cfdemDefineNewFunctionMap(forceModel)
+cfdemDefineNewFunctionMap(forceModel);
 
-        cfdemDefineConstructNewFunctionMap(forceModel)
+cfdemDefineConstructNewFunctionMap(forceModel);
 
-            cfdemDefineDestroyNewFunctionMap(forceModel)
+cfdemDefineDestroyNewFunctionMap(forceModel);
 
-                cfdmeDefineBaseTypeNewWithTypeName(std::unique_ptr, forceModel,
-                                                   (cfdemCloud & cloud, const dictionary& dict,
-                                                    const std::string& modelName),
-                                                   modelName, (cloud))
+cfdmeDefineBaseTypeNewWithTypeName(std::unique_ptr, forceModel,
+                                   (cfdemCloud & cloud, const dictionary& dict, const std::string& modelName),
+                                   modelName, (cloud));
 
-    //! \brief Constructor
-    forceModel::forceModel(cfdemCloud& cloud)
+//! \brief Constructor
+forceModel::forceModel(cfdemCloud& cloud)
     : cloud_(cloud),
       forceSubModel_(nullptr),
       useProbe_(false),
