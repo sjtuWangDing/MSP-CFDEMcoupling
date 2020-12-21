@@ -94,10 +94,10 @@ void voidFractionModel::buildLabelHashSetForCoveredCell(labelHashSet& hashSett, 
   }
   // 将 cellID 插入到哈希集合中
   hashSett.insert(cellID);
-  // 获取网格中心坐标
-  Foam::vector neighbourPos = Foam::vector::zero;
   // 获取 cellID 网格的所有 neighbour cell 的链表
   const labelList& nc = cloud_.mesh().cellCells()[cellID];
+  // 网格中心坐标
+  Foam::vector neighbourPos = Foam::vector::zero;
   // 遍历链表
   for (int i = 0; i < nc.size(); ++i) {
     int neighbour = nc[i];
@@ -112,13 +112,9 @@ void voidFractionModel::buildLabelHashSetForCoveredCell(labelHashSet& hashSett, 
 
 //! \brief 计算颗粒尺寸与其周围网格平均尺寸的比值, 并将颗粒索引按照颗粒尺寸归类
 void voidFractionModel::getDimensionRatios(const base::CITensor1& findCellIDs, const base::CDTensor1& dimensionRatios,
-                                           const base::CITensor1& particleOverMeshNumber,
                                            const double scale /* = 1.0 */) const {
-  std::fill_n(dimensionRatios.ptr(), dimensionRatios.mSize(), 0.0);
+  base::fillTensor(cloud_.dimensionRatios(), -1.0);
   for (int index = 0; index < cloud_.numberOfParticles(); ++index) {
-    // init
-    particleOverMeshNumber[index] = 0;
-    dimensionRatios[index] = 0.0;
     int findCellID = findCellIDs[index];
     if (findCellID < 0) {
       continue;
@@ -132,8 +128,7 @@ void voidFractionModel::getDimensionRatios(const base::CITensor1& findCellIDs, c
     // 构建初始化哈希集合
     buildLabelHashSetForCoveredCell(initHashSett, findCellID, particlePos, radius, scale);
     // 计算颗粒周围网格的平均尺寸
-    // Pout << "particleCenterCellID: " << findCellID << ", " << initHashSett.size() << endl;
-    particleOverMeshNumber[index] = initHashSett.size();
+    Pout << __func__ << ": " << findCellID << ", " << initHashSett.size() << endl;
   }  // end loop of particles
 }
 

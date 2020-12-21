@@ -50,23 +50,54 @@ Description
 #endif
 
 int main(int argc, char* argv[]) {
+
   #include "setRootCase.H"
+
   #include "createTime.H"
+
   #include "createDynamicFvMesh.H"
-#if defined(version30)
-  pisoControl piso(mesh);
-  #include "createTimeControls.H"
-#endif
-  #include "./create_fields.h"
+
+  #if defined(version30)
+    pisoControl piso(mesh);
+    #include "createTimeControls.H"
+  #endif
+
+  #include "create_fields.h"
+
+  #include "initContinuityErrs.H"
+
+  #if defined(version22)
+    #include "createFvOptions.H"
+  #endif
 
   // create cfdemCloud
   Foam::cfdemCloudIB particleCloud(mesh);
+
   Info << "\nStarting time loop\n" << endl;
+
   while(runTime.loop()) {
-    Info << "Starting current loop..." << endl;
+
     Info << "Time = " << runTime.timeName() << endl << endl;
+
+    // set interface
+    interface = mag(mesh.lookupObject<volScalarField>("volumeFractionNext"));
+    particleCloud.setMeshHasUpdated(mesh.update());
+
+    #if defined(version30)
+      #include "readTimeControls.H"
+      #include "CourantNo.H"
+      #include "setDeltaT.H"
+    #else
+      #include "readPISOControls.H"
+      #include "CourantNo.H"
+    #endif
+
+    // particle evolve
     particleCloud.evolve(volumeFraction, interface);
+
   } // end of runtime loop
+
   Info << "cfdemCloudIB - done\n" << endl;
+
   return 0;
 }

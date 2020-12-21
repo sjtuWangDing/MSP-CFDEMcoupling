@@ -14,22 +14,22 @@ FoamFile
     object      dynamicMeshDict;
 }
 
-dynamicFvMesh   dynamicRefineFvMesh; // staticFvMesh
+dynamicFvMesh   dynamicRefineFvMesh; // staticFvMesh;
 
 dynamicRefineFvMeshCoeffs
 {
-  refineInterval  1; // refine every refineInterval timesteps
-  field           interface;
-  lowerRefineLevel 0.000001;
-  upperRefineLevel 0.999999;
-  unrefineLevel   10;
-  nBufferLayers   1;
-  maxRefinement   2; // maximum refinement level (starts from 0)
-  maxCells        1000000;
-  correctFluxes
-  (
-      (phi    U)
-      (phi_0  U)
-  );
-  dumpLevel       false;
+    refineInterval        1; // refine every refineInterval timesteps
+    field                 interface;
+    lowerRefineLevel      0.0001;
+    upperRefineLevel      0.99;
+    unrefineLevel         10;
+    nBufferLayers         1;
+    maxRefinement         2; // maximum refinement level (starts from 0)
+    maxCells              1000000;
+    correctFluxes
+    (
+        (phi    U)
+        (phi_0  U)
+    );
+    dumpLevel             false;
 }

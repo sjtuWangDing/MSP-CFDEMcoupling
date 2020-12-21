@@ -206,7 +206,7 @@ class forceSubModel {
   const std::string densityFieldName_;
 
   //! \brief 密度
-  const volScalarField rho_;
+  const volScalarField& rho_;
 };
 
 }  // namespace Foam

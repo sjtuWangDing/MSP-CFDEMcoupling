@@ -78,12 +78,16 @@ class IBVoidFraction : public voidFractionModel {
   //! \brief Destructor
   virtual ~IBVoidFraction();
 
+  //! \brief 计算空隙率
+  void setVoidFraction();
+
  protected:
   /*!
    * \brief 设置单个颗粒的体积分数场
    * \param index 颗粒索引
+   * \param hashSetPtr 哈希集合，用于保存颗粒覆盖的网格索引
    */
-  void setVolumeFractionForSingleParticle(int index);
+  void setVolumeFractionForSingleParticle(int index, const std::unique_ptr<labelHashSet>& hashSetPtr);
 
   /*!
    * \brief 构建颗粒覆盖的所有网格的哈希集合
@@ -91,10 +95,10 @@ class IBVoidFraction : public voidFractionModel {
    * \param cellID         <[in] 递归循环中要检索网格编号
    * \param particleCentre <[in] 颗粒中心位置
    * \param radius         <[in] 颗粒半径
-   * \param hashSett       <[in, out] 需要构建的哈希集
+   * \param hashSetPtr     <[in, out] 需要构建的哈希集
    */
   void buildLabelHashSetForVolumeFraction(const label cellID, const Foam::vector& particleCentre, const double radius,
-                                          labelHashSet& hashSett);
+                                          const std::unique_ptr<labelHashSet>& hashSetPtr);
 
   /*!
    * \brief 计算距离系数，对任意一个网格, 如果网格中心 c 在颗粒内部, 但是它的某个角点 p

@@ -395,10 +395,18 @@ class Tensor<1, DType, Device, Alloc> : public base::Exp<Tensor<1, DType, Device
   }
 
   /*! \brief get valid ptr */
-  inline DType* ptr() const { return dptr_ ? dptr_ : optr_; }
+  inline DType* ptr() const {
+    CHECK(isValid());
+    return dptr_ ? dptr_ : optr_;
+  }
 
   /*! \brief return tensor is empty */
   inline bool isEmpty() const { return nullptr == dptr_ && nullptr == optr_; }
+
+  /*! \brief return tensor is valid */
+  inline bool isValid() const {
+    return (nullptr != dptr_ && nullptr == optr_) || (nullptr == dptr_ && nullptr != optr_);
+  }
 
   // member function
   template <int startDim>
@@ -434,6 +442,14 @@ using CDTensor2 = Tensor<2, double, cpu, TENSOR_DEFAULT_ALLOC(double)>;
 //! \brief define tensor type used to data exchange between CFDEM and LIGGGHTS.
 using CDExTensor1 = Tensor<1, double, cpu, TENSOR_MALLOC_ALLOC(double)>;
 using CDExTensor2 = Tensor<2, double, cpu, TENSOR_MALLOC_ALLOC(double)>;
+
+template <int dimension, typename DType, typename Device, typename Alloc>
+void fillTensor(const Tensor<dimension, DType, Device, Alloc>& tensor, const DType& value) {
+  if (tensor.isEmpty()) {
+    return;
+  }
+  std::fill_n(tensor.ptr(), tensor.mSize(), value);
+}
 
 }  // namespace base
 

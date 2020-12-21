@@ -28,7 +28,7 @@ allowUseSubCFDTimeStep true;
 
 forceModels
 (
-    ArchimedesIBTest
+    ArchimedesIB
 );
 
 voidFractionModel IB;
@@ -43,12 +43,14 @@ turbulenceModelType turbulenceProperties;
 
 ShirgaonkarIBProps
 {
+    verbose true;
     velFieldName "U";
     pressureFieldName "p";
 }
 
 ArchimedesIBProps
 {
+    verbose true;
     gravityFieldName "g";
     volumeFractionFieldName "volumeFractionNext";
 }

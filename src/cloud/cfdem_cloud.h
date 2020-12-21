@@ -194,6 +194,8 @@ class cfdemCloud {
 
   inline const std::vector<base::CDTensor1>& voidFractions() const { return parCloud_.voidFractions_; }
 
+  inline const std::vector<base::CDTensor1>& volumeFractions() const { return parCloud_.volumeFractions_; }
+
   inline double** radiiPtr() const { return parCloud_.radiiPtr_; }
 
   inline double** cdsPtr() const { return parCloud_.cdsPtr_; }

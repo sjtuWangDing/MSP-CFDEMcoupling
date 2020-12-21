@@ -52,7 +52,9 @@ class noVoidFraction : public voidFractionModel {
   noVoidFraction(cfdemCloud& cloud);
 
   //! \brief Destructor
-  virtual ~noVoidFraction();
+  ~noVoidFraction();
+
+  void setVoidFraction() {}
 };
 
 }  // namespace Foam

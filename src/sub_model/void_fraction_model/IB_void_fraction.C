@@ -46,11 +46,55 @@ IBVoidFraction::IBVoidFraction(cfdemCloud& cloud)
 //! \brief Destructor
 IBVoidFraction::~IBVoidFraction() {}
 
+//! \brief 计算颗粒的体积分数场
+void IBVoidFraction::setVoidFraction() {
+  // reset field
+  resetVolumeFraction();
+  // reset particleOverMeshNumber
+  base::fillTensor(cloud_.particleOverMeshNumber(), 0);
+  // clear cellIDs and volumeFractions
+  cloud_.pCloud().cellIDs().clear();
+  cloud_.pCloud().volumeFractions().clear();
+  // set volumeFraction
+  for (int index = 0; index < cloud_.numberOfParticles(); ++index) {
+    // 计算index颗粒的空隙率，并设置颗粒覆盖的网格集合
+    std::unique_ptr<labelHashSet> hashSetPtr(new labelHashSet);
+    setVolumeFractionForSingleParticle(index, hashSetPtr);
+    int meshNumber = hashSetPtr->size();
+    // 检查集合中元素个数大于颗粒覆盖网格数限制
+    if (meshNumber > maxCellsNumPerCoarseParticle_) {
+      FatalError << __func__ << ": Big particle found " << meshNumber
+                 << " cells more than permittd maximun number of cells per paticle " << maxCellsNumPerCoarseParticle_
+                 << abort(FatalError);
+    }
+    if (meshNumber > 0) {
+      // 将颗粒覆盖的当前处理器的网格数保存到 particleOverMeshNumber 中
+      cloud_.particleOverMeshNumber()[index] = meshNumber;
+      cloud_.pCloud().cellIDs().emplace_back(base::makeShape1(meshNumber), -1);
+      cloud_.pCloud().volumeFractions().emplace_back(base::makeShape1(meshNumber), -1.0);
+      for (int i = 0; i < meshNumber; ++i) {
+        int cellID = hashSetPtr->toc()[i];
+        // 保存颗粒覆盖的所有网格编号
+        cloud_.cellIDs()[index][i] = cellID;
+        // 保存 volumeFraction
+        cloud_.volumeFractions()[index][i] = volumeFractionNext_[cellID];
+      }
+    } else {
+      cloud_.particleOverMeshNumber()[index] = 0;
+      cloud_.pCloud().cellIDs().emplace_back();
+      cloud_.pCloud().volumeFractions().emplace_back();
+    }
+    Pout << "particleOverMeshNumber: " << meshNumber << endl;
+  }
+}
+
 /*!
  * \brief 设置单个颗粒的体积分数场
  * \param index 颗粒索引
+ * \param hashSetPtr 哈希集合，用于保存颗粒覆盖的网格索引
  */
-void IBVoidFraction::setVolumeFractionForSingleParticle(const int index) {
+void IBVoidFraction::setVolumeFractionForSingleParticle(const int index,
+                                                        const std::unique_ptr<labelHashSet>& hashSetPtr) {
   if (cloud_.checkPeriodicCells()) {
     FatalError << "Error: not support periodic check!" << abort(FatalError);
   }
@@ -59,24 +103,22 @@ void IBVoidFraction::setVolumeFractionForSingleParticle(const int index) {
   // 获取颗粒中心坐标
   Foam::vector particleCentre = cloud_.getPosition(index);
   // 获取到在当前 processor 上颗粒覆盖的某一个网格编号
-  label firstCellID = cloud_.cellIDs()[index][0];
-
-  if (firstCellID >= 0) {  // particle centre is in domain
+  label findCellID = cloud_.findCellIDs()[index];
+  if (findCellID >= 0) {  // particle centre is in domain
     // 获取网格中心坐标
-    Foam::vector cellCentre = cloud_.mesh().C()[firstCellID];
+    Foam::vector cellCentre = cloud_.mesh().C()[findCellID];
     // 判断网格中心是否在颗粒中
     scalar fc = pointInParticle(particleCentre, cellCentre, radius);
     // 计算网格的等效半径
-    scalar corona = 0.5 * sqrt(3.0) * cbrt(cloud_.mesh().V()[firstCellID]);
+    scalar corona = 0.5 * sqrt(3.0) * cbrt(cloud_.mesh().V()[findCellID]);
     // 获取网格的 corona point
     Foam::vector coronaPoint = getCoronaPointPosition(particleCentre, cellCentre, corona);
-
     if (pointInParticle(particleCentre, coronaPoint, radius) < 0.0) {
       // 如果 coronaPoint 在颗粒中, 则认为整个网格在颗粒中
-      volumeFractionNext_[firstCellID] = 0.0;
+      volumeFractionNext_[findCellID] = 0.0;
     } else {
       // 如果 coronaPoint 不在颗粒中, 则需要遍历网格的所有角点, 判断角点与网格中心是否在颗粒中
-      const labelList& vertexPoints = cloud_.mesh().cellPoints()[firstCellID];
+      const labelList& vertexPoints = cloud_.mesh().cellPoints()[findCellID];
       double ratio = 0.125;
       // 遍历当前网格的所有角点
       forAll(vertexPoints, i) {
@@ -84,37 +126,25 @@ void IBVoidFraction::setVolumeFractionForSingleParticle(const int index) {
         vector vertexPosition = cloud_.mesh().points()[vertexPoints[i]];
         // 判断角点是否在颗粒中
         scalar fv = pointInParticle(particleCentre, vertexPosition, radius);
-
         if (fc < 0.0 && fv < 0.0) {
           // 网格中心在颗粒中, 角点也在颗粒中
-          volumeFractionNext_[firstCellID] -= ratio;
+          volumeFractionNext_[findCellID] -= ratio;
         } else if (fc < 0.0 && fv > 0.0) {
           // 网格中心在颗粒中, 角点不在颗粒中
           // 计算角点 vertexPosition 对体积分数的影响系数 lambda
           double lambda = segmentParticleIntersection(radius, particleCentre, cellCentre, vertexPosition);
-          volumeFractionNext_[firstCellID] -= ratio * lambda;
+          volumeFractionNext_[findCellID] -= ratio * lambda;
         } else if (fc > 0.0 && fv < 0.0) {
           // 网格中心不在颗粒中, 角点在颗粒中
           // 计算角点 vertexPosition 对体积分数的影响系数 lambda
           double lambda = segmentParticleIntersection(radius, particleCentre, vertexPosition, cellCentre);
-          volumeFractionNext_[firstCellID] -= ratio * lambda;
+          volumeFractionNext_[findCellID] -= ratio * lambda;
         }
       }  // End of loop of vertexPoints
     }
     // 颗粒中心所在网格的体积分数已经计算完成, 下面开始递归构建相邻网格
-    labelHashSet hashSett;
-    // 构建哈希集合
-    buildLabelHashSetForVolumeFraction(firstCellID, particleCentre, radius, hashSett);
-    if (hashSett.size() > maxCellsNumPerCoarseParticle_) {  // 如果集合中元素个数大于颗粒覆盖网格数限制
-      FatalError << "Big particle found " << hashSett.size()
-                 << " cells more than permittd maximun number of cells per paticle " << maxCellsNumPerCoarseParticle_
-                 << abort(FatalError);
-    } else if (hashSett.size() > 0) {
-      // 将颗粒覆盖的当前处理器的网格数保存到 particleOverMeshNumber 中
-      cloud_.particleOverMeshNumber()[index] = hashSett.size();
-      // 保存颗粒覆盖的所有网格编号
-    }
-  }
+    buildLabelHashSetForVolumeFraction(findCellID, particleCentre, radius, hashSetPtr);
+  }  // findCellID >= 0
 }
 
 /*!
@@ -123,11 +153,12 @@ void IBVoidFraction::setVolumeFractionForSingleParticle(const int index) {
  * \param cellID         <[in] 递归循环中要检索网格编号
  * \param particleCentre <[in] 颗粒中心位置
  * \param radius         <[in] 颗粒半径
- * \param hashSett       <[in, out] 需要构建的哈希集
+ * \param hashSetPtr     <[in, out] 需要构建的哈希集
  */
 void IBVoidFraction::buildLabelHashSetForVolumeFraction(const label cellID, const Foam::vector& particleCentre,
-                                                        const double radius, labelHashSet& hashSett) {
-  hashSett.insert(cellID);
+                                                        const double radius,
+                                                        const std::unique_ptr<labelHashSet>& hashSetPtr) {
+  hashSetPtr->insert(cellID);
   // 获取 cellID 网格的所有 neighbour cell 的链表
   const labelList& nc = cloud_.mesh().cellCells()[cellID];
   // 遍历 cellID 的 neighbour cell
@@ -145,15 +176,14 @@ void IBVoidFraction::buildLabelHashSetForVolumeFraction(const label cellID, cons
     scalar coronaRaidus = 0.5 * sqrt(3.0) * cbrt(cloud_.mesh().V()[neighbour]);
     // 获取 corona point
     Foam::vector coronaPoint = getCoronaPointPosition(particleCentre, neighbourCentre, coronaRaidus);
-
     // 如果在哈希集合中没有插入 neighbour 网格
-    if (false == hashSett.found(neighbour)) {
+    if (false == hashSetPtr->found(neighbour)) {
       // 计算 neighbour 网格的体积分数
       if (pointInParticle(particleCentre, coronaPoint, radius) < 0.0) {
         // 如果相邻网格的 coronaPoint 在颗粒中, 则说明该网格完全被颗粒覆盖
         volumeFractionNext_[neighbour] = 0.0;
         // 以相邻网格为中心继续递归构建哈希集合
-        buildLabelHashSetForVolumeFraction(neighbour, particleCentre, radius, hashSett);
+        buildLabelHashSetForVolumeFraction(neighbour, particleCentre, radius, hashSetPtr);
       } else {
         // 如果相邻网格的 coronaPoint 不在颗粒中, 则需要遍历该网格的所有角点
         // 定义单个角点对空隙率的影响率
@@ -192,10 +222,10 @@ void IBVoidFraction::buildLabelHashSetForVolumeFraction(const label cellID, cons
         }
         if (!(fabs(scale - 1.0) < 1e-15)) {
           // 如果体积分数不为 1.0, 则说明该 neighbour 需要递归循环构建哈希集合
-          buildLabelHashSetForVolumeFraction(neighbour, particleCentre, radius, hashSett);
+          buildLabelHashSetForVolumeFraction(neighbour, particleCentre, radius, hashSetPtr);
         }
       }
-    }  // not found neighbour in hashSett
+    }  // not found neighbour in hash set
   }    // End of loop neighbour cell
 }
 

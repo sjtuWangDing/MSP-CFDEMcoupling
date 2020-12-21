@@ -54,7 +54,7 @@ class cfdemCloudIB : public cfdemCloud {
    */
   void evolve(volScalarField& volumeFraction, volScalarField& interface);
 
- protected:
+ public:
   //! \brief 重新分配内存
   void reallocate();
 
@@ -64,10 +64,25 @@ class cfdemCloudIB : public cfdemCloud {
   //! \brief 传递数据到 DEM
   void giveDEMData() const;
 
+  /*!
+   * \brief 更新网格，如果 mesh 是 Foam::dynamicRefineFvMesh 类型，则更新网格，
+   *   如果是 Foam::staticFvMesh 或者其他类型，则不更新
+   */
+  void updateMesh(volScalarField& interface);
+
+  void setForce() const;
+
   //! \brief 确定颗粒周围 refined 网格的区域
-  void setInterface(volScalarField& interface, const double scale = cfdemCloudIB::particleMeshScale_) const;
+  void setInterface(volScalarField& interface, const double scale = 2.0) const;
+
+  //! \brief 确定颗粒周围 refined 网格的区域(每个方向的尺寸都是颗粒尺寸的两倍)
+  void setInterface(volScalarField& interface, volScalarField& refineMeshKeepStep) const;
 
  public:
+  inline double refineMeshSkin() const { return cProps_.refineMeshSkin(); }
+
+  inline int refineMeshKeepInterval() const { return cProps_.refineMeshKeepInterval(); }
+
   inline bool meshHasUpdated() const { return meshHasUpdated_; }
 
   inline void setMeshHasUpdated(bool meshHasUpdated) { meshHasUpdated_ = meshHasUpdated; }
@@ -81,7 +96,7 @@ class cfdemCloudIB : public cfdemCloud {
   bool meshHasUpdated_;
 };
 
-const double cfdemCloudIB::particleMeshScale_ = 2.0;
+const double cfdemCloudIB::particleMeshScale_ = 1.5;
 
 }  // namespace Foam
 
