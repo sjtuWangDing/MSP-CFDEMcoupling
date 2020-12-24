@@ -51,7 +51,10 @@ CouplingProperties::CouplingProperties(const fvMesh& mesh, const IOdictionary& c
       allowUseSubCFDTimeStep_(couplingPropertiesDict.lookupOrDefault<bool>("allowUseSubCFDTimeStep", false)),
       couplingInterval_(couplingPropertiesDict.lookupOrDefault<int>("couplingInterval", 0)),
       checkPeriodicCells_(couplingPropertiesDict.lookupOrDefault<bool>("checkPeriodicCells", false)),
-      periodicCheckRange_(Foam::vector(1, 1, 1)) {
+      periodicCheckRange_(Foam::vector(1, 1, 1)),
+      refineMeshSkin_(couplingPropertiesDict.lookupOrDefault<double>("refineMeshSkin", 1.8)),
+      refineMeshKeepInterval_(couplingPropertiesDict.lookupOrDefault<int>("refineMeshKeepInterval", 0)),
+      ddtVoidFractionType_(couplingPropertiesDict.lookupOrDefault<Foam::word>("ddtVoidFractionType", "off").c_str()) {
   Info << "CFDEM coupling version: " << CFDEM_VERSION << endl;
   Info << "LIGGGHTS version: " << LIGGGHTS_VERSION << endl;
 
@@ -76,14 +79,17 @@ CouplingProperties::CouplingProperties(const fvMesh& mesh, const IOdictionary& c
     }
   }
 
-  refineMeshSkin_ = couplingPropertiesDict.lookupOrDefault<double>("refineMeshSkin", 1.8);
   if (refineMeshSkin_ < 1.0) {
     FatalError << "refineMeshSkin should be >= 1.0 but get " << refineMeshSkin_ << abort(FatalError);
   }
 
-  refineMeshKeepInterval_ = couplingPropertiesDict.lookupOrDefault<int>("refineMeshKeepInterval", 0);
   if (refineMeshKeepInterval_ < 0) {
     FatalError << "refineMeshKeepInterval should be >= 0 but get " << refineMeshKeepInterval_ << abort(FatalError);
+  }
+
+  if ("a" != ddtVoidFractionType_ && "b" != ddtVoidFractionType_ && "off" != ddtVoidFractionType_) {
+    FatalError << "Model " << ddtVoidFractionType_
+               << " is not a valid choice for ddt(voidfraction). Choose a or b or off." << abort(FatalError);
   }
 
 #if CFDEM_MIX_CLOUD

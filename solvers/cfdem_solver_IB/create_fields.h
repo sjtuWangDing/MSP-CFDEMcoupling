@@ -97,6 +97,18 @@ volScalarField refineMeshKeepStep(
   dimensionedScalar("0", dimensionSet(0, 0, 0, 0, 0), 0.0)
 );
 
+Info << "Reading field phiIB\n" << endl;
+volScalarField phiIB(
+  IOobject(
+    "phiIB",
+    runTime.timeName(),
+    mesh,
+    IOobject::MUST_READ,
+    IOobject::AUTO_WRITE
+  ),
+  mesh
+);
+
 label pRefCell = 0;
 scalar pRefValue = 0.0;
 setRefCell(p, mesh.solutionDict().subDict("PISO"), pRefCell, pRefValue);

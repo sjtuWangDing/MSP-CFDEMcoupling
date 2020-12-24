@@ -39,7 +39,8 @@ namespace Foam {
 
 const int forceSubModel::Switches::kNum = 4;
 
-const char* forceSubModel::Switches::kNameList[] = {"treatForceExplicit", "treatForceDEM", "implForceDEM", "verbose"};
+const char* forceSubModel::Switches::kNameList[] = {"treatForceExplicitInMomEquation", "treatForceBothCFDAndDEM",
+                                                    "treatDEMForceImplicit", "verbose"};
 
 //! \brief Constructor
 forceSubModel::forceSubModel(cfdemCloud& cloud, forceModel& forceModel, const dictionary& subPropsDict)
@@ -62,17 +63,16 @@ forceSubModel::~forceSubModel() {}
  */
 void forceSubModel::partToArray(const int& index, const Foam::vector& dragTot, const Foam::vector& dragEx,
                                 const Foam::vector& Ufluid, scalar Cd) const {
-  if (switches_.isTrue(kTreatForceBothCFDAndDEM)) {
+  if (treatForceBothCFDAndDEM()) {
     // CFD 与 DEM 求解器都考虑耦合力
-    if (switches_.isTrue(kTreadForceExplicitInMomEquation)) {
-// 耦合力为显式力
+    if (treatForceExplicitInMomEquation()) {
 #pragma unroll
+      // 耦合力为显式力
       for (int j = 0; j < 3; ++j) {
         // 将耦合力累加到 expFoces_
         cloud_.expForces()[index][j] += dragTot[j];
       }
-    } else {
-// 耦合力为隐式力
+    } else {  // 耦合力为隐式力
 #pragma unroll
       for (int j = 0; j < 3; ++j) {
         // 将耦合力累加到 impForces_ 和 expFoces_
@@ -81,20 +81,20 @@ void forceSubModel::partToArray(const int& index, const Foam::vector& dragTot, c
       }
     }
   }
-  if (switches_.isTrue(kTreatDEMForceImplicit)) {
-// 颗粒中心处的流体速度和阻力系数都被传递到 DEM 中，从而在每个 DEM
-// 时间步中，使用阻力系数和流体速度，与当前颗粒速度一起计算颗粒受到的阻力
+  if (treatDEMForceImplicit()) {
 #pragma unroll
+    // 颗粒中心处的流体速度和阻力系数都被传递到 DEM 中，从而在每个 DEM
+    // 时间步中，使用阻力系数和流体速度，与当前颗粒速度一起计算颗粒受到的阻力
     for (int j = 0; j < 3; j++) {
       cloud_.fluidVel()[index][j] = Ufluid[j];
     }
     cloud_.cds()[index] = Cd;
   } else {
-// 直接将总阻力传递给 DEMForces_[index]
-// usually used for ArchimedesIB and ShirgaonkarIB force model
 #pragma unroll
+    // 直接将总阻力传递给 DEMForces_[index]
+    // usually used for ArchimedesIB and ShirgaonkarIB force model
     for (int j = 0; j < 3; j++) {
-      cloud_.DEMForces()[index][j] = dragTot[j];
+      cloud_.DEMForces()[index][j] += dragTot[j];
     }
   }
 }
@@ -159,7 +159,7 @@ void forceSubModel::checkSwitches(EForceType forceType) const {
  * \param p 压力场
  * \return IB drag
  */
-const volVectorField& forceSubModel::IBDrag(const volVectorField& U, const volScalarField& p) const {
+volVectorField forceSubModel::IBDrag(const volVectorField& U, const volScalarField& p) const {
 #ifdef compre
   return muField() * fvc::laplacian(U) - fvc::grad(p);
 #else

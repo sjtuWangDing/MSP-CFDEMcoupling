@@ -174,10 +174,10 @@ typedef int32_t index_t;
 #define CHECK_GE(x, y) CHECK((x) >= (y))
 #define CHECK_EQ(x, y) CHECK((x) == (y))
 #define CHECK_NE(x, y) CHECK((x) != (y))
-#define CHECK_NOTNULL(x)                                                                   \
-  ((x) == NULL                                                                             \
-   ? base::LogMessageFatal(base::Logger::getFileName(__FILE__).c_str(), __LINE__).stream() \
-         << "Check not null failed: " #x,                                                  \
-   (x) : (x))
+#define CHECK_NOTNULL(x)                                                                       \
+  ((x) == 0                                                                                    \
+       ? base::LogMessageFatal(base::Logger::getFileName(__FILE__).c_str(), __LINE__).stream() \
+             << "Check (" << #x << ") not null failed! "(x)                                    \
+       : (x))
 
 #endif  // __LOGGING_H__

@@ -88,6 +88,8 @@ class cfdemCloud {
    */
   void evolve(volScalarField& voidFraction, volVectorField& Us, volVectorField& U);
 
+  tmp<volScalarField> ddtVoidFraction() const;
+
  protected:
   /*!
    * \brief check if simulation is fully periodic
@@ -166,6 +168,8 @@ class cfdemCloud {
 
   inline const Foam::vector& periodicCheckRange() const { return cProps_.periodicCheckRange(); }
 
+  inline const std::string& ddtVoidFractionType() const { return cProps_.ddtVoidFractionType(); }
+
   /* ------------------------- interface of particleCloud ------------------------------- */
 
   inline int numberOfParticles() const { return parCloud_.numberOfParticles_; }
@@ -204,6 +208,8 @@ class cfdemCloud {
 
   inline double** velocitiesPtr() const { return parCloud_.velocitiesPtr_; }
 
+  inline double** angularVelocitiesPtr() const { return parCloud_.angularVelocitiesPtr_; }
+
   inline double** DEMForcesPtr() const { return parCloud_.DEMForcesPtr_; }
 
   inline double** DEMTorquesPtr() const { return parCloud_.DEMTorquesPtr_; }
@@ -218,15 +224,21 @@ class cfdemCloud {
 
   inline const base::CDExTensor2& velocities() const { return parCloud_.velocities_; }
 
+  inline const base::CDExTensor2& angularVelocities() const { return parCloud_.angularVelocities_; }
+
   inline const base::CDExTensor2& DEMForces() const { return parCloud_.DEMForces_; }
 
   inline const base::CDExTensor2& DEMTorques() const { return parCloud_.DEMTorques_; }
 
   inline const base::CDExTensor2& fluidVel() const { return parCloud_.fluidVel_; }
 
+  inline double getRadius(int index) const { return parCloud_.getRadius(index); }
+
   inline Foam::vector getPosition(int index) const { return parCloud_.getPosition(index); }
 
-  inline double getRadius(int index) const { return parCloud_.getRadius(index); }
+  inline Foam::vector getVelocity(int index) const { return parCloud_.getVelocity(index); }
+
+  inline Foam::vector getAngularVelocity(int index) const { return parCloud_.getAngularVelocity(index); }
 
   inline void setNumberOfParticles(int number) { parCloud_.setNumberOfParticles(number); }
 
@@ -288,6 +300,9 @@ class cfdemCloud {
 
   bool arraysReallocated_;
 
+  //! \brief used for ddt(voidFraction)
+  volScalarField ddtVoidFraction_;
+
   /*!
    * \brief 是否隐式计算颗粒所受到的阻力
    *        true - 在每个耦合时间步，流体的速度和阻力系数都被传递到 DEM 中，从而在每个 DEM 时间步中，
@@ -307,8 +322,6 @@ class cfdemCloud {
 
   //! \brief 显式、隐式分裂系数
   scalar impExpSplitFactor_;
-
-  // volScalarField ddtVoidfraction_;
 
   //! \brief Variable used to de-activate mirroring across periodic boundary conditions.
   Switch checkPeriodicCells_;

@@ -60,23 +60,24 @@ ShirgaonkarIB::~ShirgaonkarIB() {}
 void ShirgaonkarIB::setForce() {
   Info << "Setting ShirgaonkarIB force..." << endl;
   volVectorField IBDrag = forceSubModel_->IBDrag(U_, p_);
+  Foam::vector particleCenterPos = Foam::vector::zero;
+  Foam::vector cellPos = Foam::vector::zero;
   Foam::vector drag = Foam::vector::zero;
   Foam::vector torque = Foam::vector::zero;
-  Foam::vector cellPos = Foam::vector::zero;
 
-  for (int index = 0; index <= cloud_.numberOfParticles(); ++index) {
+  for (int index = 0; index < cloud_.numberOfParticles(); ++index) {
     // init
     drag = Foam::vector::zero;
     torque = Foam::vector::zero;
     // get index's particle center position
-    Foam::vector particleCenterPos = cloud_.getPosition(index);
+    particleCenterPos = cloud_.getPosition(index);
     // loop all mesh of current particle
     for (int subCell = 0; subCell < cloud_.particleOverMeshNumber()[index]; ++subCell) {
-      label cellI = cloud_.cellIDs()[index][subCell];
-      if (cellI > -1) {  // cell Found
-        cellPos = cloud_.mesh().C()[cellI];
-        drag += IBDrag[cellI] * IBDrag.mesh().V()[cellI];
-        torque += (cellPos - particleCenterPos) ^ IBDrag[cellI] * IBDrag.mesh().V()[cellI];
+      int cellID = cloud_.cellIDs()[index][subCell];
+      if (cellID > -1) {  // cell Found
+        cellPos = cloud_.mesh().C()[cellID];
+        drag += IBDrag[cellID] * IBDrag.mesh().V()[cellID];
+        torque += (cellPos - particleCenterPos) ^ IBDrag[cellID] * IBDrag.mesh().V()[cellID];
       }
     }
     // write particle data to global array

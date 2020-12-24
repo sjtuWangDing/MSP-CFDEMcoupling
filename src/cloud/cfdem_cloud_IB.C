@@ -40,13 +40,18 @@ Class
 namespace Foam {
 
 //! \brief Constructed from mesh
-cfdemCloudIB::cfdemCloudIB(const fvMesh& mesh) : cfdemCloud(mesh), meshHasUpdated_(false) {}
+cfdemCloudIB::cfdemCloudIB(const fvMesh& mesh)
+    : cfdemCloud(mesh),
+      meshHasUpdated_(false),
+      pRefCell_(readLabel(mesh.solutionDict().subDict("PISO").lookup("pRefCell"))),
+      pRefValue_(readScalar(mesh.solutionDict().subDict("PISO").lookup("pRefValue"))) {}
 
 //! \brief Destructor
 cfdemCloudIB::~cfdemCloudIB() {
   dataExchangeM().free(parCloud_.radii(), parCloud_.radiiPtr());
   dataExchangeM().free(parCloud_.positions(), parCloud_.positionsPtr());
   dataExchangeM().free(parCloud_.velocities(), parCloud_.velocitiesPtr());
+  dataExchangeM().free(parCloud_.angularVelocities(), parCloud_.angularVelocitiesPtr());
 }
 
 //! \brief 重新分配内存
@@ -56,6 +61,8 @@ void cfdemCloudIB::reallocate() {
   dataExchangeM().realloc(parCloud_.radii(), base::makeShape1(number), parCloud_.radiiPtr(), 0.0);
   dataExchangeM().realloc(parCloud_.positions(), base::makeShape2(number, 3), parCloud_.positionsPtr(), 0.0);
   dataExchangeM().realloc(parCloud_.velocities(), base::makeShape2(number, 3), parCloud_.velocitiesPtr(), 0.0);
+  dataExchangeM().realloc(parCloud_.angularVelocities(), base::makeShape2(number, 3), parCloud_.angularVelocitiesPtr(),
+                          0.0);
   dataExchangeM().realloc(parCloud_.DEMForces(), base::makeShape2(number, 3), parCloud_.DEMForcesPtr(), 0.0);
   // allocate memory of data not exchanged with liggghts
   parCloud_.particleOverMeshNumber() = std::move(base::CITensor1(base::makeShape1(number), 0));
@@ -67,6 +74,7 @@ void cfdemCloudIB::getDEMData() {
   dataExchangeM().getData("radius", "scalar-atom", parCloud_.radiiPtr());
   dataExchangeM().getData("x", "vector-atom", parCloud_.positionsPtr());
   dataExchangeM().getData("v", "vector-atom", parCloud_.velocitiesPtr());
+  dataExchangeM().getData("omega", "vector-atom", parCloud_.angularVelocitiesPtr());
   for (int i = 0; i < numberOfParticles(); ++i) {
     Info << positions()[i][0] << ", " << positions()[i][1] << ", " << positions()[i][2] << endl;
   }
@@ -91,6 +99,44 @@ void cfdemCloudIB::setInterface(volScalarField& interface,
       }
     }
   }
+}
+
+void cfdemCloudIB::calcVelocityCorrection(volScalarField& p, volVectorField& U, volScalarField& phiIB,
+                                          volScalarField& volumeFraction) {
+  // set particle velocity
+  Foam::vector parPos = Foam::vector::zero;
+  Foam::vector lVel = Foam::vector::zero;
+  Foam::vector angVel = Foam::vector::zero;
+  Foam::vector rVec = Foam::vector::zero;
+  Foam::vector parVel = Foam::vector::zero;
+  for (int index = 0; index < numberOfParticles(); ++index) {
+    parPos = getPosition(index);         // 颗粒中心
+    lVel = getVelocity(index);           // 颗粒线速度
+    angVel = getAngularVelocity(index);  // 颗粒角速度
+    for (int subCell = 0; subCell < cellIDs()[index].mSize(); ++subCell) {
+      int cellID = cellIDs()[index][subCell];
+      if (cellID > -1) {
+        for (int i = 0; i < 3; ++i) {
+          rVec[i] = U.mesh().C()[cellID][i] - parPos[i];
+        }
+        // 计算颗粒速度
+        parVel = lVel + (angVel ^ rVec);
+        double vf = volumeFractions()[index][subCell];
+        U[cellID] = (1.0 - vf) * parVel + vf * U[cellID];
+      }
+    }
+  }
+  U.correctBoundaryConditions();
+  fvScalarMatrix phiIBEqn(fvm::laplacian(phiIB) == fvc::div(U) + fvc::ddt(volumeFraction));
+  if (phiIB.needReference()) {
+    phiIBEqn.setReference(pRefCell_, pRefValue_);
+  }
+  phiIBEqn.solve();
+  U = U - fvc::grad(phiIB);
+  U.correctBoundaryConditions();
+  // correct the pressure as well
+  p = p + phiIB / U.mesh().time().deltaT();
+  p.correctBoundaryConditions();
 }
 
 /*!
@@ -124,6 +170,10 @@ void cfdemCloudIB::evolve(volScalarField& volumeFraction, volScalarField& interf
     // set particles forces
     for (const auto& ptr : forceModels_) {
       ptr->setForce();
+    }
+
+    for(int index = 0; index < numberOfParticles(); ++index){
+        Info << "DEMForces: " << DEMForces()[index][0] << ", " << DEMForces()[index][1] << ", " << DEMForces()[index][2] << endl;
     }
     // write DEM data
     giveDEMData();

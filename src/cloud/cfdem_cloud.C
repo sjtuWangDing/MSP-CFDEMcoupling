@@ -72,7 +72,10 @@ cfdemCloud::cfdemCloud(const fvMesh& mesh)
 #else
           dimensionedScalar("zero", dimensionSet(0, 2, -1, 0, 0), 0)  // m²/s
 #endif
-          ) {
+          ),
+      ddtVoidFraction_(
+          IOobject("ddtVoidFraction", mesh.time().timeName(), mesh, IOobject::NO_READ, IOobject::AUTO_WRITE), mesh,
+          dimensionedScalar("zero", dimensionSet(0, 0, -1, 0, 0), 0)) {
   // create liggghts command model
   for (const auto& name : liggghtsCommandModelList()) {
     // liggghtsCommandModel::New() 函数返回的是 std::unique_ptr
@@ -97,13 +100,19 @@ void cfdemCloud::reallocate() {
   // if (numberOfParticlesChanged()) {
   //   int number = numberOfParticles();
   //   // allocate memory of data exchanged with liggghts
-  //   dataExchangeM().realloc(parCloud_.radii(), base::makeShape1(number), parCloud_.radiiPtr(), 0.0);
-  //   dataExchangeM().realloc(parCloud_.positions(), base::makeShape2(number, 3), parCloud_.positionsPtr(), 0.0);
-  //   dataExchangeM().realloc(parCloud_.velocities(), base::makeShape2(number, 3), parCloud_.velocitiesPtr(), 0.0);
+  //   dataExchangeM().realloc(parCloud_.radii(), base::makeShape1(number),
+  //   parCloud_.radiiPtr(), 0.0);
+  //   dataExchangeM().realloc(parCloud_.positions(), base::makeShape2(number,
+  //   3), parCloud_.positionsPtr(), 0.0);
+  //   dataExchangeM().realloc(parCloud_.velocities(), base::makeShape2(number,
+  //   3), parCloud_.velocitiesPtr(), 0.0);
   //   // allocate memory of data not exchanged with liggghts
-  //   parCloud_.particleOverMeshNumber() = std::move(base::CITensor1(base::makeShape1(number), 0));
-  //   parCloud_.findCellIDs() = std::move(base::CITensor1(base::makeShape1(number), -1));
-  //   parCloud_.dimensionRatios() = std::move(base::CDTensor1(base::makeShape1(number), 0.0));
+  //   parCloud_.particleOverMeshNumber() =
+  //   std::move(base::CITensor1(base::makeShape1(number), 0));
+  //   parCloud_.findCellIDs() =
+  //   std::move(base::CITensor1(base::makeShape1(number), -1));
+  //   parCloud_.dimensionRatios() =
+  //   std::move(base::CDTensor1(base::makeShape1(number), 0.0));
   // }
 }
 
@@ -115,7 +124,8 @@ void cfdemCloud::reallocate() {
  * \param U      <[in] 流体速度场
  */
 void cfdemCloud::evolve(volScalarField& VoidF, volVectorField& Us, volVectorField& U) {
-  // Info << "\nFoam::cfdemCloud::evolve(), used for cfdemSolverPiso......\n" << endl;
+  // Info << "\nFoam::cfdemCloud::evolve(), used for cfdemSolverPiso......\n" <<
+  // endl;
   // if (!writeTimePassed_ && mesh_.time().outputTime()) {
   //   writeTimePassed_ = true;
   // }
@@ -123,7 +133,8 @@ void cfdemCloud::evolve(volScalarField& VoidF, volVectorField& Us, volVectorFiel
   //   Info << "evolve coupling..." << endl;
   //   // couple() 函数执行 liggghts 脚本，并获取新的颗粒数量
   //   parCloud_.setNumberOfParticles(dataExchangeM().couple());
-  //   Info << "get number of particles: " << parCloud_.numberOfParticles()<< " at coupling step: "
+  //   Info << "get number of particles: " << parCloud_.numberOfParticles()<< "
+  //   at coupling step: "
   //     << dataExchangeM().couplingStep() << endl;
   //   // 重置局部平均颗粒速度
   //   averagingM().resetUs();
@@ -164,6 +175,13 @@ bool cfdemCloud::checkSimulationFullyPeriodic() {
 #endif
   }
   return nPatchesNonCyclic == 0;
+}
+
+tmp<volScalarField> cfdemCloud::ddtVoidFraction() const {
+  if ("off" == ddtVoidFractionType()) {
+    return tmp<volScalarField>(ddtVoidFraction_ * 0.);
+  }
+  return tmp<volScalarField>(ddtVoidFraction_ * 1.);
 }
 
 }  // namespace Foam

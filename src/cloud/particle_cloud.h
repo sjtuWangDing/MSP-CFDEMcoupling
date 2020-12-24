@@ -54,6 +54,7 @@ class ParticleCloud {
         cdsPtr_(nullptr),
         positionsPtr_(nullptr),
         velocitiesPtr_(nullptr),
+        angularVelocitiesPtr_(nullptr),
         DEMForcesPtr_(nullptr),
         DEMTorquesPtr_(nullptr),
         fluidVelPtr_(nullptr) {}
@@ -94,6 +95,8 @@ class ParticleCloud {
 
   inline double**& velocitiesPtr() { return velocitiesPtr_; }
 
+  inline double**& angularVelocitiesPtr() { return angularVelocitiesPtr_; }
+
   inline double**& DEMForcesPtr() { return DEMForcesPtr_; }
 
   inline double**& DEMTorquesPtr() { return DEMTorquesPtr_; }
@@ -108,11 +111,20 @@ class ParticleCloud {
 
   inline base::CDExTensor2& velocities() { return velocities_; }
 
+  inline base::CDExTensor2& angularVelocities() { return angularVelocities_; }
+
   inline base::CDExTensor2& DEMForces() { return DEMForces_; }
 
   inline base::CDExTensor2& DEMTorques() { return DEMTorques_; }
 
   inline base::CDExTensor2& fluidVel() { return fluidVel_; }
+
+  inline double getRadius(int index) const {
+    CHECK_EQ(numberOfParticles_, static_cast<int>(radii_.size(0))) << "getRadius: Number of particle is not match";
+    CHECK_GT(radii_[index], Foam::SMALL) << "getRadius: Radius of particle " << index << " is < "
+                                         << "Foam::SMALL";
+    return radii_[index];
+  }
 
   inline Foam::vector getPosition(int index) const {
     CHECK_EQ(numberOfParticles_, static_cast<int>(positions_.size(0)))
@@ -125,11 +137,26 @@ class ParticleCloud {
     return pos;
   }
 
-  inline double getRadius(int index) const {
-    CHECK_EQ(numberOfParticles_, static_cast<int>(radii_.size(0))) << "getRadius: Number of particle is not match";
-    CHECK_GT(radii_[index], Foam::SMALL) << "getRadius: Radius of particle " << index << " is < "
-                                         << "Foam::SMALL";
-    return radii_[index];
+  inline Foam::vector getVelocity(int index) const {
+    CHECK_EQ(numberOfParticles_, static_cast<int>(velocities_.size(0)))
+        << "getVelocity: Number of particle is not match";
+    Foam::vector vel = Foam::vector::zero;
+#pragma unroll
+    for (int i = 0; i < 3; ++i) {
+      vel[i] = velocities_[index][i];
+    }
+    return vel;
+  }
+
+  inline Foam::vector getAngularVelocity(int index) const {
+    CHECK_EQ(numberOfParticles_, static_cast<int>(angularVelocities_.size(0)))
+        << "getAngularVelocity: Number of particle is not match";
+    Foam::vector vel = Foam::vector::zero;
+#pragma unroll
+    for (int i = 0; i < 3; ++i) {
+      vel[i] = angularVelocities_[index][i];
+    }
+    return vel;
   }
 
   inline void setNumberOfParticles(int number) {
@@ -160,6 +187,7 @@ class ParticleCloud {
   double** cdsPtr_;
   double** positionsPtr_;
   double** velocitiesPtr_;
+  double** angularVelocitiesPtr_;
   double** DEMForcesPtr_;
   double** DEMTorquesPtr_;
   double** fluidVelPtr_;
@@ -167,6 +195,7 @@ class ParticleCloud {
   base::CDExTensor1 cds_;
   base::CDExTensor2 positions_;
   base::CDExTensor2 velocities_;
+  base::CDExTensor2 angularVelocities_;
   base::CDExTensor2 DEMForces_;
   base::CDExTensor2 DEMTorques_;
   base::CDExTensor2 fluidVel_;

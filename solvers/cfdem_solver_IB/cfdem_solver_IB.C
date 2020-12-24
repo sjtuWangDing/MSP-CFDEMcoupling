@@ -95,6 +95,102 @@ int main(int argc, char* argv[]) {
     // particle evolve
     particleCloud.evolve(volumeFraction, interface);
 
+    if (particleCloud.solveFlow()) {
+      // Momentum predictor
+      fvVectorMatrix UEqn(
+          fvm::ddt(U)
+        + fvm::div(phi, U)
+        + turbulence->divDevReff(U)
+        #if defined(version22)
+        ==
+          fvOptions(U)
+        #endif
+      );
+
+      UEqn.relax();
+      #if defined(version22)
+      fvOptions.constrain(UEqn);
+      #endif
+
+      #if defined(version30)
+      if (piso.momentumPredictor())
+      #else
+      if (momentumPredictor)
+      #endif
+      {
+        solve(UEqn == -fvc::grad(p));
+      }
+
+      // PISO loop
+      #if defined(version30)
+      while (piso.correct())
+      #else
+      for (int corr = 0; corr < nCorr; corr++)
+      #endif
+      {
+        volScalarField rUA = 1.0 / UEqn.A();
+        surfaceScalarField rUAf(fvc::interpolate(rUA));
+        U = rUA * UEqn.H();
+        #ifdef version23
+        phi = (fvc::interpolate(U) & mesh.Sf()) + rUAf * fvc::ddtCorr(U, phi);
+        #else
+        phi = (fvc::interpolate(U) & mesh.Sf()) + fvc::ddtPhiCorr(rUA, U, phi);
+        #endif
+        adjustPhi(phi, U, p);
+
+        #if defined(version22)
+        fvOptions.relativeFlux(phi);
+        #endif
+
+        // Non-orthogonal pressure corrector loop
+        #if defined(version30)
+        while (piso.correctNonOrthogonal())
+        #else
+        for (int nonOrth = 0; nonOrth <= nNonOrthCorr; nonOrth++)
+        #endif
+        {
+          // Pressure corrector
+          fvScalarMatrix pEqn(
+            fvm::laplacian(rUA, p) == fvc::div(phi) + particleCloud.ddtVoidFraction()
+          );
+          pEqn.setReference(pRefCell, pRefValue);
+          #if defined(version30)
+          pEqn.solve(mesh.solver(p.select(piso.finalInnerIter())));
+          if (piso.finalNonOrthogonalIter()) {
+            phi -= pEqn.flux();
+          }
+          #else
+          if (corr == nCorr - 1 && nonOrth == nNonOrthCorr) {
+            #if defined(versionExt32)
+            pEqn.solve(mesh.solutionDict().solver("pFinal"));
+            #else
+            pEqn.solve(mesh.solver("pFinal"));
+            #endif
+          } else {
+            pEqn.solve();
+          }
+          if (nonOrth == nNonOrthCorr) {
+            phi -= pEqn.flux();
+          }
+          #endif
+        } // pressure corrector
+        #include "continuityErrs.H"
+        U -= rUA * fvc::grad(p);
+        U.correctBoundaryConditions();
+      } // piso loop
+    } // solve flow
+
+    laminarTransport.correct();
+    turbulence->correct();
+    volScalarField volumeFractionNext = mesh.lookupObject<volScalarField>("volumeFractionNext");
+    particleCloud.calcVelocityCorrection(p, U, phiIB, volumeFractionNext);
+    #if defined(version22)
+    fvOptions.correct(U);
+    #endif
+    runTime.write();
+    Info << "ExecutionTime = " << runTime.elapsedCpuTime() << " s"
+         << " ClockTime = " << runTime.elapsedClockTime() << " s"
+         << endl;
   } // end of runtime loop
 
   Info << "cfdemCloudIB - done\n" << endl;

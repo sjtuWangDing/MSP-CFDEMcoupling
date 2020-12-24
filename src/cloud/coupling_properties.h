@@ -72,6 +72,8 @@ class CouplingProperties {
 
   inline const Foam::vector& periodicCheckRange() const { return periodicCheckRange_; }
 
+  inline const std::string& ddtVoidFractionType() const { return ddtVoidFractionType_; }
+
   /* --------------------------------- interface used for cfdemCloudIB ------------------------------------ */
 
   inline double refineMeshSkin() const { return refineMeshSkin_; }
@@ -132,6 +134,9 @@ class CouplingProperties {
    * \note 如果设置为 100, 即重构网格会保留 100 个时间步，默认值为 0
    */
   int refineMeshKeepInterval_;
+
+  //! \brief ddtVoidFraction的类型，可以是"a" "b" or "off"，默认是"off"
+  std::string ddtVoidFractionType_;
 
 #if CFDEM_MIX_CLOUD
 

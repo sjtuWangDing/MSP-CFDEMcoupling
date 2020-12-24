@@ -39,47 +39,53 @@ Class
 
 namespace Foam {
 
-/*!
- * \brief forceSwitch
- *
- * kTreadForceExplicitInMomEquation
- *    true - 在CFD的动量方程中，耦合力都为显式力
- *    false - 在CFD的动量方程中，耦合力都为隐式力 (default)
- *
- * kTreatForceBothCFDAndDEM
- *    true - 即 CFD 和 DEM 都考虑耦合力 (default)
- *    false - 仅在 DEM 中考虑耦合力，即仅考虑流体对颗粒的作用，不考虑颗粒对流体的反作用
- *            在 resolved 方法中，比如 cfdemSolverIB，ArchimedesIB force and ShirgaonkarIB
- *            会直接设置 treatForceDEM 为 true，因为颗粒对流体的作用力是通过虚拟域方法得到
- *
- * kTreatDEMForceImplicit
- *    true - 在每个耦合时间步，流体的速度和阻力系数都被传递到 DEM 中，从而在每个 DEM 时间步中，
- *           使用上一个耦合时间步中的阻力系数和流体速度，与当前颗粒速度一起计算颗粒受到的阻力
- *    false - 在每个耦合时间步中，流体对颗粒的阻力被传递到 DEM 中，并且在接下来
- *            的 DEM 时间步中，这个力保持不变，直到下个耦合时间步 (default)
- *
- * kVerbose
- *    true - 调试信息输出到屏幕
- *    false - 调试信息不输出到屏幕 (default)
- *
- * kScalarViscosity (not used)
- *    true - 使用用户自定义动力粘度 nu 进行阻力计算
- *    false - 使用 transport dict 指定的动力粘度
- */
-enum ESwitch { kTreadForceExplicitInMomEquation = 0, kTreatForceBothCFDAndDEM, kTreatDEMForceImplicit, kVerbose };
+//! \brief force switch type enum
+enum ESwitch {
+  /*!
+   * \brief kTreatForceExplicitInMomEquation
+   *   true - 在CFD的动量方程中，耦合力都为显式力
+   *   false - 在CFD的动量方程中，耦合力都为隐式力 (default)
+   */
+  kTreatForceExplicitInMomEquation = 0,
+  /*!
+   * \brief kTreatForceBothCFDAndDEM
+   *   true - 即 CFD 和 DEM 都考虑耦合力 (default)
+   *   false - 仅在 DEM 中考虑耦合力，即仅考虑流体对颗粒的作用，不考虑颗粒对流体的反作用
+   *           在 resolved 方法中，比如 cfdemSolverIB，ArchimedesIB force and ShirgaonkarIB
+   *           会直接设置 treatForceDEM 为 true，因为颗粒对流体的作用力是通过虚拟域方法得到
+   */
+  kTreatForceBothCFDAndDEM,
+  /*!
+   * \brief kTreatDEMForceImplicit
+   *   true - 在每个耦合时间步，流体的速度和阻力系数都被传递到 DEM 中，从而在每个 DEM 时间步中，
+   *          使用上一个耦合时间步中的阻力系数和流体速度，与当前颗粒速度一起计算颗粒受到的阻力
+   *   false - 在每个耦合时间步中，流体对颗粒的阻力被传递到 DEM 中，并且在接下来
+   *           的 DEM 时间步中，这个力保持不变，直到下个耦合时间步 (default)
+   */
+  kTreatDEMForceImplicit,
+  /*!
+   * \brief kVerbose
+   *   true - 调试信息输出到屏幕
+   *   false - 调试信息不输出到屏幕 (default)
+   */
+  kVerbose
+};
 
-/*!
- * \brief force type
- * kUnResolved - force used for unresolved method
- * kSemiResolved - force used for semi-resolved method
- * kResolved - force used for resolved method
- * kMix - force used for mix method
- */
-enum EForceType { kUnResolved = 0, kSemiResolved, kResolved, kMix };
+//! \brief force type enum
+enum EForceType {
+  //! \brief force used for unresolved method
+  kUnResolved = 0,
+  //! \brief force used for semi-resolved method
+  kSemiResolved,
+  //! \brief force used for resolved method
+  kResolved,
+  //! \brief force used for mix method
+  kMix
+};
 
 /*!
  * \brief The force sub model is designed to hold the settings a force model can have.
- *        For now it handles the kTreadForceExplicitInMomEquation, kTreatForceBothCFDAndDEM,
+ *        For now it handles the kTreatForceExplicitInMomEquation, kTreatForceBothCFDAndDEM,
  *        kTreatDEMForceImplicit and kVerbose option.
  */
 class forceSubModel {
@@ -97,8 +103,8 @@ class forceSubModel {
     Switches() : value_(0) {}
     inline void setTrue(ESwitch value) {
       switch (value) {
-        case kTreadForceExplicitInMomEquation:
-          value_ |= (1 << kTreadForceExplicitInMomEquation);
+        case kTreatForceExplicitInMomEquation:
+          value_ |= (1 << kTreatForceExplicitInMomEquation);
           break;
         case kTreatForceBothCFDAndDEM:
           value_ |= (1 << kTreatForceBothCFDAndDEM);
@@ -115,8 +121,8 @@ class forceSubModel {
     }
     inline bool isTrue(ESwitch value) const {
       switch (value) {
-        case kTreadForceExplicitInMomEquation:
-          return value_ & (1 << kTreadForceExplicitInMomEquation);
+        case kTreatForceExplicitInMomEquation:
+          return value_ & (1 << kTreatForceExplicitInMomEquation);
         case kTreatForceBothCFDAndDEM:
           return value_ & (1 << kTreatForceBothCFDAndDEM);
         case kTreatDEMForceImplicit:
@@ -166,13 +172,14 @@ class forceSubModel {
    * \param p 压力场
    * \return IB drag
    */
-  const volVectorField& IBDrag(const volVectorField& U, const volScalarField& p) const;
+  volVectorField IBDrag(const volVectorField& U, const volScalarField& p) const;
 
   inline const volScalarField& rhoField() const { return rho_; }
 
   inline const volScalarField& nuField() const {
 #ifdef compre
     nu_ = cloud_.turbulence().mu() / rho_;
+    return nu_;
 #else
     return cloud_.turbulence().nu();
 #endif
@@ -186,11 +193,11 @@ class forceSubModel {
 #endif
   }
 
-  inline bool treatForceExplicit() const { return switches_.isTrue(kTreadForceExplicitInMomEquation); }
+  inline bool treatForceExplicitInMomEquation() const { return switches_.isTrue(kTreatForceExplicitInMomEquation); }
 
-  inline bool treatForceDEM() const { return switches_.isTrue(kTreatForceBothCFDAndDEM); }
+  inline bool treatForceBothCFDAndDEM() const { return switches_.isTrue(kTreatForceBothCFDAndDEM); }
 
-  inline bool implForceDEM() const { return switches_.isTrue(kTreatDEMForceImplicit); }
+  inline bool treatDEMForceImplicit() const { return switches_.isTrue(kTreatDEMForceImplicit); }
 
   inline bool verbose() const { return switches_.isTrue(kVerbose); }
 

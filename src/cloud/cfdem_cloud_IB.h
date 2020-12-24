@@ -54,6 +54,9 @@ class cfdemCloudIB : public cfdemCloud {
    */
   void evolve(volScalarField& volumeFraction, volScalarField& interface);
 
+  void calcVelocityCorrection(volScalarField& p, volVectorField& U, volScalarField& phiIB,
+                              volScalarField& voidfraction);
+
  protected:
   //! \brief 重新分配内存
   void reallocate();
@@ -79,6 +82,10 @@ class cfdemCloudIB : public cfdemCloud {
    * \note 在求解器中使用 dynamic mesh，如果 mesh 更新，则 mesh.update() 返回 true，否则返回 false
    */
   bool meshHasUpdated_;
+
+  int pRefCell_;
+
+  double pRefValue_;
 };
 
 const double cfdemCloudIB::particleMeshScale_ = 2.0;
