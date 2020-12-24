@@ -113,7 +113,7 @@ void cfdemCloudIB::calcVelocityCorrection(volScalarField& p, volVectorField& U, 
     parPos = getPosition(index);         // 颗粒中心
     lVel = getVelocity(index);           // 颗粒线速度
     angVel = getAngularVelocity(index);  // 颗粒角速度
-    for (int subCell = 0; subCell < cellIDs()[index].mSize(); ++subCell) {
+    for (int subCell = 0; subCell < particleOverMeshNumber()[index]; ++subCell) {
       int cellID = cellIDs()[index][subCell];
       if (cellID > -1) {
         for (int i = 0; i < 3; ++i) {
@@ -171,9 +171,8 @@ void cfdemCloudIB::evolve(volScalarField& volumeFraction, volScalarField& interf
     for (const auto& ptr : forceModels_) {
       ptr->setForce();
     }
-
     for(int index = 0; index < numberOfParticles(); ++index){
-        Info << "DEMForces: " << DEMForces()[index][0] << ", " << DEMForces()[index][1] << ", " << DEMForces()[index][2] << endl;
+        Pout << "DEMForces: " << DEMForces()[index][0] << ", " << DEMForces()[index][1] << ", " << DEMForces()[index][2] << endl;
     }
     // write DEM data
     giveDEMData();

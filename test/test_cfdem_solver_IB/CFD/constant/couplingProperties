@@ -44,14 +44,14 @@ turbulenceModelType turbulenceProperties;
 
 ShirgaonkarIBProps
 {
-    verbose true;
+    // verbose true;
     velFieldName "U";
     pressureFieldName "p";
 }
 
 ArchimedesIBProps
 {
-    verbose true;
+    // verbose true;
     gravityFieldName "g";
     volumeFractionFieldName "volumeFractionNext";
 }

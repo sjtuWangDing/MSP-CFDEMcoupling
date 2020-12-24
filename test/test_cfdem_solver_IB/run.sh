@@ -35,7 +35,7 @@ mspCfdemParallelRun $casePath "$solverDir/$solverName" $numberOfProcs $machineFi
 
 # define variables for post-process
 runOctave="false"
-postProc="true"
+postProc="false"
 liggghtsDumpFileName="dump.liggghts_run"
 
 if [ $runOctave = "true" ]; then

@@ -420,10 +420,10 @@ class Tensor<1, DType, Device, Alloc> : public base::Exp<Tensor<1, DType, Device
 
   inline bool isContinus() const { return stride_ == shape_[0]; }
 
-  inline index_t mSize() const { return shape_[0]; }
+  inline index_t mSize() const { return memSize<0>(); }
 
   inline index_t size(int idx) const {
-    CHECK(idx >= 0 && idx < static_cast<int>(mSize()));
+    CHECK_EQ(idx, 0);
     return shape_[idx];
   }
 

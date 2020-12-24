@@ -128,10 +128,10 @@ void engineSearchIB::findCell(const base::CITensor1& findCellIDs) const {
           }
         }
       }
-    } else {
-      findCellIDs[index] = -1;
-      Pout << "Found particle " << index
-           << " not in the CFD domian, this could means that the particle and fluid has no coupling." << endl;
+    }
+    if (-1 == findCellIDs[index]) {
+      Pout << __func__ << ": Find no mesh covered by particle " << index
+           << ", this could means the particle is not in the CFD domian." << endl;
     }
   }  // end loop of particle
 }

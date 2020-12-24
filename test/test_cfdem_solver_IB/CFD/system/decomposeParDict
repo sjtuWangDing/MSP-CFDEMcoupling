@@ -24,7 +24,7 @@ method        simple; // hierarchical or scotch or metis or manual
 
 simpleCoeffs
 {
-  n           (2 2 1);
+  n           (1 1 4);
   delta       0.001;
 }
 
