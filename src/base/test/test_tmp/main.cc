@@ -1,9 +1,9 @@
 #include "base/memory/tmp.h"
 using std::cout;
-using std::endl; 
+using std::endl;
 
 class BG : public base::RefCounter {
-public:
+ public:
   double data_[1000000];
 };
 

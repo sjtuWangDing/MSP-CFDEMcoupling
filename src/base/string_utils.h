@@ -38,6 +38,8 @@ inline std::string makeString(const std::string& str) {
   return str;
 }
 
-inline std::string makeString(const char* cstr) { return std::string(cstr); }
+inline std::string makeString(const char* cstr) {
+  return std::string(cstr);
+}
 
 #endif  // __STRING_UTILS_H__

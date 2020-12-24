@@ -1,23 +1,111 @@
 # Run the following command to reformat a file:
-# clang-format -i -style=Google <file>
+# clang-format -i -style=file <file>
 # Or use clang-format-diff to only reformat the changed lines:
 # https://clang.llvm.org/docs/ClangFormat.html
+# You can get clang-format file of different style using:
+# clang-format -style=google -dump-config > .clang-format
 
-# 基础风格: LLVM(默认), Google, Chromium, Mozilla
-BasedOnStyle: Google
+---
 # 语言: None, Cpp, Java, JavaScript, ObjC, Proto, TableGen, TextProto
-Language: Cpp
+Language:        Cpp
+# 基础风格: LLVM(默认), Google, Chromium, Mozilla
+# BasedOnStyle:  Google
+AccessModifierOffset: -1
+AlignAfterOpenBracket: Align
+AlignConsecutiveAssignments: false
+AlignConsecutiveDeclarations: false
+AlignEscapedNewlinesLeft: true
+AlignOperands:   true
+AlignTrailingComments: true
+# 允许函数声明的所有参数在放在下一行
+AllowAllParametersOfDeclarationOnNextLine: true
+# 允许短的块放在同一行
+AllowShortBlocksOnASingleLine: false
+# 允许短的case标签放在同一行
+AllowShortCaseLabelsOnASingleLine: false
+# 允许短的函数放在同一行: None, InlineOnly(定义在类中), Empty(空函数), Inline(定义在类中，空函数), All
+AllowShortFunctionsOnASingleLine: Inline
+# 允许短的if语句保持在同一行
+AllowShortIfStatementsOnASingleLine: true
+# 允许短的循环保持在同一行
+AllowShortLoopsOnASingleLine: false
+AlwaysBreakAfterDefinitionReturnType: None
+AlwaysBreakAfterReturnType: None
+AlwaysBreakBeforeMultilineStrings: true
+AlwaysBreakTemplateDeclarations: true
+BinPackArguments: true
+BinPackParameters: true
+BraceWrapping:
+  AfterClass:      false
+  AfterControlStatement: false
+  AfterEnum:       false
+  AfterFunction:   false
+  AfterNamespace:  false
+  AfterObjCDeclaration: false
+  AfterStruct:     false
+  AfterUnion:      false
+  BeforeCatch:     false
+  BeforeElse:      false
+  IndentBraces:    false
+BreakBeforeBinaryOperators: None
+BreakBeforeBraces: Attach
+BreakBeforeTernaryOperators: true
+BreakConstructorInitializersBeforeComma: false
+# 每行字符的限制，0表示没有限制
+ColumnLimit:     120
+CommentPragmas:  '^ IWYU pragma:'
+ConstructorInitializerAllOnOneLineOrOnePerLine: true
+# 构造函数的初始化列表的缩进宽度
+ConstructorInitializerIndentWidth: 4
+ContinuationIndentWidth: 4
+Cpp11BracedListStyle: true
 # 继承最常用的指针和引用的对齐方式
 DerivePointerAlignment: false
-# 构造函数的初始化列表的缩进宽度
-ConstructorInitializerIndentWidth:  4
-# 每行字符的限制，0表示没有限制
-ColumnLimit: 120
+DisableFormat:   false
+ExperimentalAutoDetectBinPacking: false
+ForEachMacros:   [ foreach, Q_FOREACH, BOOST_FOREACH ]
+IncludeCategories: 
+  - Regex:           '^<.*\.h>'
+    Priority:        1
+  - Regex:           '^<.*'
+    Priority:        2
+  - Regex:           '.*'
+    Priority:        3
+IndentCaseLabels: true
+IndentWidth:     2
+IndentWrappedFunctionNames: false
+KeepEmptyLinesAtTheStartOfBlocks: false
+MacroBlockBegin: ''
+MacroBlockEnd:   ''
+MaxEmptyLinesToKeep: 1
+NamespaceIndentation: None
+ObjCBlockIndentWidth: 2
+ObjCSpaceAfterProperty: false
+ObjCSpaceBeforeProtocolList: false
+PenaltyBreakBeforeFirstCallParameter: 1
+PenaltyBreakComment: 300
+PenaltyBreakFirstLessLess: 120
+PenaltyBreakString: 1000
+PenaltyExcessCharacter: 1000000
+PenaltyReturnTypeOnItsOwnLine: 200
 # 指针和引用的对齐: Left, Right, Middle
 PointerAlignment: Left
+ReflowComments:  true
+SortIncludes:    true
+SpaceAfterCStyleCast: false
+SpaceBeforeAssignmentOperators: true
+SpaceBeforeParens: ControlStatements
+SpaceInEmptyParentheses: false
+SpacesBeforeTrailingComments: 2
+SpacesInAngles:  false
+SpacesInContainerLiterals: true
+SpacesInCStyleCastParentheses: false
+SpacesInParentheses: false
+SpacesInSquareBrackets: false
 # 标准: Cpp03, Cpp11, Auto
-Standard: Cpp11
+Standard:        Auto
 # tab宽度
-TabWidth: 2
+TabWidth:        2
 # 使用tab字符: Never, ForIndentation, ForContinuationAndIndentation, Always
-UseTab: Never
+UseTab:          Never
+...

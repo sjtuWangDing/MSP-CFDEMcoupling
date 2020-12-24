@@ -75,7 +75,9 @@ void cfdemCloudIB::getDEMData() {
   }
 }
 
-void cfdemCloudIB::giveDEMData() const { dataExchangeM().giveData("dragforce", "vector-atom", DEMForcesPtr()); }
+void cfdemCloudIB::giveDEMData() const {
+  dataExchangeM().giveData("dragforce", "vector-atom", DEMForcesPtr());
+}
 
 /*!
  * \brief 更新网格，如果 mesh 是 Foam::dynamicRefineFvMesh 类型，则更新网格，如果是 Foam::staticFvMesh

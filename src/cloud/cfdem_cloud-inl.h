@@ -57,7 +57,9 @@ inline const std::vector<std::shared_ptr<liggghtsCommandModel>>& cfdemCloud::lig
   return liggghtsCommandModels_;
 }
 
-inline const std::vector<std::shared_ptr<forceModel>>& cfdemCloud::forceModels() const { return forceModels_; }
+inline const std::vector<std::shared_ptr<forceModel>>& cfdemCloud::forceModels() const {
+  return forceModels_;
+}
 
 inline const std::vector<std::shared_ptr<momCoupleModel>>& cfdemCloud::momCoupleModels() const {
   return momCoupleModels_;
@@ -72,17 +74,29 @@ inline std::shared_ptr<forceModel> cfdemCloud::forceM(int index) const {
 }
 
 // Foam::autoPtr<T> 中定义了 inline operator const T&() const;
-inline const dataExchangeModel& cfdemCloud::dataExchangeM() const { return dataExchangeModel_; }
+inline const dataExchangeModel& cfdemCloud::dataExchangeM() const {
+  return dataExchangeModel_;
+}
 
-inline const voidFractionModel& cfdemCloud::voidFractionM() const { return voidFractionModel_; }
+inline const voidFractionModel& cfdemCloud::voidFractionM() const {
+  return voidFractionModel_;
+}
 
-inline const locateModel& cfdemCloud::locateM() const { return locateModel_; }
+inline const locateModel& cfdemCloud::locateM() const {
+  return locateModel_;
+}
 
-inline dataExchangeModel& cfdemCloud::dataExchangeM() { return dataExchangeModel_(); }
+inline dataExchangeModel& cfdemCloud::dataExchangeM() {
+  return dataExchangeModel_();
+}
 
-inline voidFractionModel& cfdemCloud::voidFractionM() { return voidFractionModel_(); }
+inline voidFractionModel& cfdemCloud::voidFractionM() {
+  return voidFractionModel_();
+}
 
-inline locateModel& cfdemCloud::locateM() { return locateModel_(); }
+inline locateModel& cfdemCloud::locateM() {
+  return locateModel_();
+}
 
 #if defined(version24Dev)
 inline const turbulenceModel& cfdemCloud::turbulence() const

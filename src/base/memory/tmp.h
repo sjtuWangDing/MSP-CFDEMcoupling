@@ -17,7 +17,7 @@
 
 #ifndef TMP_DEBUG
 #define TMP_DEBUG 1
-#endif // TMP_DEBUG
+#endif  // TMP_DEBUG
 
 namespace base {
 
@@ -146,7 +146,8 @@ class Tmp {
   //   if (isTmp()) {
   //     CHECK(isValid()) << __func__ << ": Attempt to acquire reference to deallocated object with type " << typeName()
   //                      << std::endl;
-  //     CHECK(ptr_->unique()) << __func__ << ": Attempt to acquire pointer to object referred to by myltiple Tmp of type "
+  //     CHECK(ptr_->unique()) << __func__ << ": Attempt to acquire pointer to object referred to by myltiple Tmp of
+  //     type "
   //                           << typeName() << std::endl;
   //     T* ptr = ptr_;
   //     ptr_ = 0;

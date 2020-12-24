@@ -83,7 +83,9 @@ void cfdemCloudIB::getDEMData() {
   }
 }
 
-void cfdemCloudIB::giveDEMData() const { dataExchangeM().giveData("dragforce", "vector-atom", DEMForcesPtr()); }
+void cfdemCloudIB::giveDEMData() const {
+  dataExchangeM().giveData("dragforce", "vector-atom", DEMForcesPtr());
+}
 
 //! @brief 确定颗粒周围 refined 网格的区域
 void cfdemCloudIB::setInterface(volScalarField& interface,
@@ -171,8 +173,9 @@ void cfdemCloudIB::evolve(volScalarField& volumeFraction, volScalarField& interf
     for (const auto& ptr : forceModels_) {
       ptr->setForce();
     }
-    for(int index = 0; index < numberOfParticles(); ++index){
-        Pout << "DEMForces: " << DEMForces()[index][0] << ", " << DEMForces()[index][1] << ", " << DEMForces()[index][2] << endl;
+    for (int index = 0; index < numberOfParticles(); ++index) {
+      Pout << "DEMForces: " << DEMForces()[index][0] << ", " << DEMForces()[index][1] << ", " << DEMForces()[index][2]
+           << endl;
     }
     // write DEM data
     giveDEMData();

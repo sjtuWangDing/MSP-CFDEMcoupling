@@ -56,7 +56,9 @@ runLiggghts::runLiggghts(cfdemCloud& cloud) : liggghtsCommandModel(cloud), subPr
 //! \brief Destructor
 runLiggghts::~runLiggghts() {}
 
-std::string runLiggghts::getCommand(int index) const { return command_; }
+std::string runLiggghts::getCommand(int index) const {
+  return command_;
+}
 
 std::string runLiggghts::createCommand(const std::string& cmd, int interval) {
   return cmd + " " + std::to_string(interval);
