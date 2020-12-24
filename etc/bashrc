@@ -21,21 +21,18 @@
 #export CFDEM_LIGGGHTS_MAKEFILE_NAME=auto
 #export CFDEM_LPP_DIR=$HOME/LIGGGHTS/mylpp/src
 #. $CFDEM_bashrc
-
+##-----------------------------------------------------------------------------
 ## source msp-cfdem env vars
-
 #export MSP_CFDEM_PROJECT_DIR=$HOME/CFDEM/MSP-CFDEMcoupling-$WM_PROJECT_VERSION
-#export MSP_CFDEM_SRC_DIR=$MSP_CFDEM_PROJECT_DIR/src
-#export MSP_CFDEM_bashrc=$MSP_CFDEM_PROJECT_DIR/etc/bashrc.sh
-#. $MSP_CFDEM_bashrc
-
+#export MSP_CFDEM_bashrc=$MSP_CFDEM_PROJECT_DIR/etc/bashrc
 ## source other env vars which will be used in ". $MSP_CFDEM_bashrc"
 #export MSP_CFDEM_VERBOSE=false
+#. $MSP_CFDEM_bashrc
 ##-----------------------------------------------------------------------------
 
 echo_()
 {
-  if [ "false" = $MSP_CFDEM_VERBOSE ]; then echo "$1"; fi
+  if [ "true" = $MSP_CFDEM_VERBOSE ]; then echo "$1"; fi
 }
 
 add_path_()
