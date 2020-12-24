@@ -93,6 +93,7 @@ void ShirgaonkarIB::setForce() {
       forceSubModel_->addTorque(index, torque);
     }
   }
+  Info << "Setting ShirgaonkarIB - done" << endl;
 }
 
 }  // namespace Foam

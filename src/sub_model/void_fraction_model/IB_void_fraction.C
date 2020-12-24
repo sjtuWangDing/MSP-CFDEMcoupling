@@ -77,6 +77,8 @@ void IBVoidFraction::setVoidFraction() {
         // 保存颗粒覆盖的所有网格编号
         cloud_.cellIDs()[index][i] = cellID;
         // 保存 volumeFraction
+        volumeFractionNext_[cellID] = volumeFractionNext_[cellID] < alphaMin_ ? alphaMin_ : volumeFractionNext_[cellID];
+        volumeFractionNext_[cellID] = volumeFractionNext_[cellID] > alphaMax_ ? alphaMax_ : volumeFractionNext_[cellID];
         cloud_.volumeFractions()[index][i] = volumeFractionNext_[cellID];
       }
     } else {
@@ -84,7 +86,6 @@ void IBVoidFraction::setVoidFraction() {
       cloud_.pCloud().cellIDs().emplace_back();
       cloud_.pCloud().volumeFractions().emplace_back();
     }
-    Pout << "particleOverMeshNumber: " << meshNumber << endl;
   }
 }
 
@@ -129,12 +130,12 @@ void IBVoidFraction::setVolumeFractionForSingleParticle(const int index,
         if (fc < 0.0 && fv < 0.0) {
           // 网格中心在颗粒中, 角点也在颗粒中
           volumeFractionNext_[findCellID] -= ratio;
-        } else if (fc < 0.0 && fv > 0.0) {
+        } else if (fc < 0.0 && fv >= 0.0) {
           // 网格中心在颗粒中, 角点不在颗粒中
           // 计算角点 vertexPosition 对体积分数的影响系数 lambda
           double lambda = segmentParticleIntersection(radius, particleCentre, cellCentre, vertexPosition);
           volumeFractionNext_[findCellID] -= ratio * lambda;
-        } else if (fc > 0.0 && fv < 0.0) {
+        } else if (fc >= 0.0 && fv < 0.0) {
           // 网格中心不在颗粒中, 角点在颗粒中
           // 计算角点 vertexPosition 对体积分数的影响系数 lambda
           double lambda = segmentParticleIntersection(radius, particleCentre, vertexPosition, cellCentre);
@@ -217,10 +218,12 @@ void IBVoidFraction::buildLabelHashSetForVolumeFraction(const label cellID, cons
         } else {
           // 如果 neighbour 网格的体积分数不为 1.0, 则说明在计算其他颗粒时候, 已经遍历到该网格
           volumeFractionNext_[neighbour] -= (1.0 - scale);
-          volumeFractionNext_[neighbour] = volumeFractionNext_[neighbour] < 0.0 ? 0.0 : volumeFractionNext_[neighbour];
-          volumeFractionNext_[neighbour] = volumeFractionNext_[neighbour] > 1.0 ? 1.0 : volumeFractionNext_[neighbour];
+          volumeFractionNext_[neighbour] =
+              volumeFractionNext_[neighbour] < alphaMin_ ? alphaMin_ : volumeFractionNext_[neighbour];
+          volumeFractionNext_[neighbour] =
+              volumeFractionNext_[neighbour] > alphaMax_ ? alphaMax_ : volumeFractionNext_[neighbour];
         }
-        if (!(fabs(scale - 1.0) < 1e-15)) {
+        if (!(fabs(scale - 1.0) < Foam::SMALL)) {
           // 如果体积分数不为 1.0, 则说明该 neighbour 需要递归循环构建哈希集合
           buildLabelHashSetForVolumeFraction(neighbour, particleCentre, radius, hashSetPtr);
         }

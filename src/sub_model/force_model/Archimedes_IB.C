@@ -105,6 +105,7 @@ void ArchimedesIB::setForce() {
            << buoyancy[2] << "]" << endl;
     }
   }
+  Info << "Setting ArchimedesIB force - done" << endl;
 }
 
 }  // namespace Foam

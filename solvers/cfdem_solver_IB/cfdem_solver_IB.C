@@ -77,7 +77,7 @@ int main(int argc, char* argv[]) {
 
   while(runTime.loop()) {
 
-    Info << "Time = " << runTime.timeName() << endl << endl;
+    Info << "\nTime = " << runTime.timeName() << endl << endl;
 
     // set interface
     interface = mag(mesh.lookupObject<volScalarField>("volumeFractionNext"));

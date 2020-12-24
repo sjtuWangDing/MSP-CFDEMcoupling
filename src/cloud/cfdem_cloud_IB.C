@@ -75,12 +75,6 @@ void cfdemCloudIB::getDEMData() {
   dataExchangeM().getData("x", "vector-atom", parCloud_.positionsPtr());
   dataExchangeM().getData("v", "vector-atom", parCloud_.velocitiesPtr());
   dataExchangeM().getData("omega", "vector-atom", parCloud_.angularVelocitiesPtr());
-  for (int i = 0; i < numberOfParticles(); ++i) {
-    Info << positions()[i][0] << ", " << positions()[i][1] << ", " << positions()[i][2] << endl;
-  }
-  for (int i = 0; i < numberOfParticles(); ++i) {
-    Info << velocities()[i][0] << ", " << velocities()[i][1] << ", " << velocities()[i][2] << endl;
-  }
 }
 
 void cfdemCloudIB::giveDEMData() const {
@@ -101,6 +95,24 @@ void cfdemCloudIB::setInterface(volScalarField& interface,
       }
     }
   }
+}
+
+void cfdemCloudIB::printParticleInfo() const {
+  base::MPI_Barrier();
+  for (int i = 0; i < numberOfParticles(); ++i) {
+    Info << "position of par " << i << ": " << positions()[i][0] << ", " << positions()[i][1] << ", "
+         << positions()[i][2] << endl;
+  }
+  for (int i = 0; i < numberOfParticles(); ++i) {
+    Info << "velocity of par " << i << ": " << velocities()[i][0] << ", " << velocities()[i][1] << ", "
+         << velocities()[i][2] << endl;
+  }
+  base::MPI_Barrier();
+  for (int i = 0; i < numberOfParticles(); ++i) {
+    Pout << "DEMForces of par " << i << ": " << DEMForces()[i][0] << ", " << DEMForces()[i][1] << ", "
+         << DEMForces()[i][2] << endl;
+  }
+  base::MPI_Barrier();
 }
 
 void cfdemCloudIB::calcVelocityCorrection(volScalarField& p, volVectorField& U, volScalarField& phiIB,
@@ -173,12 +185,10 @@ void cfdemCloudIB::evolve(volScalarField& volumeFraction, volScalarField& interf
     for (const auto& ptr : forceModels_) {
       ptr->setForce();
     }
-    for (int index = 0; index < numberOfParticles(); ++index) {
-      Pout << "DEMForces: " << DEMForces()[index][0] << ", " << DEMForces()[index][1] << ", " << DEMForces()[index][2]
-           << endl;
-    }
     // write DEM data
     giveDEMData();
+    // 输出信息
+    printParticleInfo();
   }
   Info << __func__ << " - done\n" << endl;
 }

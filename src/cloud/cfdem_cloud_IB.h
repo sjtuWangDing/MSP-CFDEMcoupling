@@ -57,6 +57,10 @@ class cfdemCloudIB : public cfdemCloud {
   void calcVelocityCorrection(volScalarField& p, volVectorField& U, volScalarField& phiIB,
                               volScalarField& voidfraction);
 
+  inline bool meshHasUpdated() const { return meshHasUpdated_; }
+
+  inline void setMeshHasUpdated(bool meshHasUpdated) { meshHasUpdated_ = meshHasUpdated; }
+
  protected:
   //! \brief 重新分配内存
   void reallocate();
@@ -70,10 +74,8 @@ class cfdemCloudIB : public cfdemCloud {
   //! \brief 确定颗粒周围 refined 网格的区域
   void setInterface(volScalarField& interface, const double scale = cfdemCloudIB::particleMeshScale_) const;
 
- public:
-  inline bool meshHasUpdated() const { return meshHasUpdated_; }
-
-  inline void setMeshHasUpdated(bool meshHasUpdated) { meshHasUpdated_ = meshHasUpdated; }
+  //! \brief 输出颗粒信息
+  void printParticleInfo() const;
 
  protected:
   static const double particleMeshScale_;
