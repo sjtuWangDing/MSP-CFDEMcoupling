@@ -30,6 +30,11 @@ else
   blockMesh
 fi
 
+# add post dir to DEM
+if [ ! -d "$casePath/DEM/post" ]; then
+	mkdir "$casePath/DEM/post"
+fi
+
 # call function to run a parallel CFD-DEM case
 mspCfdemParallelRun $casePath "$solverDir/$solverName" $numberOfProcs $machineFileName $logPath $logFileName
 
