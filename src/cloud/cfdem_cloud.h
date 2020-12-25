@@ -144,6 +144,10 @@ class cfdemCloud {
 
   inline bool writeTimePassed() const { return writeTimePassed_; }
 
+  inline bool meshHasUpdated() const { return meshHasUpdated_; }
+
+  inline void setMeshHasUpdated(bool meshHasUpdated) { meshHasUpdated_ = meshHasUpdated; }
+
   /* ------------------------- interface of CouplingProperties --------------------------- */
 
   inline const std::vector<std::string>& forceModelList() const { return cProps_.forceModelList(); }
@@ -255,6 +259,14 @@ class cfdemCloud {
 
   ParticleCloud parCloud_;
 
+  bool writeTimePassed_;
+
+  /*!
+   * \brief 判断 mesh 是否被更新过
+   * \note 在求解器中使用 dynamic mesh，如果 mesh 更新，则 mesh.update() 返回 true，否则返回 false
+   */
+  bool meshHasUpdated_;
+
   std::vector<std::shared_ptr<liggghtsCommandModel>> liggghtsCommandModels_;
 
   std::vector<std::shared_ptr<forceModel>> forceModels_;
@@ -296,32 +308,8 @@ class cfdemCloud {
   //! \brief Multiphase Turbulence (e.g., slip-induced turbulence)
   volScalarField turbulenceMultiphase_;
 
-  bool writeTimePassed_;
-
-  bool arraysReallocated_;
-
   //! \brief used for ddt(voidFraction)
   volScalarField ddtVoidFraction_;
-
-  /*!
-   * \brief 是否隐式计算颗粒所受到的阻力
-   *        true - 在每个耦合时间步，流体的速度和阻力系数都被传递到 DEM 中，从而在每个 DEM 时间步中，
-   *               使用上一个耦合时间步中的阻力系数和流体速度，与当前颗粒速度一起计算颗粒受到的阻力
-   *        false - 在每个耦合时间步中，流体对颗粒的阻力被传递到 DEM 中，并且在接下来的 DEM 时间步中，
-   *                这个力保持不变，直到下个耦合时间步
-   * \note default false
-   */
-  bool impDEMdrag_;
-
-  /*!
-   * \brief 在每个 DEM 时间步中，都将颗粒受到的力累计起来，然后在耦合时间步中传递给 CFD 计算，
-   *        只有当 impDEMdrag_ = true 时才为真
-   * \note default false
-   */
-  bool impDEMdragAcc_;
-
-  //! \brief 显式、隐式分裂系数
-  scalar impExpSplitFactor_;
 
   //! \brief Variable used to de-activate mirroring across periodic boundary conditions.
   Switch checkPeriodicCells_;

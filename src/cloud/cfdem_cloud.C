@@ -51,6 +51,8 @@ cfdemCloud::cfdemCloud(const fvMesh& mesh)
                                      mesh.time().constant(), mesh, IOobject::MUST_READ, IOobject::NO_WRITE)),
       cProps_(mesh, couplingPropertiesDict_, liggghtsCommandsDict_),
       parCloud_(0),
+      writeTimePassed_(false),
+      meshHasUpdated_(false),
       dataExchangeModel_(dataExchangeModel::New(*this, couplingPropertiesDict_)),
       voidFractionModel_(voidFractionModel::New(*this, couplingPropertiesDict_)),
       locateModel_(locateModel::New(*this, couplingPropertiesDict_)),

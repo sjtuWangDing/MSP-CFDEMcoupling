@@ -73,6 +73,9 @@ engineSearchIB::~engineSearchIB() {}
  * \param findCellIDs 颗粒覆盖网格的编号
  */
 void engineSearchIB::findCell(const base::CITensor1& findCellIDs) const {
+  if (cloud_.meshHasUpdated()) {
+    const_cast<engineSearchIB*>(this)->searchEngine_.correct();
+  }
   for (int index = 0; index < cloud_.numberOfParticles(); ++index) {
     // reset findCellIDs
     findCellIDs[index] = -1;

@@ -57,10 +57,6 @@ class cfdemCloudIB : public cfdemCloud {
   void calcVelocityCorrection(volScalarField& p, volVectorField& U, volScalarField& phiIB,
                               volScalarField& voidfraction);
 
-  inline bool meshHasUpdated() const { return meshHasUpdated_; }
-
-  inline void setMeshHasUpdated(bool meshHasUpdated) { meshHasUpdated_ = meshHasUpdated; }
-
  protected:
   //! \brief 重新分配内存
   void reallocate();
@@ -79,11 +75,6 @@ class cfdemCloudIB : public cfdemCloud {
 
  protected:
   static const double particleMeshScale_;
-  /*!
-   * \brief 判断 mesh 是否被更新过
-   * \note 在求解器中使用 dynamic mesh，如果 mesh 更新，则 mesh.update() 返回 true，否则返回 false
-   */
-  bool meshHasUpdated_;
 
   int pRefCell_;
 

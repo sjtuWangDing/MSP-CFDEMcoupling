@@ -33,7 +33,6 @@ Class
 
 #include <mutex>
 #include "cloud/cfdem_cloud_IB.h"
-#include "dynamicFvMesh.H"
 #include "sub_model/data_exchange_model/data_exchange_model.h"
 #include "sub_model/force_model/force_model.h"
 
@@ -42,7 +41,6 @@ namespace Foam {
 //! \brief Constructed from mesh
 cfdemCloudIB::cfdemCloudIB(const fvMesh& mesh)
     : cfdemCloud(mesh),
-      meshHasUpdated_(false),
       pRefCell_(readLabel(mesh.solutionDict().subDict("PISO").lookup("pRefCell"))),
       pRefValue_(readScalar(mesh.solutionDict().subDict("PISO").lookup("pRefValue"))) {}
 
@@ -81,7 +79,7 @@ void cfdemCloudIB::giveDEMData() const {
   dataExchangeM().giveData("dragforce", "vector-atom", DEMForcesPtr());
 }
 
-//! @brief 确定颗粒周围 refined 网格的区域
+//! \brief 确定颗粒周围 refined 网格的区域
 void cfdemCloudIB::setInterface(volScalarField& interface,
                                 const double scale /* = cfdemCloudIB::particleMeshScale_ */) const {
   interface = dimensionedScalar("zero", interface.dimensions(), 0.0);

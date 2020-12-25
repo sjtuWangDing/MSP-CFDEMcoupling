@@ -25,26 +25,26 @@ License
   Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
-  cfdemCloudIB derived from cfdemCloud
+  cfdemCloudIBOpti derived from cfdemCloud
 
 Class
-  Foam::cfdemCloudIB
+  Foam::cfdemCloudIBOpti
 \*---------------------------------------------------------------------------*/
 
-#ifndef __CFDEM_CLOUD_IB_H__
-#define __CFDEM_CLOUD_IB_H__
+#ifndef __CFDEM_CLOUD_IB_OPTI_H__
+#define __CFDEM_CLOUD_IB_OPTI_H__
 
 #include "cloud/cfdem_cloud.h"
 
 namespace Foam {
 
-class cfdemCloudIB : public cfdemCloud {
+class cfdemCloudIBOpti : public cfdemCloud {
  public:
   //! \brief Constructed from mesh
-  cfdemCloudIB(const fvMesh& mesh);
+  cfdemCloudIBOpti(const fvMesh& mesh);
 
   //! \brief Destructor
-  ~cfdemCloudIB();
+  ~cfdemCloudIBOpti();
 
   /*!
    * \brief 更新函数
@@ -54,7 +54,16 @@ class cfdemCloudIB : public cfdemCloud {
    */
   void evolve(volScalarField& volumeFraction, volScalarField& interface);
 
- public:
+  void calcVelocityCorrection(volScalarField& p, volVectorField& U, volScalarField& phiIB,
+                              volScalarField& voidfraction);
+
+  /*!
+   * \brief 更新网格，如果 mesh 是 Foam::dynamicRefineFvMesh 类型，则更新网格，
+   *   如果是 Foam::staticFvMesh 或者其他类型，则不更新
+   */
+  void updateMesh(volScalarField& interface);
+
+ protected:
   //! \brief 重新分配内存
   void reallocate();
 
@@ -64,40 +73,22 @@ class cfdemCloudIB : public cfdemCloud {
   //! \brief 传递数据到 DEM
   void giveDEMData() const;
 
-  /*!
-   * \brief 更新网格，如果 mesh 是 Foam::dynamicRefineFvMesh 类型，则更新网格，
-   *   如果是 Foam::staticFvMesh 或者其他类型，则不更新
-   */
-  void updateMesh(volScalarField& interface);
-
-  void setForce() const;
-
   //! \brief 确定颗粒周围 refined 网格的区域
-  void setInterface(volScalarField& interface, const double scale = 2.0) const;
+  void setInterface(volScalarField& interface, const double scale = cfdemCloudIBOpti::particleMeshScale_) const;
 
-  //! \brief 确定颗粒周围 refined 网格的区域(每个方向的尺寸都是颗粒尺寸的两倍)
-  void setInterface(volScalarField& interface, volScalarField& refineMeshKeepStep) const;
-
- public:
-  inline double refineMeshSkin() const { return cProps_.refineMeshSkin(); }
-
-  inline int refineMeshKeepInterval() const { return cProps_.refineMeshKeepInterval(); }
-
-  inline bool meshHasUpdated() const { return meshHasUpdated_; }
-
-  inline void setMeshHasUpdated(bool meshHasUpdated) { meshHasUpdated_ = meshHasUpdated; }
+  //! \brief 输出颗粒信息
+  void printParticleInfo() const;
 
  protected:
   static const double particleMeshScale_;
-  /*!
-   * \brief 判断 mesh 是否被更新过
-   * \note 在求解器中使用 dynamic mesh，如果 mesh 更新，则 mesh.update() 返回 true，否则返回 false
-   */
-  bool meshHasUpdated_;
+
+  int pRefCell_;
+
+  double pRefValue_;
 };
 
-const double cfdemCloudIB::particleMeshScale_ = 1.5;
+const double cfdemCloudIBOpti::particleMeshScale_ = 2.0;
 
 }  // namespace Foam
 
-#endif  // __CFDEM_CLOUD_IB_H__
+#endif  // __CFDEM_CLOUD_IB_OPTI_H__
