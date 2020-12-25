@@ -52,7 +52,7 @@ CouplingProperties::CouplingProperties(const fvMesh& mesh, const IOdictionary& c
       couplingInterval_(couplingPropertiesDict.lookupOrDefault<int>("couplingInterval", 0)),
       checkPeriodicCells_(couplingPropertiesDict.lookupOrDefault<bool>("checkPeriodicCells", false)),
       periodicCheckRange_(Foam::vector(1, 1, 1)),
-      refineMeshSkin_(couplingPropertiesDict.lookupOrDefault<double>("refineMeshSkin", 1.8)),
+      refineMeshSkin_(couplingPropertiesDict.lookupOrDefault<double>("refineMeshSkin", 2.0)),
       refineMeshKeepInterval_(couplingPropertiesDict.lookupOrDefault<int>("refineMeshKeepInterval", 0)),
       ddtVoidFractionType_(couplingPropertiesDict.lookupOrDefault<Foam::word>("ddtVoidFractionType", "off").c_str()) {
   Info << "CFDEM coupling version: " << CFDEM_VERSION << endl;

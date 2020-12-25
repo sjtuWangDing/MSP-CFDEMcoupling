@@ -174,6 +174,10 @@ class cfdemCloud {
 
   inline const std::string& ddtVoidFractionType() const { return cProps_.ddtVoidFractionType(); }
 
+  inline double refineMeshSkin() const { return cProps_.refineMeshSkin(); }
+
+  inline int refineMeshKeepInterval() const { return cProps_.refineMeshKeepInterval(); }
+
   /* ------------------------- interface of particleCloud ------------------------------- */
 
   inline int numberOfParticles() const { return parCloud_.numberOfParticles_; }

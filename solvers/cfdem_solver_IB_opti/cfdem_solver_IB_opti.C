@@ -89,7 +89,7 @@ int main(int argc, char* argv[]) {
     #endif
 
     // particle cloud evolve and update mesh
-    particleCloud.evolve(volumeFraction, interface);
+    particleCloud.evolve(volumeFraction, interface, refineMeshKeepStep);
 
     if (particleCloud.solveFlow()) {
       // Momentum predictor

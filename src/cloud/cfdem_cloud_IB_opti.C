@@ -84,15 +84,16 @@ void cfdemCloudIBOpti::giveDEMData() const {
  * \brief 更新网格，如果 mesh 是 Foam::dynamicRefineFvMesh 类型，则更新网格，如果是 Foam::staticFvMesh
  * 或者其他类型，则不更新
  */
-void cfdemCloudIBOpti::updateMesh(volScalarField& interface) {
+void cfdemCloudIBOpti::updateMesh(volScalarField& interface, volScalarField& refineMeshKeepStep) {
   Info << "update mesh..." << endl;
   fvMesh& mesh = const_cast<fvMesh&>(mesh_);
   try {
     // 采用动态网格
     dynamicFvMesh& dyMesh = dynamic_cast<dynamicFvMesh&>(mesh);
     // 设置 interface
-    setInterface(interface);
+    setInterface(interface, refineMeshKeepStep, refineMeshSkin());
     interface.correctBoundaryConditions();
+    refineMeshKeepStep.correctBoundaryConditions();
     // 如果 dyMesh.update() 返回 true，则表明 mesh 被更新了
     // 在findCell函数中，searchEngine会调用correct()函数修正
     setMeshHasUpdated(dyMesh.update());
@@ -105,22 +106,6 @@ void cfdemCloudIBOpti::updateMesh(volScalarField& interface) {
   Info << "update mesh - done" << endl;
   base::MPI_Barrier();
   return;
-}
-
-//! \brief 确定颗粒周围 refined 网格的区域
-void cfdemCloudIBOpti::setInterface(volScalarField& interface,
-                                    const double scale /* = cfdemCloudIBOpti::particleMeshScale_ */) const {
-  interface = dimensionedScalar("zero", interface.dimensions(), 0.0);
-  for (int index = 0; index < numberOfParticles(); ++index) {
-    Foam::vector particlePos = getPosition(index);
-    double radius = getRadius(index);
-    forAll(mesh_.C(), cellI) {
-      double value = voidFractionM().pointInParticle(mesh_.C()[cellI], particlePos, radius, scale);
-      if (value <= 0.0) {
-        interface[cellI] = value + 1.0;
-      }
-    }
-  }
 }
 
 void cfdemCloudIBOpti::printParticleInfo() const {
@@ -182,10 +167,12 @@ void cfdemCloudIBOpti::calcVelocityCorrection(volScalarField& p, volVectorField&
 /*!
  * \brief 更新函数
  * \note used for cfdemSolverIB
- * \param volumeFraction  <[in, out] 大颗粒体积分数
- * \param interface       <[in, out] 界面场，用于 dynamic mesh
+ * \param volumeFraction           <[in, out] 大颗粒体积分数
+ * \param interface                <[in, out] 界面场，用于 dynamic mesh
+ * \param refineMeshKeepStep       <[in, out] 界面场，用于 dynamic mesh
  */
-void cfdemCloudIBOpti::evolve(volScalarField& volumeFraction, volScalarField& interface) {
+void cfdemCloudIBOpti::evolve(volScalarField& volumeFraction, volScalarField& interface,
+                              volScalarField& refineMeshKeepStep) {
   Info << "/ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * /" << endl;
   // 检查当前流体时间步是否同时也是耦合时间步
   if (dataExchangeM().checkValidCouplingStep()) {
@@ -199,7 +186,7 @@ void cfdemCloudIBOpti::evolve(volScalarField& volumeFraction, volScalarField& in
     // 获取 DEM data
     getDEMData();
     // 根据 DEM data，设置 interface 并更新网格
-    updateMesh(interface);
+    updateMesh(interface, refineMeshKeepStep);
     // 获取到在当前 processor 上颗粒覆盖的某一个网格编号，如果获取到的网格编号为 -1，则表示颗粒不覆盖当前 processor
     locateM().findCell(parCloud_.findCellIDs());
     // 计算颗粒空隙率
@@ -220,62 +207,74 @@ void cfdemCloudIBOpti::evolve(volScalarField& volumeFraction, volScalarField& in
     Info << __func__ << ": no need couple, just update mesh..." << endl;
     // 使用上一个耦合时间步的 DEM data 更新 mesh
     // 虽然 DEM data 没有改变，但是这里仍然需要 update mesh，因为 mesh 需要根据自身的 maxRefinement 等属性更新
-    updateMesh(interface);
+    updateMesh(interface, refineMeshKeepStep);
   }
   Info << __func__ << " - done\n" << endl;
 }
 
-// //! \brief 确定颗粒周围 refined 网格的区域(每个方向的尺寸都是颗粒尺寸的两倍)
-// void cfdemCloudIB::setInterface(volScalarField& interface, volScalarField& refineMeshKeepStep) const {
-//   // 确保 call_once 函数中的 lambda 表达式只会被执行一次
-//   static std::once_flag flag;
-//   std::call_once(flag, [&interface, &refineMeshKeepStep]() {
-//     // reset interface and refineMeshKeepStep field
-//     // only set at first step ?????????????????????????????????????
-//     interface = dimensionedScalar("zero", interface.dimensions(), 0.0);
-//     refineMeshKeepStep = dimensionedScalar("zero", refineMeshKeepStep.dimensions(), 0.0);
-//   });
-//   forAll(mesh_.C(), cellI) {
-//     // 当前 cellI 是否位于任意一个颗粒中
-//     bool cellInParticle = false;
-//     bool cellFirstEntryRefineMeshKeepStep = false;
-//     // 网格中心
-//     Foam::vector cellPos = mesh_.C()[cellI];
-//     for (int index = 0; index < numberOfParticles(); ++index) {
-//       if (checkPeriodicCells()) {
-//         FatalError << "Error: not support periodic check!" << abort(FatalError);
-//       }
-//       // 判断网格中心是否在 index 颗粒中
-//       double value = voidFractionM().pointInParticle(getPosition(index), cellPos, getRadius(index),
-//       refineMeshSkin());
-//       if (0 == refineMeshKeepInterval()) {
-//         if (value <= 0.0) {
-//           interface[cellI] = std::max(interface[cellI], value + 1);
-//         }
-//       } else {  // valid refineMeshKeepInterval
-//         if (value <= 0.0) {
-//           // cellI 位于 index 颗粒内部
-//           cellInParticle = true;
-//           // 如果 cellI 网格位于任何一个颗粒内部，则重新设置 refineMeshKeepStep
-//           refineMeshKeepStep[cellI] = refineMeshKeepInterval();
-//           // 设置 interface
-//           interface[cellI] = std::max(interface[cellI], value + 1);
-//         } else {
-//           if (false == cellInParticle) {
-//             // cellI 目前不在任何颗粒中
-//             if (refineMeshKeepStep[cellI] > Foam::SMALL && false == cellFirstEntryRefineMeshKeepStep) {
-//               // refineMeshKeepStep[cellI] > 0.0，则保持 interFace 值
-//               cellFirstEntryRefineMeshKeepStep = true;  // 确保对每一个 cellI 只执行一次
-//               refineMeshKeepStep[cellI] -= 1.0;
-//             } else {
-//               // 设置 interFace 为 0.0
-//               interface[cellI] = 0.0;
-//             }
-//           }
-//         }
-//       }
-//     }  // end of all particles
-//   }    // end of all cell in current processor
-// }
+//! \brief 确定颗粒周围 refined 网格的区域
+void cfdemCloudIBOpti::setInterface(volScalarField& interface, const double scale) const {
+  interface = dimensionedScalar("zero", interface.dimensions(), 0.0);
+  for (int index = 0; index < numberOfParticles(); ++index) {
+    Foam::vector particlePos = getPosition(index);
+    double radius = getRadius(index);
+    forAll(mesh_.C(), cellI) {
+      double value = voidFractionM().pointInParticle(mesh_.C()[cellI], particlePos, radius, scale);
+      if (value <= 0.0) {
+        interface[cellI] = value + 1.0;
+      }
+    }
+  }
+}
+
+//! \brief 确定颗粒周围 refined 网格的区域
+void cfdemCloudIBOpti::setInterface(volScalarField& interface, volScalarField& refineMeshKeepStep,
+                                    const double scale) const {
+  if (0 == refineMeshKeepInterval()) {
+    setInterface(interface, scale);
+    return;
+  }
+  // 确保 call_once 函数中的 lambda 表达式只会被执行一次
+  static std::once_flag flag;
+  std::call_once(flag, [&interface, &refineMeshKeepStep]() {
+    // reset interface and refineMeshKeepStep field
+    interface = dimensionedScalar("zero", interface.dimensions(), 0.0);
+    refineMeshKeepStep = dimensionedScalar("zero", refineMeshKeepStep.dimensions(), 0.0);
+  });
+  Foam::vector cellPos = Foam::vector::zero;  // 网格中心
+  Foam::vector parPos = Foam::vector::zero;   // 颗粒中心
+  double radius = 0;                          // 颗粒半径
+  forAll(mesh_.C(), cellI) {
+    bool cellFirstEntryRefineMeshKeepStep = false;
+    cellPos = mesh_.C()[cellI];
+    for (int index = 0; index < numberOfParticles(); ++index) {
+      if (checkPeriodicCells()) {
+        FatalError << "Error: not support periodic check!" << abort(FatalError);
+      }
+      parPos = getPosition(index);
+      radius = getRadius(index);
+      // 判断网格中心是否在 index 颗粒中
+      double value = voidFractionM().pointInParticle(cellPos, parPos, radius, refineMeshSkin());
+      if (value < 0.0) {
+        // 如果 cellI 网格位于任何一个颗粒内部，则重新设置 refineMeshKeepStep
+        refineMeshKeepStep[cellI] = refineMeshKeepInterval();
+        // 设置 interface
+        interface[cellI] = value + 1.0;
+        // 如果cellI位于某一个颗粒中，则可以直接结束particle loop
+        break;
+      } else {  // cellI 目前不在任何颗粒中
+        if (refineMeshKeepStep[cellI] > Foam::SMALL && false == cellFirstEntryRefineMeshKeepStep) {
+          // refineMeshKeepStep[cellI] > 0.0，则保持 interFace 值
+          cellFirstEntryRefineMeshKeepStep = true;
+          // 确保在 particle loop 的过程中对每一个 cellI 只执行一次
+          refineMeshKeepStep[cellI] -= 1.0;
+        } else {
+          interface[cellI] = 0.0;
+          refineMeshKeepStep[cellI] = 0.0;
+        }
+      }
+    }  // end of all particles
+  }    // end of all cell in current processor
+}
 
 }  // namespace Foam

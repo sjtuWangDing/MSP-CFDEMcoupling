@@ -49,10 +49,11 @@ class cfdemCloudIBOpti : public cfdemCloud {
   /*!
    * \brief 更新函数
    * \note used for cfdemSolverIB
-   * \param volumeFraction  <[in, out] 大颗粒体积分数
-   * \param interFace       <[in, out] 界面场，用于 dynamic mesh
+   * \param volumeFraction           <[in, out] 大颗粒体积分数
+   * \param interface                <[in, out] 界面场，用于 dynamic mesh
+   * \param refineMeshKeepStep       <[in, out] 界面场，用于 dynamic mesh
    */
-  void evolve(volScalarField& volumeFraction, volScalarField& interface);
+  void evolve(volScalarField& volumeFraction, volScalarField& interface, volScalarField& refineMeshKeepStep);
 
   void calcVelocityCorrection(volScalarField& p, volVectorField& U, volScalarField& phiIB,
                               volScalarField& voidfraction);
@@ -61,7 +62,7 @@ class cfdemCloudIBOpti : public cfdemCloud {
    * \brief 更新网格，如果 mesh 是 Foam::dynamicRefineFvMesh 类型，则更新网格，
    *   如果是 Foam::staticFvMesh 或者其他类型，则不更新
    */
-  void updateMesh(volScalarField& interface);
+  void updateMesh(volScalarField& interface, volScalarField& refineMeshKeepStep);
 
  protected:
   //! \brief 重新分配内存
@@ -74,20 +75,19 @@ class cfdemCloudIBOpti : public cfdemCloud {
   void giveDEMData() const;
 
   //! \brief 确定颗粒周围 refined 网格的区域
-  void setInterface(volScalarField& interface, const double scale = cfdemCloudIBOpti::particleMeshScale_) const;
+  void setInterface(volScalarField& interface, const double scale) const;
+
+  //! \brief 确定颗粒周围 refined 网格的区域
+  void setInterface(volScalarField& interface, volScalarField& refineMeshKeepStep, const double scale) const;
 
   //! \brief 输出颗粒信息
   void printParticleInfo() const;
 
  protected:
-  static const double particleMeshScale_;
-
   int pRefCell_;
 
   double pRefValue_;
 };
-
-const double cfdemCloudIBOpti::particleMeshScale_ = 2.0;
 
 }  // namespace Foam
 

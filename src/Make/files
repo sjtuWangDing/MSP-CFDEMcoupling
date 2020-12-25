@@ -6,6 +6,7 @@ $(cloud)/cfdem_base.C
 $(cloud)/cfdem_cloud.C
 $(cloud)/cfdem_cloud_IB.C
 $(cloud)/cfdem_cloud_IB_opti.C
+$(cloud)/cfdem_cloud_IB_lmpf.C
 $(cloud)/coupling_properties.C
 
 $(sub_model)/averaging_model/averaging_model.C
