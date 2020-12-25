@@ -1,0 +1,3 @@
+cfdem_solver_IB_opti.C
+
+EXE=$(MSP_CFDEM_BIN_DIR)/cfdemSolverIBOpti-1.0

@@ -1,0 +1,78 @@
+/*---------------------------------------------------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  1.4                                   |
+|   \\  /    A nd           | Web:      http://www.openfoam.org               |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version         2.0;
+    format          ascii;
+    root            "";
+    case            "";
+    instance        "";
+    local           "";
+    class           dictionary;
+    object          couplingProperties;
+}
+
+/* ---------------------------- sub-models & settings ---------------------------- */
+
+modelType none;
+
+couplingInterval 10;
+
+// 如果耦合时间间隔 > CFD 时间步，那么允许在一个耦合时间步中存在多个 CFD 时间步
+allowUseSubCFDTimeStep true;
+
+forceModels
+(
+    ArchimedesIB
+    ShirgaonkarIB
+);
+
+voidFractionModel IB;
+
+locateModel engineIB;
+
+dataExchangeModel twoWayMPI;
+
+turbulenceModelType turbulenceProperties;
+
+/* ---------------------------- sub-model properties ------------------------- */
+
+ShirgaonkarIBProps
+{
+    verbose true;
+    velFieldName "U";
+    pressureFieldName "p";
+}
+
+ArchimedesIBProps
+{
+    verbose true;
+    gravityFieldName "g";
+    volumeFractionFieldName "volumeFractionNext";
+}
+
+ArchimedesIBTestProps
+{
+    gravityFieldName "g";
+}
+
+twoWayMPIProps
+{
+    liggghtsPath "../DEM/in.liggghts_run";
+}
+
+IBProps
+{
+}
+
+engineIBProps
+{
+    treeSearch false;
+    zSplit 8;
+    xySplit 16;
+}

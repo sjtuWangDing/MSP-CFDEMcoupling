@@ -104,14 +104,14 @@ void IBVoidFraction::setVolumeFractionForSingleParticle(const int index,
   // 获取颗粒中心坐标
   Foam::vector particleCentre = cloud_.getPosition(index);
   // 获取到在当前 processor 上颗粒覆盖的某一个网格编号
-  label findCellID = cloud_.findCellIDs()[index];
+  int findCellID = cloud_.findCellIDs()[index];
   if (findCellID >= 0) {  // particle centre is in domain
     // 获取网格中心坐标
     Foam::vector cellCentre = cloud_.mesh().C()[findCellID];
     // 判断网格中心是否在颗粒中
-    scalar fc = pointInParticle(particleCentre, cellCentre, radius);
+    double fc = pointInParticle(particleCentre, cellCentre, radius);
     // 计算网格的等效半径
-    scalar corona = 0.5 * sqrt(3.0) * cbrt(cloud_.mesh().V()[findCellID]);
+    double corona = 0.5 * sqrt(3.0) * cbrt(cloud_.mesh().V()[findCellID]);
     // 获取网格的 corona point
     Foam::vector coronaPoint = getCoronaPointPosition(particleCentre, cellCentre, corona);
     if (pointInParticle(particleCentre, coronaPoint, radius) < 0.0) {
