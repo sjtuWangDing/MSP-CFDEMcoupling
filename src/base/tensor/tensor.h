@@ -249,7 +249,7 @@ class Tensor : public base::Exp<Tensor<dimension, DType, Device, Alloc>, DType> 
 #if TENSOR_VERBOSE
     std::cout << "Tensor(Tensor&&)" << std::endl;
 #endif
-    if (nullptr != &that) {
+    if (this != &that) {
       dptr_ = that.dptr_;
       optr_ = that.optr_;
       shape_ = that.shape_;
@@ -371,7 +371,7 @@ class Tensor<1, DType, Device, Alloc> : public base::Exp<Tensor<1, DType, Device
   inline Tensor& operator=(const Tensor<1, DType, Device, Alloc>& that) = delete;
 
   inline Tensor(Tensor<1, DType, Device, Alloc>&& that) {
-    if (nullptr != &that) {
+    if (this != &that) {
       dptr_ = that.dptr_;
       optr_ = that.optr_;
       shape_ = that.shape_;
