@@ -35,6 +35,7 @@ Class
 #ifndef __COUPLING_PROPERTIES_H__
 #define __COUPLING_PROPERTIES_H__
 
+#include <vector>
 #include "cloud/cfdem_base.h"
 #include "dictionary.H"
 #include "fvMesh.H"
