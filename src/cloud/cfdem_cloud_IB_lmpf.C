@@ -43,15 +43,72 @@ cfdemCloudIBLmpf::~cfdemCloudIBLmpf() {}
 
 void cfdemCloudIBLmpf::calcLmpf(const volVectorField& U, const volScalarField& rho,
                                 const volScalarField& volumeFraction, volVectorField& lmpf) const {
-  Foam::vector particleVel = Foam::vector::zero;
-  Foam::vector relativeVec = Foam::vector::zero;
-  Foam::vector rotationVel = Foam::vector::zero;
-  Foam::vector angularVel = Foam::vector::zero;
-  Foam::vector updateVel = Foam::vector::zero;
+  // set particle velocity
+  Foam::vector parPos = Foam::vector::zero;
+  Foam::vector lVel = Foam::vector::zero;
+  Foam::vector angVel = Foam::vector::zero;
+  Foam::vector rVec = Foam::vector::zero;
+  Foam::vector parVel = Foam::vector::zero;
+  // reset lmpf field
+  lmpf == dimensionedVector("zero", lmpf.dimensions(), vector::zero);
+  // 计算更新速度
   volVectorField globalUpdateVel = U;
   for (int index = 0; index < numberOfParticles(); ++index) {
-    
-  }  // End of loop all particles
+    parPos = getPosition(index);         // 颗粒中心
+    lVel = getVelocity(index);           // 颗粒线速度
+    angVel = getAngularVelocity(index);  // 颗粒角速度
+    for (int subCell = 0; subCell < particleOverMeshNumber()[index]; ++subCell) {
+      int cellID = cellIDs()[index][subCell];
+      if (cellID > -1) {
+        for (int i = 0; i < 3; ++i) {
+          rVec[i] = U.mesh().C()[cellID][i] - parPos[i];
+        }
+        // 计算颗粒速度
+        parVel = lVel + (angVel ^ rVec);
+        double vf = volumeFractions()[index][subCell];
+        globalUpdateVel[cellID] = (1.0 - vf) * parVel + vf * U[cellID];
+      }
+    }  // End of loop all meshes
+  }    // End of loop all particles
+  Foam::vector sumLmpf = Foam::vector::zero;
+  Foam::vector sumVelDiff = Foam::vector::zero;
+  for (int index = 0; index < numberOfParticles(); ++index) {
+    for (int subCell = 0; subCell < particleOverMeshNumber()[index]; ++subCell) {
+      int cellID = cellIDs()[index][subCell];
+      if (cellID > -1) {
+        Foam::vector updateVel = Foam::vector::zero;
+        Foam::vector neighUpdateVel = Foam::vector::zero;
+        // 获取相邻网格的所有 neighbour cell
+        const labelList& neighList = U.mesh().cellCells()[cellID];
+        int neighbourNum = 0;
+        forAll(neighList, i) {
+          int neighbourCellID = neighList[i];
+          if (neighbourCellID < 0) {
+            continue;
+          }
+          neighbourNum += 1;
+          neighUpdateVel += globalUpdateVel[neighbourCellID];
+        }  // End of neighbour loop
+        if (neighbourNum > 0) {
+          updateVel = 0.5 * globalUpdateVel[cellID] + 1.0 * neighUpdateVel / (2.0 * neighbourNum);
+        } else {
+          updateVel = globalUpdateVel[cellID];
+        }
+        // 计算 lmpf
+        lmpf[cellID] = (updateVel - U[cellID]) / (U.mesh().time().deltaT().value());
+        sumLmpf += lmpf[cellID] * rho[cellID] * U.mesh().V()[cellID];
+        sumVelDiff += updateVel - U[cellID];
+      }
+    }  // End of loop all meshes
+  }    // End of loop all particles
+  if (mag(sumVelDiff) > Foam::SMALL) {
+    Pout << "sumVelDiff: " << sumVelDiff << endl;
+  }
+  base::MPI_Barrier(0.1);
+  if (mag(sumLmpf) > Foam::SMALL) {
+    Pout << "sumLmpf: " << sumLmpf << endl;
+  }
+  base::MPI_Barrier(0.1);
 }
 
 }  // namespace Foam
