@@ -116,8 +116,6 @@ class cfdemCloud {
 
   inline const std::vector<std::shared_ptr<momCoupleModel>>& momCoupleModels() const;
 
-  inline std::shared_ptr<forceModel> forceM(int index) const;
-
   inline const dataExchangeModel& dataExchangeM() const;
 
   inline const voidFractionModel& voidFractionM() const;

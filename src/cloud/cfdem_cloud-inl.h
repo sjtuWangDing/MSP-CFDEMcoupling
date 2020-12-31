@@ -65,14 +65,6 @@ inline const std::vector<std::shared_ptr<momCoupleModel>>& cfdemCloud::momCouple
   return momCoupleModels_;
 }
 
-inline std::shared_ptr<forceModel> cfdemCloud::forceM(int index) const {
-  if (index < 0 || index >= static_cast<int>(forceModels_.size())) {
-    FatalError << "forceM(): "
-               << "index " << index << " out of boundary" << abort(FatalError);
-  }
-  return forceModels_[index];
-}
-
 // Foam::autoPtr<T> 中定义了 inline operator const T&() const;
 inline const dataExchangeModel& cfdemCloud::dataExchangeM() const {
   return dataExchangeModel_;
