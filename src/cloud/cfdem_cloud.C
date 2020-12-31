@@ -80,7 +80,7 @@ cfdemCloud::cfdemCloud(const fvMesh& mesh)
           dimensionedScalar("zero", dimensionSet(0, 0, -1, 0, 0), 0)) {
   // create liggghts command model
   for (const auto& name : liggghtsCommandModelList()) {
-    // liggghtsCommandModel::New() 函数返回的是 std::unique_ptr
+    // liggghtsCommandModel::New() 函数返回的是 std::unique_ptr(xvalue)
     liggghtsCommandModels_.emplace_back(liggghtsCommandModel::New(*this, liggghtsCommandsDict_, name));
   }
   // create force model
