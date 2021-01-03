@@ -67,7 +67,7 @@ twoWayMPI::~twoWayMPI() {}
 //! \return 当前耦合时间步中颗粒的数量
 int twoWayMPI::couple() {
   Info << "dataExchangeModel " << typeName() << ": Starting up LIGGGHTS..." << endl;
-  for (const std::shared_ptr<liggghtsCommandModel>& model : cloud_.liggghtsCommandModels()) {
+  for (const auto& model : cloud_.liggghtsCommandModels()) {
     liggghtsCommandModel* lgs = model.get();
     // 在 runCommand 中会判断当前的 couplingStep_ 是否满足时间步的要求
     if (lgs->runCommand(couplingStep_)) {

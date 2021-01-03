@@ -38,6 +38,8 @@ locateModel engineIB;
 
 dataExchangeModel twoWayMPI;
 
+averagingModel noAveragingModel;
+
 turbulenceModelType turbulenceProperties;
 
 /* ---------------------------- sub-model properties ------------------------- */

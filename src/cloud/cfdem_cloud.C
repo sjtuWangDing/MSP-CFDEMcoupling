@@ -37,8 +37,10 @@ Class
 #include "sub_model/averaging_model/averaging_model.h"
 #include "sub_model/data_exchange_model/data_exchange_model.h"
 #include "sub_model/force_model/force_model.h"
+#include "sub_model/force_model/global_force.h"
 #include "sub_model/liggghts_command_model/liggghts_command_model.h"
 #include "sub_model/locate_model/locate_model.h"
+#include "sub_model/mom_couple_model/mom_couple_model.h"
 #include "sub_model/void_fraction_model/void_fraction_model.h"
 
 namespace Foam {
@@ -54,9 +56,11 @@ cfdemCloud::cfdemCloud(const fvMesh& mesh)
       writeTimePassed_(false),
       meshHasUpdated_(false),
       validCouplingStep_(false),
+      globalForce_(new globalForce(*this)),
       dataExchangeModel_(dataExchangeModel::New(*this, couplingPropertiesDict_)),
       voidFractionModel_(voidFractionModel::New(*this, couplingPropertiesDict_)),
       locateModel_(locateModel::New(*this, couplingPropertiesDict_)),
+      averagingModel_(averagingModel::New(*this, couplingPropertiesDict_)),
 #if defined(version24Dev)
       turbulence_(mesh.lookupObject<turbulenceModel>(cProps_.turbulenceModelType())),
 #elif defined(version21) || defined(version16ext)
@@ -88,6 +92,10 @@ cfdemCloud::cfdemCloud(const fvMesh& mesh)
   for (const auto& name : forceModelList()) {
     forceModels_.emplace_back(forceModel::New(*this, couplingPropertiesDict_, name));
   }
+  // create mom couple model
+  for (const auto& name : momCoupleModelList()) {
+    momCoupleModels_.emplace_back(momCoupleModel::New(*this, couplingPropertiesDict_, name));
+  }
   // check periodic
   if (checkPeriodicCells() != checkSimulationFullyPeriodic()) {
     FatalError << "checkSimulationFullyPeriodic(): " << (checkSimulationFullyPeriodic() ? true : false)
@@ -100,57 +108,111 @@ cfdemCloud::~cfdemCloud() {}
 
 //! \brief 重新分配内存
 void cfdemCloud::reallocate() {
-  // if (numberOfParticlesChanged()) {
-  //   int number = numberOfParticles();
-  //   // allocate memory of data exchanged with liggghts
-  //   dataExchangeM().realloc(parCloud_.radii(), base::makeShape1(number),
-  //   parCloud_.radiiPtr(), 0.0);
-  //   dataExchangeM().realloc(parCloud_.positions(), base::makeShape2(number,
-  //   3), parCloud_.positionsPtr(), 0.0);
-  //   dataExchangeM().realloc(parCloud_.velocities(), base::makeShape2(number,
-  //   3), parCloud_.velocitiesPtr(), 0.0);
-  //   // allocate memory of data not exchanged with liggghts
-  //   parCloud_.particleOverMeshNumber() =
-  //   std::move(base::CITensor1(base::makeShape1(number), 0));
-  //   parCloud_.findCellIDs() =
-  //   std::move(base::CITensor1(base::makeShape1(number), -1));
-  //   parCloud_.dimensionRatios() =
-  //   std::move(base::CDTensor1(base::makeShape1(number), 0.0));
-  // }
+  int number = numberOfParticles();
+  // allocate memory of data exchanged with liggghts
+  dataExchangeM().realloc(parCloud_.radii(), base::makeShape1(number), parCloud_.radiiPtr(), 0.0);
+  dataExchangeM().realloc(parCloud_.positions(), base::makeShape2(number, 3), parCloud_.positionsPtr(), 0.0);
+  dataExchangeM().realloc(parCloud_.velocities(), base::makeShape2(number, 3), parCloud_.velocitiesPtr(), 0.0);
+  dataExchangeM().realloc(parCloud_.DEMForces(), base::makeShape2(number, 3), parCloud_.DEMForcesPtr(), 0.0);
+  // allocate memory of data not exchanged with liggghts
+  parCloud_.particleOverMeshNumber() = std::move(base::CITensor1(base::makeShape1(number), 0));
+  parCloud_.findCellIDs() = std::move(base::CITensor1(base::makeShape1(number), -1));
+  parCloud_.dimensionRatios() = std::move(base::CDTensor1(base::makeShape1(number), -1.0));
+}
+
+void cfdemCloud::getDEMData() {
+  dataExchangeM().getData("radius", "scalar-atom", parCloud_.radiiPtr());
+  dataExchangeM().getData("x", "vector-atom", parCloud_.positionsPtr());
+  dataExchangeM().getData("v", "vector-atom", parCloud_.velocitiesPtr());
+}
+
+void cfdemCloud::giveDEMData() const {
+  dataExchangeM().giveData("dragforce", "vector-atom", DEMForcesPtr());
+}
+
+void cfdemCloud::printParticleInfo() const {
+  base::MPI_Barrier();
+  for (int i = 0; i < numberOfParticles(); ++i) {
+    Info << "position of par " << i << ": " << positions()[i][0] << ", " << positions()[i][1] << ", "
+         << positions()[i][2] << endl;
+  }
+  for (int i = 0; i < numberOfParticles(); ++i) {
+    Info << "velocity of par " << i << ": " << velocities()[i][0] << ", " << velocities()[i][1] << ", "
+         << velocities()[i][2] << endl;
+  }
+  base::MPI_Barrier();
+  for (int i = 0; i < numberOfParticles(); ++i) {
+    Pout << "DEMForces of par " << i << ": " << DEMForces()[i][0] << ", " << DEMForces()[i][1] << ", "
+         << DEMForces()[i][2] << endl;
+  }
+  base::MPI_Barrier();
+}
+
+//! \brief reset field
+void cfdemCloud::resetField() {
+  // 重置局部平均颗粒速度
+  averagingM().resetUs();
+  Info << "Reset Us fields - done" << endl;
+
+  // 重置颗粒速度影响因数场
+  averagingM().resetUsWeightField();
+  Info << "Reset Us weight fields - done" << endl;
+
+  // 重置空隙率场
+  voidFractionM().resetVoidFraction();
+  Info << "Reset voidfraction fields - done" << endl;
+
+  // 重置隐式力场
+  globalF().resetImpParticleForce();
+  Info << "Reset implicit force fields - done" << endl;
+
+  // 重置显式力场
+  globalF().resetExpParticleForcee();
+  Info << "Reset Explicit force fields - done" << endl;
+
+  // 重置单位体积动量交换场
+  for (const auto& ptr : momCoupleModels()) {
+    ptr->resetMomSourceField();
+  }
+  Info << "Reset Ksl fields - done" << endl;
 }
 
 /*!
  * \brief 更新函数
  * \note used for cfdemSolverPiso
- * \param VoidF  <[in, out] 小颗粒空隙率场
+ * \param voidF  <[in, out] 小颗粒空隙率场
  * \param Us     <[in, out] 局部平均小颗粒速度场
  * \param U      <[in] 流体速度场
  */
-void cfdemCloud::evolve(volScalarField& VoidF, volVectorField& Us, volVectorField& U) {
-  // Info << "\nFoam::cfdemCloud::evolve(), used for cfdemSolverPiso......\n" <<
-  // endl;
-  // if (!writeTimePassed_ && mesh_.time().outputTime()) {
-  //   writeTimePassed_ = true;
-  // }
-  // if (dataExchangeM().doCoupleNow()) {
-  //   Info << "evolve coupling..." << endl;
-  //   // couple() 函数执行 liggghts 脚本，并获取新的颗粒数量
-  //   parCloud_.setNumberOfParticles(dataExchangeM().couple());
-  //   Info << "get number of particles: " << parCloud_.numberOfParticles()<< "
-  //   at coupling step: "
-  //     << dataExchangeM().couplingStep() << endl;
-  //   // 重置局部平均颗粒速度
-  //   averagingM().resetUs();
-  //   // 重置颗粒速度影响因数场
-  //   averagingM().resetUsWeightField();
-  //   // 重置小颗粒空隙率场
-  //   voidFractionM().resetVoidFraction();
-  //   // 重置隐式力场
-  //   // 重置显式力场
-  //   // 重置动量交换场
-  // }
-  // Info << "Foam::cfdemCloud::evolve() - done\n" << endl;
-  // return true;
+void cfdemCloud::evolve(volScalarField& voidF, volVectorField& Us, volVectorField& U) {
+  Info << "/ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * /" << endl;
+  // 检查当前流体时间步是否同时也是耦合时间步
+  validCouplingStep_ = dataExchangeM().checkValidCouplingStep();
+  if (validCouplingStep_) {
+    // 创建用于记录 coupling time step counter
+    auto pCounter = std::make_shared<dataExchangeModel::CouplingStepCounter>(dataExchangeM());
+    // couple(): run liggghts command and get number of particle
+    setNumberOfParticles(dataExchangeM().couple());
+    // reset field
+    resetField();
+    // realloc memory
+    reallocate();
+    // 获取 DEM data
+    getDEMData();
+    // 获取到在当前 processor 上颗粒覆盖的某一个网格编号，如果获取到的网格编号为 -1，则表示颗粒不覆盖当前 processor
+    locateM().findCell(parCloud_.findCellIDs());
+    // 计算颗粒空隙率
+    voidFractionM().setVoidFraction();
+    voidFractionM().printVoidFractionInfo();
+    // set particles forces
+    for (const auto& ptr : forceModels_) {
+      ptr->setForce();
+    }
+    // write DEM data
+    giveDEMData();
+    printParticleInfo();
+  }
+  Info << __func__ << " - done\n" << endl;
 }
 
 /*!

@@ -48,6 +48,7 @@ Class
 // not need to include header because they use share_ptr
 #include "sub_model/averaging_model/averaging_model.h"
 #include "sub_model/data_exchange_model/data_exchange_model.h"
+#include "sub_model/force_model/global_force.h"
 #include "sub_model/locate_model/locate_model.h"
 #include "sub_model/void_fraction_model/void_fraction_model.h"
 
@@ -78,6 +79,14 @@ inline const locateModel& cfdemCloud::locateM() const {
   return locateModel_;
 }
 
+inline const averagingModel& cfdemCloud::averagingM() const {
+  return averagingModel_;
+}
+
+inline const globalForce& cfdemCloud::globalF() const {
+  return globalForce_;
+}
+
 inline dataExchangeModel& cfdemCloud::dataExchangeM() {
   return dataExchangeModel_();
 }
@@ -88,6 +97,14 @@ inline voidFractionModel& cfdemCloud::voidFractionM() {
 
 inline locateModel& cfdemCloud::locateM() {
   return locateModel_();
+}
+
+inline averagingModel& cfdemCloud::averagingM() {
+  return averagingModel_();
+}
+
+inline globalForce& cfdemCloud::globalF() {
+  return globalForce_();
 }
 
 #if defined(version24Dev)

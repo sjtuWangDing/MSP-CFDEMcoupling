@@ -49,6 +49,8 @@ cfdmeDefineBaseTypeNew(autoPtr, voidFractionModel, (cfdemCloud & cloud, const di
 //! \brief Constructor
 voidFractionModel::voidFractionModel(cfdemCloud& cloud)
     : cloud_(cloud),
+      weight_(1.0),
+      porosity_(1.0),
       voidFractionPrev_(IOobject("voidFractionPrev", cloud.mesh().time().timeName(), cloud.mesh(),
                                  IOobject::READ_IF_PRESENT,  // or MUST_READ,
                                  IOobject::AUTO_WRITE),

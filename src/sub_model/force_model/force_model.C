@@ -49,20 +49,7 @@ cfdmeDefineBaseTypeNewWithTypeName(std::unique_ptr, forceModel,
                                    modelName, (cloud));
 
 //! \brief Constructor
-forceModel::forceModel(cfdemCloud& cloud)
-    : cloud_(cloud),
-      forceSubModel_(nullptr),
-      useProbe_(false),
-      impParticleForces_(IOobject("impParticleForces", cloud.mesh().time().timeName(), cloud.mesh(),
-                                  IOobject::READ_IF_PRESENT, IOobject::AUTO_WRITE),
-                         cloud.mesh(), dimensionedVector("zero", dimensionSet(1, 1, -2, 0, 0),
-                                                         vector(0, 0, 0))  // [N] == [kg * m / s^2]
-                         ),
-      expParticleForces_(IOobject("expParticleForces", cloud.mesh().time().timeName(), cloud.mesh(),
-                                  IOobject::READ_IF_PRESENT, IOobject::AUTO_WRITE),
-                         cloud.mesh(), dimensionedVector("zero", dimensionSet(1, 1, -2, 0, 0),
-                                                         vector(0, 0, 0))  // [N] == [kg * m / s^2]
-                         ) {}
+forceModel::forceModel(cfdemCloud& cloud) : cloud_(cloud), forceSubModel_(nullptr), useProbe_(false) {}
 
 //! \brief Destructor
 forceModel::~forceModel() {}

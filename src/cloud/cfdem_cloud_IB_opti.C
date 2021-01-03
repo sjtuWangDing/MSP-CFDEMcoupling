@@ -123,24 +123,6 @@ void cfdemCloudIBOpti::setInterface(volScalarField& interface,
   }
 }
 
-void cfdemCloudIBOpti::printParticleInfo() const {
-  base::MPI_Barrier();
-  for (int i = 0; i < numberOfParticles(); ++i) {
-    Info << "position of par " << i << ": " << positions()[i][0] << ", " << positions()[i][1] << ", "
-         << positions()[i][2] << endl;
-  }
-  for (int i = 0; i < numberOfParticles(); ++i) {
-    Info << "velocity of par " << i << ": " << velocities()[i][0] << ", " << velocities()[i][1] << ", "
-         << velocities()[i][2] << endl;
-  }
-  base::MPI_Barrier();
-  for (int i = 0; i < numberOfParticles(); ++i) {
-    Pout << "DEMForces of par " << i << ": " << DEMForces()[i][0] << ", " << DEMForces()[i][1] << ", "
-         << DEMForces()[i][2] << endl;
-  }
-  base::MPI_Barrier();
-}
-
 void cfdemCloudIBOpti::calcVelocityCorrection(volScalarField& p, volVectorField& U, volScalarField& phiIB,
                                               volScalarField& volumeFraction) {
   if (validCouplingStep_) {

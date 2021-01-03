@@ -38,7 +38,7 @@ Description
   (for voidfraction calculation) constant.
 
 Syntax
-  voidfractionModel IB;
+  voidFractionModel IB;
   IBProps
   {
     maxCellsPerParticle number1;

@@ -94,12 +94,6 @@ class forceModel {
 
   //! \brief 是否激活探针
   bool useProbe_;
-
-  //! \brief 颗粒隐式力的总和 [N]
-  volVectorField impParticleForces_;
-
-  //! \brief 颗粒显式力的总和 [N]
-  volVectorField expParticleForces_;
 };
 
 }  // namespace Foam

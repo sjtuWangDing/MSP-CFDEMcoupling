@@ -33,7 +33,7 @@ Syntax
   voidfractionModel model;
 
 Class
-  voidFractionModel, default is noVoidFraction
+  Foam::voidFractionModel
 \*---------------------------------------------------------------------------*/
 
 #ifndef __VOID_FRACTION_MODEL_H__
@@ -99,6 +99,10 @@ class voidFractionModel {
     return Foam::magSqr(point - particlePos) / (scale * scale * radius * radius) - 1.0;
   }
 
+  inline double weight() const { return weight_; }
+
+  inline double porosity() const { return porosity_; }
+
   inline const volScalarField& voidFractionPrev() const { return voidFractionPrev_; }
 
   inline const volScalarField& voidFractionNext() const { return voidFractionNext_; }
@@ -122,6 +126,10 @@ class voidFractionModel {
 
  protected:
   cfdemCloud& cloud_;
+
+  double weight_;
+
+  double porosity_;
 
   //! \brief 小颗粒空隙率
   volScalarField voidFractionPrev_;
