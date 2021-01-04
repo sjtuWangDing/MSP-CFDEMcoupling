@@ -102,9 +102,9 @@ void dataExchangeModel::checkTimeStepSize() const {
 
 /*!
  * \brief 因为耦合时间步长 = 流体时间步长的整数倍，所以 timeStepFraction()
- * 用于计算每个流体时间步在耦合时间步中的所占比例，
- *        如果 couplingTime() == 3 * CFDts，那么每一个耦合时间步由 3 个流体时间步构成，
- *        那么这三个流体时间步的 timeStepFraction() 分别返回 0, 0.333333, 0.666666
+ *   用于计算每个流体时间步在耦合时间步中的所占比例，如果 couplingTime() == 3 * CFDts，
+ *   那么每一个耦合时间步由 3 个流体时间步构成，那么这三个流体时间步的
+ *   timeStepFraction() 分别返回 0, 0.333333, 0.666666
  */
 double dataExchangeModel::timeStepFraction() const {
   Info << "timeIndex: " << cloud_.mesh().time().timeIndex() << ", couplingStep: " << couplingStep_ << endl;

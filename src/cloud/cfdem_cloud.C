@@ -53,6 +53,7 @@ cfdemCloud::cfdemCloud(const fvMesh& mesh)
       parCloud_(0),
       writeTimePassed_(false),
       meshHasUpdated_(false),
+      validCouplingStep_(false),
       dataExchangeModel_(dataExchangeModel::New(*this, couplingPropertiesDict_)),
       voidFractionModel_(voidFractionModel::New(*this, couplingPropertiesDict_)),
       locateModel_(locateModel::New(*this, couplingPropertiesDict_)),
