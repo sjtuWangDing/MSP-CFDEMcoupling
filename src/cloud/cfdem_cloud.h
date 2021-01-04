@@ -269,6 +269,8 @@ class cfdemCloud {
    */
   bool meshHasUpdated_;
 
+  bool validCouplingStep_;
+
   std::vector<std::shared_ptr<liggghtsCommandModel>> liggghtsCommandModels_;
 
   std::vector<std::shared_ptr<forceModel>> forceModels_;
