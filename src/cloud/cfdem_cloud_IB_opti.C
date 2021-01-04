@@ -143,40 +143,42 @@ void cfdemCloudIBOpti::printParticleInfo() const {
 
 void cfdemCloudIBOpti::calcVelocityCorrection(volScalarField& p, volVectorField& U, volScalarField& phiIB,
                                               volScalarField& volumeFraction) {
-  // set particle velocity
-  Foam::vector parPos = Foam::vector::zero;
-  Foam::vector lVel = Foam::vector::zero;
-  Foam::vector angVel = Foam::vector::zero;
-  Foam::vector rVec = Foam::vector::zero;
-  Foam::vector parVel = Foam::vector::zero;
-  for (int index = 0; index < numberOfParticles(); ++index) {
-    parPos = getPosition(index);         // 颗粒中心
-    lVel = getVelocity(index);           // 颗粒线速度
-    angVel = getAngularVelocity(index);  // 颗粒角速度
-    for (int subCell = 0; subCell < particleOverMeshNumber()[index]; ++subCell) {
-      int cellID = cellIDs()[index][subCell];
-      if (cellID > -1) {
-        for (int i = 0; i < 3; ++i) {
-          rVec[i] = U.mesh().C()[cellID][i] - parPos[i];
+  if (validCouplingStep_) {
+    // set particle velocity
+    Foam::vector parPos = Foam::vector::zero;
+    Foam::vector lVel = Foam::vector::zero;
+    Foam::vector angVel = Foam::vector::zero;
+    Foam::vector rVec = Foam::vector::zero;
+    Foam::vector parVel = Foam::vector::zero;
+    for (int index = 0; index < numberOfParticles(); ++index) {
+      parPos = getPosition(index);         // 颗粒中心
+      lVel = getVelocity(index);           // 颗粒线速度
+      angVel = getAngularVelocity(index);  // 颗粒角速度
+      for (int subCell = 0; subCell < particleOverMeshNumber()[index]; ++subCell) {
+        int cellID = cellIDs()[index][subCell];
+        if (cellID > -1) {
+          for (int i = 0; i < 3; ++i) {
+            rVec[i] = U.mesh().C()[cellID][i] - parPos[i];
+          }
+          // 计算颗粒速度
+          parVel = lVel + (angVel ^ rVec);
+          double vf = volumeFractions()[index][subCell];
+          U[cellID] = (1.0 - vf) * parVel + vf * U[cellID];
         }
-        // 计算颗粒速度
-        parVel = lVel + (angVel ^ rVec);
-        double vf = volumeFractions()[index][subCell];
-        U[cellID] = (1.0 - vf) * parVel + vf * U[cellID];
       }
     }
+    U.correctBoundaryConditions();
+    fvScalarMatrix phiIBEqn(fvm::laplacian(phiIB) == fvc::div(U) + fvc::ddt(volumeFraction));
+    if (phiIB.needReference()) {
+      phiIBEqn.setReference(pRefCell_, pRefValue_);
+    }
+    phiIBEqn.solve();
+    U = U - fvc::grad(phiIB);
+    U.correctBoundaryConditions();
+    // correct the pressure as well
+    p = p + phiIB / U.mesh().time().deltaT();
+    p.correctBoundaryConditions();
   }
-  U.correctBoundaryConditions();
-  fvScalarMatrix phiIBEqn(fvm::laplacian(phiIB) == fvc::div(U) + fvc::ddt(volumeFraction));
-  if (phiIB.needReference()) {
-    phiIBEqn.setReference(pRefCell_, pRefValue_);
-  }
-  phiIBEqn.solve();
-  U = U - fvc::grad(phiIB);
-  U.correctBoundaryConditions();
-  // correct the pressure as well
-  p = p + phiIB / U.mesh().time().deltaT();
-  p.correctBoundaryConditions();
 }
 
 /*!
@@ -188,7 +190,9 @@ void cfdemCloudIBOpti::calcVelocityCorrection(volScalarField& p, volVectorField&
 void cfdemCloudIBOpti::evolve(volScalarField& volumeFraction, volScalarField& interface) {
   Info << "/ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * /" << endl;
   // 检查当前流体时间步是否同时也是耦合时间步
-  if (dataExchangeM().checkValidCouplingStep()) {
+  validCouplingStep_ = dataExchangeM().checkValidCouplingStep();
+  Info << "time step fraction: " << dataExchangeM().timeStepFraction() << endl;
+  if (validCouplingStep_) {
     Info << __func__ << ": coupling..." << endl;
     // 创建用于记录 coupling time step counter
     auto pCounter = std::make_shared<dataExchangeModel::CouplingStepCounter>(dataExchangeM());
