@@ -114,7 +114,7 @@ void DiFeliceDrag::setForce() {
       dragCoefficient = 0.0;
       if (magUr > 0) {
         // 计算颗粒雷诺数
-        pRe = diameter * vf * magUr / (nuf + SMALL);
+        pRe = diameter * vf * magUr / (nuf + Foam::SMALL);
         // 计算流体阻力系数
         Cd = sqr(0.63 + 4.8 / sqrt(pRe));
         // 计算模型阻力系数
@@ -127,14 +127,23 @@ void DiFeliceDrag::setForce() {
         // 计算总阻力
         drag = dragCoefficient * Ur;
       }
+      if (forceSubModel_->verbose()) {
+        Pout << "index = " << index << endl;
+        Pout << "findCellID = " << findCellID << endl;
+        Pout << "Up = " << Up << endl;
+        Pout << "Ur = " << Ur << endl;
+        Pout << "diameter = " << diameter << endl;
+        Pout << "rho = " << rho << endl;
+        Pout << "nuf = " << nuf << endl;
+        Pout << "voidFraction = " << vf << endl;
+        Pout << "pRe = " << pRe << endl;
+        Pout << "Cd = " << Cd << endl;
+        Pout << "dragCoefficient = " << dragCoefficient << endl;
+        Pout << "drag (total) = " << drag << endl;
+      }
     }
     // write particle data to global array
     forceSubModel_->partToArray(index, drag, Foam::vector::zero, Ufluid, dragCoefficient);
-
-    if (forceSubModel_->verbose()) {
-      Info << "DiFeliceDrag force on particle " << index << ": [" << drag[0] << ", " << drag[1] << ", " << drag[2]
-           << "]" << endl;
-    }
   }
   Info << "Setting DiFeliceDrag - done" << endl;
 }

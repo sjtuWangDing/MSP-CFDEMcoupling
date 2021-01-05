@@ -46,7 +46,7 @@ meshMotionModel noMeshMotion;
 
 dataExchangeModel twoWayMPI;
 
-averagingModel noAveragingModel;
+averagingModel dense;
 
 turbulenceModelType turbulenceProperties;
 
@@ -56,7 +56,7 @@ implicitCoupleProps
 {
   velFieldName "U";
   granVelFieldName "Us";
-  voidfractionFieldName "voidfraction";
+  voidFractionFieldName "voidFraction";
 }
 
 DiFeliceDragProps
@@ -64,8 +64,11 @@ DiFeliceDragProps
   velFieldName "U";
   granVelFieldName "Us";
   voidFractionFieldName "voidFraction";
+  treatForceExplicitInMomEquation false;
+  treatForceBothCFDAndDEM true;
+  treatDEMForceImplicit false;
   verbose true;
-  interpolation true;
+  interpolation false;
   // scalarViscosity true;
   // nu [0 2 -1 0 0 0 0] 1e-04;
 }

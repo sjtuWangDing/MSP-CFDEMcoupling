@@ -29,6 +29,7 @@ Class
 \*---------------------------------------------------------------------------*/
 
 #include "./averaging_model.h"
+#include "sub_model/data_exchange_model/data_exchange_model.h"
 
 namespace Foam {
 
@@ -57,5 +58,10 @@ averagingModel::averagingModel(cfdemCloud& cloud)
 
 //! \brief Destructor
 averagingModel::~averagingModel() {}
+
+tmp<volVectorField> averagingModel::UsInterp() const {
+  double tsf = cloud_.dataExchangeM().timeStepFraction();
+  return tmp<volVectorField>(new volVectorField("UsInterp", tsf * UsPrev_ + (1.0 - tsf) * UsNext_));
+}
 
 }  // namespace Foam

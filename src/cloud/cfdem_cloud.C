@@ -114,13 +114,17 @@ void cfdemCloud::reallocate() {
   int number = numberOfParticles();
   // allocate memory of data exchanged with liggghts
   dataExchangeM().realloc(parCloud_.radii(), base::makeShape1(number), parCloud_.radiiPtr(), 0.0);
+  dataExchangeM().realloc(parCloud_.cds(), base::makeShape1(number), parCloud_.cdsPtr(), 0.0);
   dataExchangeM().realloc(parCloud_.positions(), base::makeShape2(number, 3), parCloud_.positionsPtr(), 0.0);
   dataExchangeM().realloc(parCloud_.velocities(), base::makeShape2(number, 3), parCloud_.velocitiesPtr(), 0.0);
   dataExchangeM().realloc(parCloud_.DEMForces(), base::makeShape2(number, 3), parCloud_.DEMForcesPtr(), 0.0);
+  dataExchangeM().realloc(parCloud_.fluidVel(), base::makeShape2(number, 3), parCloud_.fluidVelPtr(), 0.0);
   // allocate memory of data not exchanged with liggghts
   parCloud_.particleOverMeshNumber() = std::move(base::CITensor1(base::makeShape1(number), 0));
   parCloud_.findCellIDs() = std::move(base::CITensor1(base::makeShape1(number), -1));
   parCloud_.dimensionRatios() = std::move(base::CDTensor1(base::makeShape1(number), -1.0));
+  parCloud_.impForces() = std::move(base::CDTensor2(base::makeShape2(number, 3), 0.0));
+  parCloud_.expForces() = std::move(base::CDTensor2(base::makeShape2(number, 3), 0.0));
 }
 
 void cfdemCloud::getDEMData() {
@@ -131,6 +135,17 @@ void cfdemCloud::getDEMData() {
 
 void cfdemCloud::giveDEMData() const {
   dataExchangeM().giveData("dragforce", "vector-atom", DEMForcesPtr());
+  bool implDEMdrag = false;
+  for (const auto& ptr : forceModels_) {
+    if (ptr->forceSubM()->treatDEMForceImplicit()) {
+      implDEMdrag = true;
+      break;
+    }
+  }
+  if (implDEMdrag) {
+    dataExchangeM().giveData("Ksl", "scalar-atom", cdsPtr());
+    dataExchangeM().giveData("uf", "vector-atom", fluidVelPtr());
+  }
 }
 
 void cfdemCloud::printParticleInfo() const {
@@ -139,22 +154,24 @@ void cfdemCloud::printParticleInfo() const {
   MPI_Comm_rank(MPI_COMM_WORLD, &id);
   base::MPI_Barrier();
   if (0 == id) {
-    Pout << "Position of particles:" << endl;
     for (int index = 0; index < numberOfParticles(); ++index) {
-      Pout << "  pos[" << index << "]: " << positions()[index][0] << ", " << positions()[index][1] << ", "
+      Pout << "  position[" << index << "]: " << positions()[index][0] << ", " << positions()[index][1] << ", "
            << positions()[index][2] << endl;
     }
-    Pout << "Velocity of particles:" << endl;
     for (int index = 0; index < numberOfParticles(); ++index) {
-      Pout << "  vel[" << index << "]: " << velocities()[index][0] << ", " << velocities()[index][1] << ", "
+      Pout << "  velocity[" << index << "]: " << velocities()[index][0] << ", " << velocities()[index][1] << ", "
            << velocities()[index][2] << endl;
     }
-    Pout << "DEMForce of particles:" << endl;
   }
   base::MPI_Barrier();
   for (int index = 0; index < numberOfParticles(); ++index) {
-    Pout << "  DEMF[" << index << "]: " << DEMForces()[index][0] << ", " << DEMForces()[index][1] << ", "
+    Pout << "  DEMForce[" << index << "]: " << DEMForces()[index][0] << ", " << DEMForces()[index][1] << ", "
          << DEMForces()[index][2] << endl;
+  }
+  base::MPI_Barrier();
+  for (int index = 0; index < numberOfParticles(); ++index) {
+    Pout << "  impForce[" << index << "]: " << impForces()[index][0] << ", " << impForces()[index][1] << ", "
+         << impForces()[index][2] << endl;
   }
   base::MPI_Barrier();
   voidFractionM().printVoidFractionInfo();
@@ -216,13 +233,17 @@ void cfdemCloud::evolve(volVectorField& U, volScalarField& voidF, volVectorField
     locateM().findCell(parCloud_.findCellIDs());
     // 计算颗粒空隙率
     voidFractionM().setVoidFraction();
+    voidF = voidFractionM().voidFractionInterp();
     // 计算局部平局颗粒速度场
     averagingM().setVectorFieldAverage(averagingM().UsNext(), averagingM().UsWeightField(), velocities(),
                                        particleWeights());
-    // set particles forces
+    Us = averagingM().UsInterp();
+    // 计算流体对颗粒的作用力
     for (const auto& ptr : forceModels_) {
       ptr->setForce();
     }
+    // 计算局部累加的流体作用力场
+    averagingM().setVectorFieldSum(globalF().impParticleForce(), impForces(), particleWeights());
     // write DEM data
     giveDEMData();
     // get shared ptr of implicitCouple model and update Ksl field
@@ -266,6 +287,31 @@ tmp<volScalarField> cfdemCloud::ddtVoidFraction() const {
     return tmp<volScalarField>(ddtVoidFraction_ * 0.);
   }
   return tmp<volScalarField>(ddtVoidFraction_ * 1.);
+}
+
+tmp<volScalarField> cfdemCloud::voidFractionNuEff(volScalarField& voidFraction) const {
+  if (modelType() == "B" || modelType() == "Bfull" || modelType() == "none") {
+#ifdef compre
+    return tmp<volScalarField>(
+        new volScalarField("viscousTerm", (turbulence_.mut() + turbulence_.mu() + turbulenceMultiphase_)));
+#else
+    return tmp<volScalarField>(
+        new volScalarField("viscousTerm", (turbulence_.nut() + turbulence_.nu() + turbulenceMultiphase_)));
+#endif
+  } else {  // 如果是 model A, 则需要乘以空隙率
+#ifdef compre
+    return tmp<volScalarField>(new volScalarField(
+        "viscousTerm", voidFraction * (turbulence_.mut() + turbulence_.mu() + turbulenceMultiphase_)));
+#else
+    return tmp<volScalarField>(new volScalarField(
+        "viscousTerm", voidFraction * (turbulence_.nut() + turbulence_.nu() + turbulenceMultiphase_)));
+#endif
+  }
+}
+
+tmp<fvVectorMatrix> cfdemCloud::divVoidFractionTau(volVectorField& U, volScalarField& voidFraction) const {
+  return -fvm::laplacian(voidFractionNuEff(voidFraction), U) -
+         fvc::div(voidFractionNuEff(voidFraction) * dev2(fvc::grad(U)().T()));
 }
 
 }  // namespace Foam

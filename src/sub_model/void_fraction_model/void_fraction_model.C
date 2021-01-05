@@ -33,6 +33,7 @@ Class
 \*---------------------------------------------------------------------------*/
 
 #include "./void_fraction_model.h"
+#include "sub_model/data_exchange_model/data_exchange_model.h"
 
 namespace Foam {
 
@@ -77,6 +78,12 @@ voidFractionModel::voidFractionModel(cfdemCloud& cloud)
 
 //! \brief Destructor
 voidFractionModel::~voidFractionModel() {}
+
+tmp<volScalarField> voidFractionModel::voidFractionInterp() const {
+  double tsf = cloud_.dataExchangeM().timeStepFraction();
+  return tmp<volScalarField>(
+      new volScalarField("voidFractionInterp", tsf * voidFractionPrev_ + (1.0 - tsf) * voidFractionNext_));
+}
 
 /*!
  * \brief 构建颗粒覆盖的所有网格的哈希集合

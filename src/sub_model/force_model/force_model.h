@@ -65,11 +65,6 @@ class forceModel {
                << abort(FatalError);
   }
 
-  // virtual void setMixForce(const std::vector<double>& dimensionRatios) {
-  //   FatalError << "forceModel:setMixForce(): using base class function, please use derived class function\n"
-  //     << abort(FatalError);
-  // }
-
   /*!
    * \brief create forceSubModel_
    * \param subPropsDict the dictionary of current force model
@@ -77,15 +72,7 @@ class forceModel {
    */
   void createForceSubModels(const dictionary& subPropsDict, EForceType forceType);
 
-  // inline const base::CDTensor2& impForces() const { return cloud_.pCloud().impForces(); }
-
-  // inline const base::CDTensor2& expForces() const { return cloud_.pCloud().expForces(); }
-
-  // inline const base::CDTensor2& DEMForces() const { return cloud_.pCloud().DEMForces(); }
-
-  // inline const base::CDTensor2& fluidVel() const { return cloud_.pCloud().fluidVel(); }
-
-  // inline const base::CDTensor1& cds() const { return cloud_.pCloud().cds(); }
+  inline std::shared_ptr<forceSubModel> forceSubM() const { return forceSubModel_; }
 
  protected:
   cfdemCloud& cloud_;

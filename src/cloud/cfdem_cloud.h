@@ -98,6 +98,13 @@ class cfdemCloud {
 
   tmp<volScalarField> ddtVoidFraction() const;
 
+  tmp<volScalarField> voidFractionNuEff(volScalarField& voidFraction) const;
+
+  tmp<fvVectorMatrix> divVoidFractionTau(volVectorField& U, volScalarField& voidFraction) const;
+
+  template <typename Field>
+  inline void scaleWithVcell(Field& field) const;
+
  protected:
   //! \brief reset field
   void resetField();

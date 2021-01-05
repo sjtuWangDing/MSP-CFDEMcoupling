@@ -70,8 +70,7 @@ forceSubModel::~forceSubModel() {}
  */
 void forceSubModel::partToArray(const int& index, const Foam::vector& dragTot, const Foam::vector& dragEx,
                                 const Foam::vector& Ufluid, scalar Cd) const {
-  if (treatForceBothCFDAndDEM()) {
-    // CFD 与 DEM 求解器都考虑耦合力
+  if (treatForceBothCFDAndDEM()) {  // CFD 与 DEM 求解器都考虑耦合力
     if (treatForceExplicitInMomEquation()) {
 #pragma unroll
       // 耦合力为显式力

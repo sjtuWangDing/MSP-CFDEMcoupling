@@ -193,7 +193,7 @@ int main(int argc, char* argv[]) {
          << endl;
   } // end of runtime loop
 
-  Info << "cfdemCloudIB - done\n" << endl;
+  Info << "cfdemSolverIB - done\n" << endl;
 
   return 0;
 }

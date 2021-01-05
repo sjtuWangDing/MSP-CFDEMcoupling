@@ -48,7 +48,7 @@ dense::~dense() {}
  */
 void dense::setVectorFieldAverage(volVectorField& valueField, volScalarField& weightField,
                                   const base::CDExTensor2& value, const std::vector<base::CDTensor1>& weight) {
-  CHECK_EQ(value.size(1), 3) << ": vector field's dimension must equal to 3";
+  CHECK_EQ(value.size(1), 3) << __func__ << ": vector field's dimension must equal to 3";
   for (int index = 0; index < cloud_.numberOfParticles(); index++) {
     // get value vector
     Foam::vector valueVec(value[index][0], value[index][1], value[index][2]);

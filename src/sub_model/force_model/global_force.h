@@ -23,6 +23,10 @@ class globalForce {
 
   inline const volVectorField& expParticleForce() const { return expParticleForce_; }
 
+  inline volVectorField& impParticleForce() { return impParticleForce_; }
+
+  inline volVectorField& expParticleForce() { return expParticleForce_; }
+
  private:
   cfdemCloud& cloud_;
 

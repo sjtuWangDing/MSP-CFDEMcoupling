@@ -62,6 +62,16 @@ class averagingModel {
   virtual ~averagingModel();
 
   /*!
+   * \brief 计算局部累加矢量场
+   * \param valueField   <[in, out] 需要被局部累加的场
+   * \param value        <[in] 用于局部累加的颗粒数据(lagrange value)
+   * \param weight       <[in] 用于局部累加的权重系数(lagrange value)
+   */
+  template <int nDim, typename DType, typename Device, typename Alloc>
+  void setVectorFieldSum(volVectorField& valueField, const base::Tensor<nDim, DType, Device, Alloc>& value,
+                         const std::vector<base::CDTensor1>& weight);
+
+  /*!
    * \brief 计算局部平均矢量场
    * \param valueField   <[in, out] 需要被局部平均化场
    * \param weightField  <[in, out] 权重系数平均化场
@@ -70,6 +80,8 @@ class averagingModel {
    */
   virtual void setVectorFieldAverage(volVectorField& valueField, volScalarField& weightField,
                                      const base::CDExTensor2& value, const std::vector<base::CDTensor1>& weight) = 0;
+
+  tmp<volVectorField> UsInterp() const;
 
   inline void resetUs() {
     UsPrev_ == UsNext_;
@@ -104,5 +116,7 @@ class averagingModel {
 };
 
 }  // namespace Foam
+
+#include "./averaging_model-inl.h"
 
 #endif  // __AVERAGING_MODEL_H__

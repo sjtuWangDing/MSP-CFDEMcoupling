@@ -46,6 +46,7 @@ Class
 // Need include header files of class which uses Foam::autoPtr to
 // wrap model For liggghtsCommandModel, forceModel and momCoupleModel,
 // not need to include header because they use share_ptr
+#include "./cfdem_cloud.h"
 #include "sub_model/averaging_model/averaging_model.h"
 #include "sub_model/data_exchange_model/data_exchange_model.h"
 #include "sub_model/force_model/global_force.h"
@@ -120,6 +121,11 @@ inline const incompressible::RASModel& cfdemCloud::turbulence() const
 #endif
 {
   return turbulence_;
+}
+
+template <typename Field>
+void cfdemCloud::scaleWithVcell(Field& field) const {
+  forAll(field, cellID) { field[cellID] *= mesh_.V()[cellID]; }
 }
 
 }  // namespace Foam
