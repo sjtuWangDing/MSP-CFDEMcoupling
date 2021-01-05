@@ -26,6 +26,7 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "./IB_void_fraction.h"
+#include "mpi.h"
 
 namespace Foam {
 
@@ -45,6 +46,24 @@ IBVoidFraction::IBVoidFraction(cfdemCloud& cloud)
 
 //! \brief Destructor
 IBVoidFraction::~IBVoidFraction() {}
+
+//! \brief 输出空隙率相关信息
+void IBVoidFraction::printVoidFractionInfo() const {
+  base::MPI_Barrier();
+  int nProcs = 0, id = 0;
+  MPI_Comm_size(MPI_COMM_WORLD, &nProcs);
+  MPI_Comm_rank(MPI_COMM_WORLD, &id);
+  for (int i = 0; i < nProcs; ++i) {
+    if (id == i) {
+      Pout << typeName().c_str() << ":" << endl;
+      for (int index = 0; index < cloud_.numberOfParticles(); ++index) {
+        Pout << "  findCellIDs[" << index << "]: " << cloud_.findCellIDs()[index] << endl;
+        Pout << "  particleOverMeshNumber[" << index << "]: " << cloud_.particleOverMeshNumber()[index] << endl;
+      }
+    }
+    base::MPI_Barrier(0.2);
+  }  // End of procs loop
+}
 
 //! \brief 计算颗粒的体积分数场
 void IBVoidFraction::setVoidFraction() {
