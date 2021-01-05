@@ -81,6 +81,9 @@ class IBVoidFraction : public voidFractionModel {
   //! \brief 计算空隙率
   void setVoidFraction();
 
+  //! \brief 输出空隙率相关信息
+  void printVoidFractionInfo() const;
+
  protected:
   /*!
    * \brief 设置单个颗粒的体积分数场

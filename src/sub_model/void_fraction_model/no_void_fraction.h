@@ -55,6 +55,9 @@ class noVoidFraction : public voidFractionModel {
   ~noVoidFraction();
 
   void setVoidFraction() {}
+
+  //! \brief 输出空隙率相关信息
+  void printVoidFractionInfo() const {}
 };
 
 }  // namespace Foam

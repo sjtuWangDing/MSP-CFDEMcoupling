@@ -69,6 +69,9 @@ class voidFractionModel {
   //! \brief 计算空隙率
   virtual void setVoidFraction() = 0;
 
+  //! \brief 输出空隙率相关信息
+  virtual void printVoidFractionInfo() const = 0;
+
   //! \brief 重置空隙率
   inline void resetVoidFraction() {
     voidFractionPrev_ == voidFractionNext_;
