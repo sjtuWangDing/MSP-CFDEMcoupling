@@ -59,6 +59,16 @@ class dilute : public averagingModel {
 
   //! \brief Destructor
   ~dilute();
+
+  /*!
+   * \brief 计算局部平均矢量场
+   * \param valueField   <[in, out] 需要被局部平均化场
+   * \param weightField  <[in, out] 权重系数平均化场
+   * \param value        <[in] 用于局部平均化的颗粒数据(lagrange value)
+   * \param weight       <[in] 用于局部平均化的权重系数(lagrange value)
+   */
+  void setVectorFieldAverage(volVectorField& valueField, volScalarField& weightField, const base::CDExTensor2& value,
+                             const std::vector<base::CDTensor1>& weight) {}
 };
 
 }  // namespace Foam

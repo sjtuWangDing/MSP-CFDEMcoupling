@@ -73,6 +73,6 @@ int main(int argc, char *argv[]) {
       #include "readPISOControls.H"
       #include "CourantNo.H"
     #endif
-    particleCloud.evolve(voidFraction, Us, U);
+    particleCloud.evolve(U, voidFraction, Us, Ksl);
   }
 }

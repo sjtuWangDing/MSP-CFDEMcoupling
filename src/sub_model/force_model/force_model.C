@@ -49,7 +49,12 @@ cfdmeDefineBaseTypeNewWithTypeName(std::unique_ptr, forceModel,
                                    modelName, (cloud));
 
 //! \brief Constructor
-forceModel::forceModel(cfdemCloud& cloud) : cloud_(cloud), forceSubModel_(nullptr), useProbe_(false) {}
+forceModel::forceModel(cfdemCloud& cloud)
+    : cloud_(cloud),
+      forceSubModel_(nullptr),
+      useProbe_(false),
+      UInterpolator_(nullptr),
+      voidFractionInterpolator_(nullptr) {}
 
 //! \brief Destructor
 forceModel::~forceModel() {}

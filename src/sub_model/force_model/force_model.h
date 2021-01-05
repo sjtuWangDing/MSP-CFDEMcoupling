@@ -38,6 +38,7 @@ Class
 #include "./force_sub_model.h"
 #include "base/run_time_selection_tables.h"
 #include "cloud/cfdem_cloud.h"
+#include "interpolationCellPointFace.H"
 
 namespace Foam {
 
@@ -94,6 +95,10 @@ class forceModel {
 
   //! \brief 是否激活探针
   bool useProbe_;
+
+  autoPtr<interpolation<Foam::vector>> UInterpolator_;
+
+  autoPtr<interpolation<Foam::scalar>> voidFractionInterpolator_;
 };
 
 }  // namespace Foam

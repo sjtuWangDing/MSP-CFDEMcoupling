@@ -110,7 +110,7 @@ void cfdemCloudIB::calcVelocityCorrection(volScalarField& p, volVectorField& U, 
       angVel = getAngularVelocity(index);  // 颗粒角速度
       for (int subCell = 0; subCell < particleOverMeshNumber()[index]; ++subCell) {
         int cellID = cellIDs()[index][subCell];
-        if (cellID > -1) {
+        if (cellID >= 0) {
           for (int i = 0; i < 3; ++i) {
             rVec[i] = U.mesh().C()[cellID][i] - parPos[i];
           }

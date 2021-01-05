@@ -23,6 +23,7 @@ $(sub_model)/force_model/Archimedes_IB.C
 $(sub_model)/force_model/Archimedes_IB_test.C
 $(sub_model)/force_model/Shirgaonkar_IB.C
 $(sub_model)/force_model/Archimedes.C
+$(sub_model)/force_model/DiFeliceDrag.C
 
 $(sub_model)/liggghts_command_model/liggghts_command_model.C
 $(sub_model)/liggghts_command_model/run_liggghts.C

@@ -34,12 +34,14 @@ Class
 #include "cloud/cfdem_cloud.h"
 #include "cloud/coupling_properties.h"
 #include "cloud/particle_cloud.h"
+#include "mpi.h"
 #include "sub_model/averaging_model/averaging_model.h"
 #include "sub_model/data_exchange_model/data_exchange_model.h"
 #include "sub_model/force_model/force_model.h"
 #include "sub_model/force_model/global_force.h"
 #include "sub_model/liggghts_command_model/liggghts_command_model.h"
 #include "sub_model/locate_model/locate_model.h"
+#include "sub_model/mom_couple_model/implicit_couple.h"
 #include "sub_model/mom_couple_model/mom_couple_model.h"
 #include "sub_model/void_fraction_model/void_fraction_model.h"
 
@@ -94,7 +96,8 @@ cfdemCloud::cfdemCloud(const fvMesh& mesh)
   }
   // create mom couple model
   for (const auto& name : momCoupleModelList()) {
-    momCoupleModels_.emplace_back(momCoupleModel::New(*this, couplingPropertiesDict_, name));
+    std::shared_ptr<momCoupleModel> sPtr(momCoupleModel::New(*this, couplingPropertiesDict_, name));
+    momCoupleModels_.insert(std::make_pair(name, sPtr));
   }
   // check periodic
   if (checkPeriodicCells() != checkSimulationFullyPeriodic()) {
@@ -131,21 +134,30 @@ void cfdemCloud::giveDEMData() const {
 }
 
 void cfdemCloud::printParticleInfo() const {
+  int nProcs = 0, id = 0;
+  MPI_Comm_size(MPI_COMM_WORLD, &nProcs);
+  MPI_Comm_rank(MPI_COMM_WORLD, &id);
   base::MPI_Barrier();
-  for (int i = 0; i < numberOfParticles(); ++i) {
-    Info << "position of par " << i << ": " << positions()[i][0] << ", " << positions()[i][1] << ", "
-         << positions()[i][2] << endl;
-  }
-  for (int i = 0; i < numberOfParticles(); ++i) {
-    Info << "velocity of par " << i << ": " << velocities()[i][0] << ", " << velocities()[i][1] << ", "
-         << velocities()[i][2] << endl;
+  if (0 == id) {
+    Pout << "Position of particles:" << endl;
+    for (int index = 0; index < numberOfParticles(); ++index) {
+      Pout << "  pos[" << index << "]: " << positions()[index][0] << ", " << positions()[index][1] << ", "
+           << positions()[index][2] << endl;
+    }
+    Pout << "Velocity of particles:" << endl;
+    for (int index = 0; index < numberOfParticles(); ++index) {
+      Pout << "  vel[" << index << "]: " << velocities()[index][0] << ", " << velocities()[index][1] << ", "
+           << velocities()[index][2] << endl;
+    }
+    Pout << "DEMForce of particles:" << endl;
   }
   base::MPI_Barrier();
-  for (int i = 0; i < numberOfParticles(); ++i) {
-    Pout << "DEMForces of par " << i << ": " << DEMForces()[i][0] << ", " << DEMForces()[i][1] << ", "
-         << DEMForces()[i][2] << endl;
+  for (int index = 0; index < numberOfParticles(); ++index) {
+    Pout << "  DEMF[" << index << "]: " << DEMForces()[index][0] << ", " << DEMForces()[index][1] << ", "
+         << DEMForces()[index][2] << endl;
   }
   base::MPI_Barrier();
+  voidFractionM().printVoidFractionInfo();
 }
 
 //! \brief reset field
@@ -171,8 +183,8 @@ void cfdemCloud::resetField() {
   Info << "Reset Explicit force fields - done" << endl;
 
   // 重置单位体积动量交换场
-  for (const auto& ptr : momCoupleModels()) {
-    ptr->resetMomSourceField();
+  for (const auto& pair : momCoupleModels_) {
+    (pair.second)->resetMomSourceField();
   }
   Info << "Reset Ksl fields - done" << endl;
 }
@@ -180,11 +192,12 @@ void cfdemCloud::resetField() {
 /*!
  * \brief 更新函数
  * \note used for cfdemSolverPiso
+ * \param U      <[in] 流体速度场
  * \param voidF  <[in, out] 小颗粒空隙率场
  * \param Us     <[in, out] 局部平均小颗粒速度场
- * \param U      <[in] 流体速度场
+ * \param Ksl    <[in, out] 动量交换场
  */
-void cfdemCloud::evolve(volScalarField& voidF, volVectorField& Us, volVectorField& U) {
+void cfdemCloud::evolve(volVectorField& U, volScalarField& voidF, volVectorField& Us, volScalarField& Ksl) {
   Info << "/ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * /" << endl;
   // 检查当前流体时间步是否同时也是耦合时间步
   validCouplingStep_ = dataExchangeM().checkValidCouplingStep();
@@ -203,13 +216,19 @@ void cfdemCloud::evolve(volScalarField& voidF, volVectorField& Us, volVectorFiel
     locateM().findCell(parCloud_.findCellIDs());
     // 计算颗粒空隙率
     voidFractionM().setVoidFraction();
-    voidFractionM().printVoidFractionInfo();
+    // 计算局部平局颗粒速度场
+    averagingM().setVectorFieldAverage(averagingM().UsNext(), averagingM().UsWeightField(), velocities(),
+                                       particleWeights());
     // set particles forces
     for (const auto& ptr : forceModels_) {
       ptr->setForce();
     }
     // write DEM data
     giveDEMData();
+    // get shared ptr of implicitCouple model and update Ksl field
+    std::shared_ptr<momCoupleModel> sPtr = momCoupleModels_[implicitCouple::cTypeName()];
+    Ksl = sPtr->impMomSource();
+    Ksl.correctBoundaryConditions();
     printParticleInfo();
   }
   Info << __func__ << " - done\n" << endl;

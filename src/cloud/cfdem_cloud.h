@@ -69,6 +69,8 @@ class dataExchangeModel;
 class locateModel;
 class averagingModel;
 
+typedef std::unordered_map<std::string, std::shared_ptr<momCoupleModel>> momCoupleModelMap;
+
 class cfdemCloud {
  public:
   //! \brief Constructor
@@ -87,11 +89,12 @@ class cfdemCloud {
   /*!
    * \brief 更新函数
    * \note used for cfdemSolverPiso
+   * \param U      <[in] 流体速度场
    * \param voidF  <[in, out] 小颗粒空隙率场
    * \param Us     <[in, out] 局部平均小颗粒速度场
-   * \param U      <[in] 流体速度场
+   * \param Ksl    <[in, out] 动量交换场
    */
-  void evolve(volScalarField& voidF, volVectorField& Us, volVectorField& U);
+  void evolve(volVectorField& U, volScalarField& voidF, volVectorField& Us, volScalarField& Ksl);
 
   tmp<volScalarField> ddtVoidFraction() const;
 
@@ -124,7 +127,7 @@ class cfdemCloud {
 
   inline const std::vector<std::shared_ptr<forceModel>>& forceModels() const;
 
-  inline const std::vector<std::shared_ptr<momCoupleModel>>& momCoupleModels() const;
+  inline const momCoupleModelMap& momCoupleModels() const;
 
   inline const globalForce& globalF() const;
 
@@ -287,7 +290,7 @@ class cfdemCloud {
 
   std::vector<std::shared_ptr<forceModel>> forceModels_;
 
-  std::vector<std::shared_ptr<momCoupleModel>> momCoupleModels_;
+  momCoupleModelMap momCoupleModels_;
 
   autoPtr<globalForce> globalForce_;
 

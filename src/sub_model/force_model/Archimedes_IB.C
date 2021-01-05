@@ -65,10 +65,10 @@ void ArchimedesIB::setForce() {
     buoyancy = Foam::vector::zero;
     // loop all mesh of current particle
     for (int subCell = 0; subCell < cloud_.particleOverMeshNumber()[index]; ++subCell) {
-      label cellI = cloud_.cellIDs()[index][subCell];
-      if (cellI > -1) {  // cell found
-        buoyancy +=
-            -g_.value() * forceSubModel_->rhoField()[cellI] * cloud_.mesh().V()[cellI] * (1.0 - volumeFraction_[cellI]);
+      int cellID = cloud_.cellIDs()[index][subCell];
+      if (cellID >= 0) {  // cell found
+        buoyancy += -g_.value() * forceSubModel_->rhoField()[cellID] * cloud_.mesh().V()[cellID] *
+                    (1.0 - volumeFraction_[cellID]);
       }
     }
     // write particle data to global array

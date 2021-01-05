@@ -30,7 +30,7 @@ allowUseSubCFDTimeStep true;
 forceModels
 (
   Archimedes
-  // DiFeliceDrag
+  DiFeliceDrag
 );
 
 momCoupleModels
@@ -62,12 +62,12 @@ implicitCoupleProps
 DiFeliceDragProps
 {
   velFieldName "U";
-  voidfractionFieldName "voidFraction";
   granVelFieldName "Us";
+  voidFractionFieldName "voidFraction";
   verbose true;
-  // use of scalar viscosity for drag
+  interpolation true;
   // scalarViscosity true;
-  // nu nu [ 0 2 -1 0 0 0 0 ] 1e-04;
+  // nu [0 2 -1 0 0 0 0] 1e-04;
 }
 
 ArchimedesProps

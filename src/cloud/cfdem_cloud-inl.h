@@ -62,7 +62,7 @@ inline const std::vector<std::shared_ptr<forceModel>>& cfdemCloud::forceModels()
   return forceModels_;
 }
 
-inline const std::vector<std::shared_ptr<momCoupleModel>>& cfdemCloud::momCoupleModels() const {
+inline const momCoupleModelMap& cfdemCloud::momCoupleModels() const {
   return momCoupleModels_;
 }
 

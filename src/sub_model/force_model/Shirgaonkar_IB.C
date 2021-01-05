@@ -74,15 +74,13 @@ void ShirgaonkarIB::setForce() {
     // loop all mesh of current particle
     for (int subCell = 0; subCell < cloud_.particleOverMeshNumber()[index]; ++subCell) {
       int cellID = cloud_.cellIDs()[index][subCell];
-      if (cellID > -1) {  // cell Found
+      if (cellID >= 0) {  // cell Found
         cellPos = cloud_.mesh().C()[cellID];
         drag += IBDrag[cellID] * IBDrag.mesh().V()[cellID];
         torque += (cellPos - particleCenterPos) ^ IBDrag[cellID] * IBDrag.mesh().V()[cellID];
       }
     }
     // write particle data to global array
-    // index - particle index
-    // drag - total drag
     forceSubModel_->partToArray(index, drag, Foam::vector::zero, Foam::vector::zero, 0);
 
     if (forceSubModel_->verbose()) {
