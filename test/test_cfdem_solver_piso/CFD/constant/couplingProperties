@@ -38,7 +38,7 @@ momCoupleModels
   implicitCouple
 );
 
-voidFractionModel divided; // centre; bigParticle;
+voidFractionModel centre; // divided centre
 
 locateModel engine;
 

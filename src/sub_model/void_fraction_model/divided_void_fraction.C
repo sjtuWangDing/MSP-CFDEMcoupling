@@ -43,9 +43,10 @@ dividedVoidFraction::dividedVoidFraction(cfdemCloud& cloud)
       verbose_(false),
       alphaMin_(0.0),
       tooMuch_(0.0) {
-  verbose_ = subPropsDict_.lookupOrDefault<bool>("verbose", false);
   weight_ = subPropsDict_.lookupOrDefault<double>("weight", 1.0);
   porosity_ = subPropsDict_.lookupOrDefault<double>("porosity", 1.0);
+  verbose_ = subPropsDict_.lookupOrDefault<bool>("verbose", false);
+  alphaMin_ = subPropsDict_.lookupOrDefault<double>("alphaMin", 0.0);
   // 计算标志点相对颗粒中心的坐标
   [this](void) -> void {
     int idx = 0;
@@ -204,9 +205,10 @@ void dividedVoidFraction::setVoidFractionForSingleParticle(const int index,
   Foam::vector particleCentre = cloud_.getPosition(index);
   // 获取到在当前 processor 上颗粒覆盖的某一个网格编号
   int findCellID = cloud_.findCellIDs()[index];
-  // 获取颗粒体积的 1 / 29
+  // 使用 scaleVol 作为颗粒体积因子
   double scaleVol = weight();
   double scaleRadius = cbrt(porosity());
+  // 获取颗粒体积的 1 / 29
   double particleVolume = pV(radius, scaleVol) / static_cast<double>(numberOfMarkerPoints_);
   // 先计算体积, 然后再用 scaleRadius 乘以半径, 以保证在计算空隙率时候颗粒尺寸不变
   radius *= scaleRadius;

@@ -39,6 +39,7 @@ $(sub_model)/mom_couple_model/explicit_couple.C
 $(sub_model)/void_fraction_model/void_fraction_model.C
 $(sub_model)/void_fraction_model/no_void_fraction.C
 $(sub_model)/void_fraction_model/IB_void_fraction.C
+$(sub_model)/void_fraction_model/centre_void_fraction.C
 $(sub_model)/void_fraction_model/divided_void_fraction.C
 
 LIB = $(MSP_CFDEM_LIB_DIR)/libMSP-CFDEMcoupling-5.x_1.0

@@ -94,7 +94,7 @@ class cfdemCloud {
    * \param Us     <[in, out] 局部平均小颗粒速度场
    * \param Ksl    <[in, out] 动量交换场
    */
-  void evolve(volVectorField& U, volScalarField& voidF, volVectorField& Us, volScalarField& Ksl);
+  virtual void evolve(volVectorField& U, volScalarField& voidF, volVectorField& Us, volScalarField& Ksl);
 
   tmp<volScalarField> ddtVoidFraction() const;
 

@@ -90,10 +90,6 @@ class dividedVoidFraction : public voidFractionModel {
   void printVoidFractionInfo() const;
 
  protected:
-  inline double pV(const double radius, const double scaleVol = 1.0) const {
-    return 4.188790205 * radius * radius * radius * scaleVol;
-  }
-
   //! \brief 设置索引为 index 的单个颗粒的空隙率
   void setVoidFractionForSingleParticle(const int index, std::unordered_map<int, Foam::vector>& parMap);
 

@@ -114,6 +114,10 @@ class voidFractionModel {
   inline const volScalarField& volumeFractionNext() const { return volumeFractionNext_; }
 
  protected:
+  inline double pV(const double radius, const double scaleVol = 1.0) const {
+    return 4.188790205 * radius * radius * radius * scaleVol;
+  }
+
   /*!
    * \brief 构建颗粒覆盖的所有网格的哈希集合
    * \note 设置为递归函数，通过哈希器将网格编号转换为哈希值，并存入 set 中以便于搜索
