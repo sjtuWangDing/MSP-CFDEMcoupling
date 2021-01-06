@@ -38,7 +38,7 @@ momCoupleModels
   implicitCouple
 );
 
-voidFractionModel centre; // divided centre
+voidFractionModel divided; // divided centre
 
 locateModel engine;
 
@@ -46,7 +46,7 @@ meshMotionModel noMeshMotion;
 
 dataExchangeModel twoWayMPI;
 
-averagingModel dense;
+averagingModel dilute; // dense dilute
 
 turbulenceModelType turbulenceProperties;
 

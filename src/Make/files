@@ -34,7 +34,6 @@ $(sub_model)/locate_model/engine_search_IB.C
 
 $(sub_model)/mom_couple_model/mom_couple_model.C
 $(sub_model)/mom_couple_model/implicit_couple.C
-$(sub_model)/mom_couple_model/explicit_couple.C
 
 $(sub_model)/void_fraction_model/void_fraction_model.C
 $(sub_model)/void_fraction_model/no_void_fraction.C
