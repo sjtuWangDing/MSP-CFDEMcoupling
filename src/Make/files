@@ -1,5 +1,6 @@
 source_path = ../src
 cloud = $(source_path)/cloud
+cfdem_tools = $(source_path)/cfdem_tools
 sub_model = $(source_path)/sub_model
 
 $(cloud)/cfdem_base.C
@@ -7,6 +8,8 @@ $(cloud)/cfdem_cloud.C
 $(cloud)/cfdem_cloud_IB.C
 $(cloud)/cfdem_cloud_IB_opti.C
 $(cloud)/coupling_properties.C
+
+$(cfdem_tools)/check_model_type.C
 
 $(sub_model)/averaging_model/averaging_model.C
 $(sub_model)/averaging_model/no_averaging_model.C

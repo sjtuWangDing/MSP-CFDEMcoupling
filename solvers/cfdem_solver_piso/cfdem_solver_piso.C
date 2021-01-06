@@ -40,6 +40,7 @@ Description
 
 #include "cloud/of_version.h"
 #include "cloud/cfdem_cloud.h"
+#include "cfdem_tools/cfdem_tools.h"
 
 #if defined(version30)
   #include "turbulentTransportModel.H"
@@ -68,8 +69,8 @@ int main(int argc, char *argv[]) {
   #include "readGravitationalAcceleration.H"
   // create cfdemCloud
   Foam::cfdemCloud particleCloud(mesh);
-  // #include "checkModelType.H"
-  word modelType = particleCloud.modelType();
+  cfdemTools::checkModelType(particleCloud);
+  std::string modelType = particleCloud.modelType();
 
   // run loop
   Info << "\nStarting time loop\n" << endl;
