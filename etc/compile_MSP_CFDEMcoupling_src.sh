@@ -18,7 +18,7 @@ mkdir -p $logDir
 # must compile (but not clean) LIGGGHTS libraries
 # compile src
 #================================================================================#
-compiledLibList="$MSP_CFDEM_ETC_DIR/msp_cfdem_compiled_lib_list.txt"
+compiledLibList="$MSP_CFDEM_ETC_DIR/package_msp_cfdem_lib_list.txt"
 echo "Please provide the libraries to be compiled in the $compiledLibList file."
 
 if [[ ! -f $compiledLibList ]]; then
