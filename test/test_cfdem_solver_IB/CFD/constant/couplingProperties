@@ -38,8 +38,6 @@ locateModel engineIB;
 
 dataExchangeModel twoWayMPI;
 
-averagingModel noAveragingModel;
-
 turbulenceModelType turbulenceProperties;
 
 /* ---------------------------- sub-model properties ------------------------- */
@@ -62,7 +60,6 @@ ArchimedesIBTestProps
 {
     gravityFieldName "g";
 }
-
 
 twoWayMPIProps
 {

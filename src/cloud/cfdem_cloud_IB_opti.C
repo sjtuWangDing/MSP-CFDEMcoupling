@@ -34,6 +34,7 @@ Class
 #include <mutex>
 #include "cloud/cfdem_cloud_IB_opti.h"
 #include "dynamicFvMesh.H"
+#include "mpi.h"
 #include "sub_model/data_exchange_model/data_exchange_model.h"
 #include "sub_model/force_model/force_model.h"
 
@@ -78,6 +79,30 @@ void cfdemCloudIBOpti::getDEMData() {
 
 void cfdemCloudIBOpti::giveDEMData() const {
   dataExchangeM().giveData("dragforce", "vector-atom", DEMForcesPtr());
+}
+
+void cfdemCloudIBOpti::printParticleInfo() const {
+  int nProcs = 0, id = 0;
+  MPI_Comm_size(MPI_COMM_WORLD, &nProcs);
+  MPI_Comm_rank(MPI_COMM_WORLD, &id);
+  base::MPI_Barrier();
+  if (0 == id) {
+    for (int index = 0; index < numberOfParticles(); ++index) {
+      Pout << "  position[" << index << "]: " << positions()[index][0] << ", " << positions()[index][1] << ", "
+           << positions()[index][2] << endl;
+    }
+    for (int index = 0; index < numberOfParticles(); ++index) {
+      Pout << "  velocity[" << index << "]: " << velocities()[index][0] << ", " << velocities()[index][1] << ", "
+           << velocities()[index][2] << endl;
+    }
+  }
+  base::MPI_Barrier();
+  for (int index = 0; index < numberOfParticles(); ++index) {
+    Pout << "  DEMForce[" << index << "]: " << DEMForces()[index][0] << ", " << DEMForces()[index][1] << ", "
+         << DEMForces()[index][2] << endl;
+  }
+  base::MPI_Barrier();
+  voidFractionM().printVoidFractionInfo();
 }
 
 /*!

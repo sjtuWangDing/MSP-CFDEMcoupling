@@ -86,6 +86,8 @@ class cfdemCloud {
 
   virtual void giveDEMData() const;
 
+  virtual void printParticleInfo() const;
+
   /*!
    * \brief 更新函数
    * \note used for cfdemSolverPiso
@@ -114,8 +116,6 @@ class cfdemCloud {
    * \return true if simulation is fully periodic
    */
   bool checkSimulationFullyPeriodic();
-
-  void printParticleInfo() const;
 
   /* --------------------------------- interfaces ---------------------------------------- */
 

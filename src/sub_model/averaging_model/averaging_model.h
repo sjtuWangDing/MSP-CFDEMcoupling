@@ -47,7 +47,7 @@ namespace Foam {
 class averagingModel {
  public:
   //! \brief Runtime type information
-  cfdemTypeName("averagingModel");
+  cfdemBaseTypeName("averagingModel", "noAveragingModel");
 
   //! \brief Declare runtime constructor selection
   cfdemDeclareRunTimeSelection(autoPtr, averagingModel, (cfdemCloud & cloud), (cloud));

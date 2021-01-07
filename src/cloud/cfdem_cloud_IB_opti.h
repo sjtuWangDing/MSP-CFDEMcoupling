@@ -73,6 +73,8 @@ class cfdemCloudIBOpti : public cfdemCloud {
   //! \brief 传递数据到 DEM
   void giveDEMData() const;
 
+  void printParticleInfo() const;
+
   //! \brief 确定颗粒周围 refined 网格的区域
   void setInterface(volScalarField& interface, const double scale = cfdemCloudIBOpti::particleMeshScale_) const;
 

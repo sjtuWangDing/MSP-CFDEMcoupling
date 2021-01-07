@@ -43,7 +43,7 @@ namespace Foam {
 class dataExchangeModel {
  public:
   //! \brief Runtime type information
-  cfdemTypeName("dataExchangeModel");
+  cfdemBaseTypeName("dataExchangeModel", "");
 
   //! \brief Declare runtime constructor selection
   cfdemDeclareRunTimeSelection(autoPtr, dataExchangeModel, (cfdemCloud & cloud), (cloud));

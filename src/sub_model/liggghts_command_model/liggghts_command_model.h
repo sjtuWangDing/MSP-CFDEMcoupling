@@ -43,7 +43,7 @@ namespace Foam {
 class liggghtsCommandModel {
  public:
   //! \brief Runtime type information
-  cfdemTypeName("liggghtsCommandModel");
+  cfdemBaseTypeName("liggghtsCommandModel", "");
 
   //! \brief Declare runtime constructor selection
   cfdemDeclareRunTimeSelection(std::unique_ptr, liggghtsCommandModel, (cfdemCloud & cloud), (cloud));

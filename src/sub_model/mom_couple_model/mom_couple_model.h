@@ -50,7 +50,7 @@ namespace Foam {
 class momCoupleModel {
  public:
   //! \brief Runtime type information
-  cfdemTypeName("momCoupleModel");
+  cfdemBaseTypeName("momCoupleModel", "");
 
   //! \brief Declare runtime constructor selection
   cfdemDeclareRunTimeSelection(std::unique_ptr, momCoupleModel, (cfdemCloud & cloud), (cloud));
