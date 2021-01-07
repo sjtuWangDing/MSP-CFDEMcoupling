@@ -109,11 +109,12 @@ class dataExchangeModel {
       CHECK_EQ(pData[0], tensor.optr_) << "dataExchangeModel::free: tensor's optr_ not match with pData[0]";
       // 释放 pData[0] 指向的内存
       TENSOR_MALLOC_ALLOC(DType)::deallocate(pData[0], tensor.mSize());
+      // 重置 pData[0]
+      pData[0] = nullptr;
       // 释放 pData 指向的内存
       TENSOR_MALLOC_ALLOC(DType*)::deallocate(pData, tensor.size(0));
-      // reset pointer
-      // note: must reset pointer of pData to nullptr, otherwise liggghts will allocate memory failed.
-      pData[0] = nullptr;
+      // Note: reset pointer
+      // Note: must reset pointer of pData to nullptr, otherwise liggghts will allocate memory failed!
       pData = nullptr;
       tensor.optr_ = nullptr;
     } else {
