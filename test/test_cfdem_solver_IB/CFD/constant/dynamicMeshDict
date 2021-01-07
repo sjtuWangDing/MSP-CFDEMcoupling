@@ -14,28 +14,22 @@ FoamFile
     object      dynamicMeshDict;
 }
 
-dynamicFvMesh   dynamicRefineFvMesh;  // dynamicRefineFvMesh staticFvMesh
+dynamicFvMesh   dynamicRefineFvMesh; // dynamicRefineFvMesh; // staticFvMesh;
 
 dynamicRefineFvMeshCoeffs
 {
-    refineInterval    1;          // refine every refineInterval timesteps
-    field             interFace;  // field to be refinement on
-    lowerRefineLevel  0.0001;     // refine field inbetween lower and upper
-    upperRefineLevel  0.9999;
-    unrefineLevel     3;          // if value < unrefineLevel (default = GREAT) unrefine
-    nBufferLayers     10;         // unrefine pointCells that are within nBufferLayers of points marked for refinement
-    maxRefinement     3;          // refine cells only up to maxRefinement levels (start with 0)
-    maxCells          10000000;    // stop refinement if maxCells reached
-    // Flux field and corresponding velocity field.
-    // Fluxes on changed faces get recalculated by interpolating the velocity.
-    // Use 'none' on surfaceScalarFields that do not need to be reinterpolated,
-    // use NaN to detect use of mapped variable.
-    // First is name of the flux to adapt, second is velocity that will
-    // be interpolated and inner-producted with the face area vector.
+    refineInterval        1; // refine every refineInterval timesteps
+    field                 interface;
+    lowerRefineLevel      0.0001;
+    upperRefineLevel      0.99;
+    unrefineLevel         10;
+    nBufferLayers         1;
+    maxRefinement         2; // maximum refinement level (starts from 0)
+    maxCells              1000000;
     correctFluxes
     (
-        (phi                U)
-        (phi_0              U)
+        (phi    U)
+        (phi_0  U)
     );
-    dumpLevel         false;      // write the refinement level as a volScalarField
+    dumpLevel             false;
 }

@@ -50,7 +50,7 @@ class cfdemCloudIBOpti : public cfdemCloud {
    * \brief 更新函数
    * \note used for cfdemSolverIB
    * \param volumeFraction  <[in, out] 大颗粒体积分数
-   * \param interFace       <[in, out] 界面场，用于 dynamic mesh
+   * \param interface       <[in, out] 界面场，用于 dynamic mesh
    */
   void evolve(volScalarField& volumeFraction, volScalarField& interface);
 

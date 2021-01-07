@@ -40,17 +40,6 @@ Syntax
     velFieldName "U";
     voidFractionFieldName "voidFraction";
     granVelFieldName "Us";
-    interpolation switch1;
-    voidFractionInterpolationType "type1";
-    UInterpolationType "type2";
-    suppressProbe       switch2;
-    scale               scalar1;
-    scaleDrag           scalar2;
-    treatForceExplicit  switch3;
-    implForceDEM        switch4;
-    verbose             switch5;
-    scalarViscosity     switch6;
-    nu                  scalar3;
   };
 \*---------------------------------------------------------------------------*/
 

@@ -125,7 +125,7 @@ class CouplingProperties {
   const Foam::vector periodicCheckRange_;
 
   /*!
-   * \brief 重构网格的颗粒直径因数，在颗粒 refineMeshSkin_ * diameter 中的网格设置 interFace 用于 refine meshs
+   * \brief 重构网格的颗粒直径因数，在颗粒 refineMeshSkin_ * diameter 中的网格设置 interface 用于 refine meshs
    * \note used for cfdemCloudIB or cfdemCloudMix
    */
   double refineMeshSkin_;

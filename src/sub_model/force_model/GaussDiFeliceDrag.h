@@ -25,63 +25,65 @@ License
   Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
-  cfdemCloudIB derived from cfdemCloud
+  The force model performs the calculation of forces (e.g. fluid-particle
+  interaction forces) acting on each DEM particle. The DiFeliceDrag model
+  is a model that calculates the particle drag force based on Gauss function.
 
-Class
-  Foam::cfdemCloudIB
+Syntax
+  forceModels
+  (
+    GaussDiFeliceDrag
+  );
+  GaussDiFeliceDragProps
+  {
+    velFieldName "U";
+    voidFractionFieldName "voidFraction";
+    granVelFieldName "Us";
+  };
 \*---------------------------------------------------------------------------*/
 
-#ifndef __CFDEM_CLOUD_IB_H__
-#define __CFDEM_CLOUD_IB_H__
+#ifndef __GAUSS_DIFELICE_DRAG_H__
+#define __GAUSS_DIFELICE_DRAG_H__
 
-#include "cloud/cfdem_cloud.h"
+#include "./force_model.h"
 
 namespace Foam {
 
-class cfdemCloudIB : public cfdemCloud {
+class GaussDiFeliceDrag : public forceModel {
  public:
-  //! \brief Constructed from mesh
-  cfdemCloudIB(const fvMesh& mesh);
+  //! \brief Runtime type information
+  cfdemTypeName("GaussDiFeliceDrag");
+
+  cfdemDefineNewFunctionAdder(forceModel, GaussDiFeliceDrag);
+
+  //! \brief Constructor
+  GaussDiFeliceDrag(cfdemCloud& cloud);
 
   //! \brief Destructor
-  ~cfdemCloudIB();
+  ~GaussDiFeliceDrag();
 
-  /*!
-   * \brief 更新函数
-   * \note used for cfdemSolverIB
-   * \param volumeFraction  <[in, out] 大颗粒体积分数
-   * \param interface       <[in, out] 界面场，用于 dynamic mesh
-   */
-  void evolve(volScalarField& volumeFraction, volScalarField& interface);
+  void setForce();
 
-  void calcVelocityCorrection(volScalarField& p, volVectorField& U, volScalarField& phiIB,
-                              volScalarField& voidfraction);
+ private:
+  //! \note subPropsDict_ should be declared in front of other members
+  dictionary subPropsDict_;
 
- protected:
-  //! \brief 重新分配内存
-  void reallocate();
+  //! \brief 速度场名称
+  std::string velFieldName_;
 
-  //! \brief 从 DEM 获取数据
-  void getDEMData();
+  //! \brief 局部平均颗粒速度场名称
+  std::string UsFieldName_;
 
-  //! \brief 传递数据到 DEM
-  void giveDEMData() const;
+  //! \brief 空隙率场的名称
+  std::string voidFractionFieldName_;
 
-  void printParticleInfo() const;
+  const volVectorField& U_;
 
-  //! \brief 确定颗粒周围 refined 网格的区域
-  void setInterface(volScalarField& interface, const double scale = cfdemCloudIB::particleMeshScale_) const;
+  const volVectorField& UsField_;
 
- protected:
-  static const double particleMeshScale_;
-
-  int pRefCell_;
-
-  double pRefValue_;
+  const volScalarField& voidFraction_;
 };
-
-const double cfdemCloudIB::particleMeshScale_ = 2.0;
 
 }  // namespace Foam
 
-#endif  // __CFDEM_CLOUD_IB_H__
+#endif  // __GAUSS_DIFELICE_DRAG_H__

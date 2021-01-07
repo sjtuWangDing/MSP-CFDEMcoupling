@@ -113,7 +113,6 @@ class voidFractionModel {
 
   inline const volScalarField& volumeFractionNext() const { return volumeFractionNext_; }
 
- protected:
   inline double pV(const double radius, const double scaleVol = 1.0) const {
     return 4.188790205 * radius * radius * radius * scaleVol;
   }

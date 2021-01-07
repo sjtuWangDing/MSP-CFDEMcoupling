@@ -275,11 +275,11 @@ void cfdemCloudIBOpti::evolve(volScalarField& volumeFraction, volScalarField& in
 //           if (false == cellInParticle) {
 //             // cellI 目前不在任何颗粒中
 //             if (refineMeshKeepStep[cellI] > Foam::SMALL && false == cellFirstEntryRefineMeshKeepStep) {
-//               // refineMeshKeepStep[cellI] > 0.0，则保持 interFace 值
+//               // refineMeshKeepStep[cellI] > 0.0，则保持 interface 值
 //               cellFirstEntryRefineMeshKeepStep = true;  // 确保对每一个 cellI 只执行一次
 //               refineMeshKeepStep[cellI] -= 1.0;
 //             } else {
-//               // 设置 interFace 为 0.0
+//               // 设置 interface 为 0.0
 //               interface[cellI] = 0.0;
 //             }
 //           }
