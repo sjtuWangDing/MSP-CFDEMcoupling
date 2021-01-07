@@ -10,26 +10,43 @@ FoamFile
     version     2.0;
     format      ascii;
     class       dictionary;
-    location    "constant";
-    object      transportProperties;
+    location    "system";
+    object      controlDict;
 }
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-transportModel  Newtonian;
+application     interDyMFoam;
 
-nu              nu [ 0 2 -1 0 0 0 0 ] 6.04167e-5;
+startFrom       startTime;
 
-CrossPowerLawCoeffs
-{
-    nu0             nu0 [ 0 2 -1 0 0 0 0 ] 1e-06;
-    nuInf           nuInf [ 0 2 -1 0 0 0 0 ] 1e-06;
-    m               m [ 0 0 1 0 0 0 0 ] 1;
-    n               n [ 0 0 0 0 0 0 0 ] 1;
-}
+startTime       0;
 
-BirdCarreauCoeffs
-{
-    nu0             nu0 [ 0 2 -1 0 0 0 0 ] 1e-06;
-    nuInf           nuInf [ 0 2 -1 0 0 0 0 ] 1e-06;
-    k               k [ 0 0 1 0 0 0 0 ] 0;
-    n               n [ 0 0 0 0 0 0 0 ] 1;
-}
+stopAt          endTime;
+
+endTime         1.3;
+
+deltaT          0.00005;
+
+writeControl    adjustableRunTime; // adjustableRunTime; // timeStep;
+
+writeInterval   0.004; // 0.004; // 10; // 0.05;
+
+purgeWrite      0;
+
+writeFormat     ascii;
+
+writePrecision  10;
+
+writeCompression uncompressed;
+
+timeFormat      general;
+
+timePrecision   10;
+
+runTimeModifiable off; //yes;
+
+adjustTimeStep  no;
+
+maxCo           1;
+
+maxDeltaT       1;

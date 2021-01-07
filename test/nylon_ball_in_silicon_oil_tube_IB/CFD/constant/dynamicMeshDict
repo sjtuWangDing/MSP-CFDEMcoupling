@@ -11,25 +11,25 @@ FoamFile
     format      ascii;
     class       dictionary;
     location    "constant";
-    object      transportProperties;
+    object      dynamicMeshDict;
 }
 
-transportModel  Newtonian;
+dynamicFvMesh   dynamicRefineFvMesh; // staticFvMesh;
 
-nu              nu [ 0 2 -1 0 0 0 0 ] 6.04167e-5;
-
-CrossPowerLawCoeffs
+dynamicRefineFvMeshCoeffs
 {
-    nu0             nu0 [ 0 2 -1 0 0 0 0 ] 1e-06;
-    nuInf           nuInf [ 0 2 -1 0 0 0 0 ] 1e-06;
-    m               m [ 0 0 1 0 0 0 0 ] 1;
-    n               n [ 0 0 0 0 0 0 0 ] 1;
-}
-
-BirdCarreauCoeffs
-{
-    nu0             nu0 [ 0 2 -1 0 0 0 0 ] 1e-06;
-    nuInf           nuInf [ 0 2 -1 0 0 0 0 ] 1e-06;
-    k               k [ 0 0 1 0 0 0 0 ] 0;
-    n               n [ 0 0 0 0 0 0 0 ] 1;
+    refineInterval        1; // refine every refineInterval timesteps
+    field                 interface;
+    lowerRefineLevel      0.0001;
+    upperRefineLevel      0.99;
+    unrefineLevel         10;
+    nBufferLayers         1;
+    maxRefinement         2; // maximum refinement level (starts from 0)
+    maxCells              1000000;
+    correctFluxes
+    (
+        (phi    U)
+        (phi_0  U)
+    );
+    dumpLevel             false;
 }

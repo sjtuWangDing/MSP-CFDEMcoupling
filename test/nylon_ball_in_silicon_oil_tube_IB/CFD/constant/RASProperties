@@ -11,25 +11,11 @@ FoamFile
     format      ascii;
     class       dictionary;
     location    "constant";
-    object      transportProperties;
+    object      RASProperties;
 }
 
-transportModel  Newtonian;
+RASModel        laminar; // kEpsilon
 
-nu              nu [ 0 2 -1 0 0 0 0 ] 6.04167e-5;
+turbulence      on;
 
-CrossPowerLawCoeffs
-{
-    nu0             nu0 [ 0 2 -1 0 0 0 0 ] 1e-06;
-    nuInf           nuInf [ 0 2 -1 0 0 0 0 ] 1e-06;
-    m               m [ 0 0 1 0 0 0 0 ] 1;
-    n               n [ 0 0 0 0 0 0 0 ] 1;
-}
-
-BirdCarreauCoeffs
-{
-    nu0             nu0 [ 0 2 -1 0 0 0 0 ] 1e-06;
-    nuInf           nuInf [ 0 2 -1 0 0 0 0 ] 1e-06;
-    k               k [ 0 0 1 0 0 0 0 ] 0;
-    n               n [ 0 0 0 0 0 0 0 ] 1;
-}
+printCoeffs     on;
