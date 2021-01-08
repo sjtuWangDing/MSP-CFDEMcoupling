@@ -15,8 +15,8 @@ source $MSP_CFDEM_TOOLS_DIR/msp_cfdem_parallel_run.sh
 # define variables for mpirun
 casePath="$(dirname "$(readlink -f ${BASH_SOURCE[0]})")"
 solverDir="$MSP_CFDEM_BIN_DIR"
-solverName="cfdemSolverIB-1.0"
-numberOfProcs="16"
+solverName="cfdemSolverPiso-1.0"
+numberOfProcs="4"
 machineFileName="none" # yourMachinefileName
 logPath=$casePath
 logFileName="log_mpirun_$numberOfProcs_$solverName"
