@@ -128,12 +128,12 @@ void IBVoidFraction::setVolumeFractionForSingleParticle(const int index,
     // 获取网格中心坐标
     Foam::vector cellCentre = cloud_.mesh().C()[findCellID];
     // 判断网格中心是否在颗粒中
-    double fc = pointInParticle(particleCentre, cellCentre, radius);
+    double fc = pointInParticle(cellCentre, particleCentre, radius);
     // 计算网格的等效半径
     double corona = 0.5 * sqrt(3.0) * cbrt(cloud_.mesh().V()[findCellID]);
     // 获取网格的 corona point
     Foam::vector coronaPoint = getCoronaPointPosition(particleCentre, cellCentre, corona);
-    if (pointInParticle(particleCentre, coronaPoint, radius) < 0.0) {
+    if (pointInParticle(coronaPoint, particleCentre, radius) < 0.0) {
       // 如果 coronaPoint 在颗粒中, 则认为整个网格在颗粒中
       volumeFractionNext_[findCellID] = 0.0;
     } else {
@@ -145,7 +145,7 @@ void IBVoidFraction::setVolumeFractionForSingleParticle(const int index,
         // 获取第 i 角点坐标
         vector vertexPosition = cloud_.mesh().points()[vertexPoints[i]];
         // 判断角点是否在颗粒中
-        scalar fv = pointInParticle(particleCentre, vertexPosition, radius);
+        scalar fv = pointInParticle(vertexPosition, particleCentre, radius);
         if (fc < 0.0 && fv < 0.0) {
           // 网格中心在颗粒中, 角点也在颗粒中
           volumeFractionNext_[findCellID] -= ratio;
@@ -191,7 +191,7 @@ void IBVoidFraction::buildLabelHashSetForVolumeFraction(const label cellID, cons
     // 获取相邻网格中心坐标
     Foam::vector neighbourCentre = cloud_.mesh().C()[neighbour];
     // 判断相邻网格中心是否在颗粒中
-    scalar fc = pointInParticle(particleCentre, neighbourCentre, radius);
+    scalar fc = pointInParticle(neighbourCentre, particleCentre, radius);
     // 计算相邻网格的等效半径
     scalar coronaRaidus = 0.5 * sqrt(3.0) * cbrt(cloud_.mesh().V()[neighbour]);
     // 获取 corona point
@@ -199,7 +199,7 @@ void IBVoidFraction::buildLabelHashSetForVolumeFraction(const label cellID, cons
     // 如果在哈希集合中没有插入 neighbour 网格
     if (false == hashSetPtr->found(neighbour)) {
       // 计算 neighbour 网格的体积分数
-      if (pointInParticle(particleCentre, coronaPoint, radius) < 0.0) {
+      if (pointInParticle(coronaPoint, particleCentre, radius) < 0.0) {
         // 如果相邻网格的 coronaPoint 在颗粒中, 则说明该网格完全被颗粒覆盖
         volumeFractionNext_[neighbour] = 0.0;
         // 以相邻网格为中心继续递归构建哈希集合
@@ -216,7 +216,7 @@ void IBVoidFraction::buildLabelHashSetForVolumeFraction(const label cellID, cons
           // 获取角点坐标
           Foam::vector vertexPosition = cloud_.mesh().points()[vertexPoints[j]];
           // 判断角点是否在颗粒中
-          scalar fv = pointInParticle(particleCentre, vertexPosition, radius);
+          scalar fv = pointInParticle(vertexPosition, particleCentre, radius);
           if (fc < 0.0 && fv < 0.0) {  // 如果网格 neighbour 中心在颗粒中, 角点 j 也在颗粒中
             scale -= ratio;
           } else if (fc < 0.0 && fv > 0.0) {  // 如果网格 neighbour 中心在颗粒中, 角点 j 不在颗粒中

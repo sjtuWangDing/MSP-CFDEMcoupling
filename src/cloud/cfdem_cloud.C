@@ -105,9 +105,20 @@ cfdemCloud::cfdemCloud(const fvMesh& mesh)
                << ", but from dictionary read checkPeriodicCells: " << (checkPeriodicCells() ? true : false)
                << abort(FatalError);
   }
+  // 执行初始化函数
+  init();
 }
 
 cfdemCloud::~cfdemCloud() {}
+
+void cfdemCloud::init() {
+  // 由于在构造 dataExchangeModel 的时候会执行 liggghts 脚本，所以此时可以获得最初的颗粒信息
+  int number = dataExchangeM().getNumberOfParticlesFromDEM();
+  setNumberOfParticles(number);
+  // allocate memory of init data exchanged with liggghts
+  dataExchangeM().realloc(parCloud_.initVelocities(), base::makeShape2(number, 3), parCloud_.initVelocitiesPtr(), 0.0);
+  dataExchangeM().getData("v", "vector-atom", parCloud_.initVelocitiesPtr());
+}
 
 //! \brief 重新分配内存
 void cfdemCloud::reallocate() {
@@ -162,6 +173,10 @@ void cfdemCloud::printParticleInfo() const {
       Pout << "  velocity[" << index << "]: " << velocities()[index][0] << ", " << velocities()[index][1] << ", "
            << velocities()[index][2] << endl;
     }
+  }
+  base::MPI_Barrier();
+  for (int index = 0; index < numberOfParticles(); ++index) {
+    Pout << "  dimensionRatio[" << index << "]: " << dimensionRatios()[index] << endl;
   }
   base::MPI_Barrier();
   for (int index = 0; index < numberOfParticles(); ++index) {
@@ -231,6 +246,8 @@ void cfdemCloud::evolve(volVectorField& U, volScalarField& voidF, volVectorField
     getDEMData();
     // 获取到在当前 processor 上颗粒覆盖的某一个网格编号，如果获取到的网格编号为 -1，则表示颗粒不覆盖当前 processor
     locateM().findCell(parCloud_.findCellIDs());
+    // 计算颗粒尺度
+    voidFractionM().getDimensionRatios(parCloud_.dimensionRatios());
     // 计算颗粒空隙率
     voidFractionM().setVoidFraction();
     voidF = voidFractionM().voidFractionInterp();

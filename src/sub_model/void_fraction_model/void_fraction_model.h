@@ -39,6 +39,7 @@ Class
 #ifndef __VOID_FRACTION_MODEL_H__
 #define __VOID_FRACTION_MODEL_H__
 
+#include <unordered_set>
 #include "base/run_time_selection_tables.h"
 #include "cloud/cfdem_cloud.h"
 
@@ -63,8 +64,7 @@ class voidFractionModel {
   virtual ~voidFractionModel();
 
   //! \brief 计算颗粒尺寸与其周围网格平均尺寸的比值, 并将颗粒索引按照颗粒尺寸归类
-  void getDimensionRatios(const base::CITensor1& findCellIDs, const base::CDTensor1& dimensionRatios,
-                          const double scale = 1.0) const;
+  void getDimensionRatios(const base::CDTensor1& dimensionRatios, const double scale = 1.0) const;
 
   //! \brief 计算空隙率
   virtual void setVoidFraction() = 0;
@@ -118,16 +118,15 @@ class voidFractionModel {
   }
 
   /*!
-   * \brief 构建颗粒覆盖的所有网格的哈希集合
-   * \note 设置为递归函数，通过哈希器将网格编号转换为哈希值，并存入 set 中以便于搜索
-   * \param hashSett    <[in, out] 需要构建的哈希集
+   * \brief 构建颗粒覆盖的所有网格的集合
+   * \param set         <[in, out] 需要构建的集合
    * \param cellID      <[in] 递归循环中要检索网格编号
    * \param particlePos <[in] 颗粒中心位置
    * \param radius      <[in] 颗粒半径
    * \param scale       <[in] 颗粒半径扩大系数
    */
-  void buildLabelHashSetForCoveredCell(labelHashSet& hashSett, const int cellID, const Foam::vector& particlePos,
-                                       const double radius, const double scale) const;
+  void buildExpandedCellSet(std::unordered_set<int>& set, const int cellID, const Foam::vector& particlePos,
+                            const double radius, const double scale) const;
 
  protected:
   cfdemCloud& cloud_;

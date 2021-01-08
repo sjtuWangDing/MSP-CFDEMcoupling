@@ -83,6 +83,14 @@ class CouplingProperties {
 
   /* --------------------------------- interface used for cfdemCloudMix ----------------------------------- */
 
+  inline bool checkFineParticle(double ratio) const { return ratio > 0 && ratio >= fineParticleRatio_; }
+
+  inline bool checkMiddleParticle(double ratio) const {
+    return ratio > 0 && (coarseParticleRatio_ <= ratio && ratio < fineParticleRatio_);
+  }
+
+  inline bool checkCoarseParticle(double ratio) const { return ratio > 0 && ratio < coarseParticleRatio_; }
+
  protected:
   const fvMesh& mesh_;
 
@@ -90,6 +98,11 @@ class CouplingProperties {
   const IOdictionary& couplingPropertiesDict_;
 
   const IOdictionary& liggghtsCommandsDict_;
+
+  //! \brief 颗粒尺度系数
+  double fineParticleRatio_;
+
+  double coarseParticleRatio_;
 
   //! \brief dict 中指定的所有 force model 的名称
   std::vector<std::string> forceModelList_;
@@ -140,12 +153,6 @@ class CouplingProperties {
   std::string ddtVoidFractionType_;
 
 #if CFDEM_MIX_CLOUD
-
- public:
-  //! \brief 颗粒尺度系数
-  static double fineParticleRatio_;
-
-  static double coarseParticleRatio_;
 
  protected:
   //! \brief 是否用于求解器 cfdemSolverIB

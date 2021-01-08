@@ -54,7 +54,9 @@ forceModel::forceModel(cfdemCloud& cloud)
       forceSubModel_(nullptr),
       useProbe_(false),
       UInterpolator_(nullptr),
-      voidFractionInterpolator_(nullptr) {}
+      voidFractionInterpolator_(nullptr),
+      divTauInterpolator_(nullptr),
+      gradPInterpolator_(nullptr) {}
 
 //! \brief Destructor
 forceModel::~forceModel() {}

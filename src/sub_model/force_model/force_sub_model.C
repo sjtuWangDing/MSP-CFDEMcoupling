@@ -180,4 +180,15 @@ volVectorField forceSubModel::IBDrag(const volVectorField& U, const volScalarFie
 #endif
 }
 
+volVectorField forceSubModel::divTauField(const volVectorField& U) const {
+#ifdef compre
+  const volScalarField& mu_ = muField();
+  return -fvc::laplacian(mu_, U) - fvc::div(mu_ * dev(fvc::grad(U)().T()));
+#else
+  const volScalarField& nu_ = nuField();
+  const volScalarField& rho_ = rhoField();
+  return -fvc::laplacian(nu_ * rho_, U) - fvc::div(nu_ * rho_ * dev(fvc::grad(U)().T()));
+#endif
+}
+
 }  // namespace Foam

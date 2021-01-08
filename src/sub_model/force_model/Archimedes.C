@@ -74,7 +74,7 @@ void Archimedes::setForce() {
     forceSubModel_->partToArray(index, buoyancy, Foam::vector::zero, Foam::vector::zero, 0);
 
     if (forceSubModel_->verbose()) {
-      Info << "Archimedes buoyancy on particle " << index << ": [" << buoyancy[0] << ", " << buoyancy[1] << ", "
+      Pout << "Archimedes buoyancy on particle " << index << ": [" << buoyancy[0] << ", " << buoyancy[1] << ", "
            << buoyancy[2] << "]" << endl;
     }
   }

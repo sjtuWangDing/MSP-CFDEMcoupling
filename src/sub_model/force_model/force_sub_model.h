@@ -196,6 +196,8 @@ class forceSubModel {
    */
   volVectorField IBDrag(const volVectorField& U, const volScalarField& p) const;
 
+  volVectorField divTauField(const volVectorField& U) const;
+
   inline const volScalarField& rhoField() const { return rho_; }
 
   inline const volScalarField& nuField() const {

@@ -64,24 +64,6 @@ class twoWayMPI : public dataExchangeModel {
   //! \return 当前耦合时间步中颗粒的数量
   int couple();
 
-  // void destroy(double**& array);
-  // void destroy(double**& array, int);
-  // void allocateArray(double**& array, double initVal, int width, int length);
-
-  // //! \brief Allocate and destroy for 2-D int array
-  // void destroy(int**& array);
-  // void destroy(int**& array, int);
-  // void allocateArray(int**& array, int initVal, int width, int length);
-  // void allocateArray(int**& array, int initVal, int width, const char* length  = "nparticles");
-
-  // //! \brief Allocate and destroy for 1-D double array
-  // void destroy(double*& array);
-  // void allocateArray(double*& array, double initVal, int length);
-
-  // //! \brief Allocate and destroy for 1-D int array
-  // void destroy(int*& array);
-  // void allocateArray(int*& array, int initVal, int length);
-
   /*!
    * \brief 从 LAMMPS 中获取数据（数据类型为 double）
    *        Eg: getData("x", "vector-atom", array);
@@ -136,6 +118,14 @@ class twoWayMPI : public dataExchangeModel {
   //! \brief Allocate 2-D int array using liggghts interface
   void liggghtsAllocate(int**& array, int length, int width, int initVal = 0) const {
     allocate_external_int(array, width, length, initVal, lmp_);
+  }
+
+  //! \brief 从 DEM 求解器获取颗粒数量
+  int getNumberOfParticlesFromDEM() const {
+    if (lmp_) {
+      return liggghts_get_maxtag(lmp_);
+    }
+    return 0;
   }
 
  private:

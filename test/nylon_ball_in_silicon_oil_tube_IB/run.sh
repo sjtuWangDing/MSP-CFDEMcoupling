@@ -32,7 +32,7 @@ fi
 
 # add post dir to DEM
 if [ ! -d "$casePath/DEM/post" ]; then
-	mkdir "$casePath/DEM/post"
+  mkdir "$casePath/DEM/post"
 fi
 
 # call function to run a parallel CFD-DEM case
@@ -58,5 +58,5 @@ fi
 
 #- keep terminal open (if started in new terminal)
 echo
-echo "press Ctr+C kill process"
+echo "press Ctrl+C kill process"
 read

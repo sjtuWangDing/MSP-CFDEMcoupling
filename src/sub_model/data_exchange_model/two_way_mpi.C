@@ -81,7 +81,7 @@ int twoWayMPI::couple() {
   }
   Info << "Run LIGGGHTS - done" << endl;
   // 返回颗粒数量
-  return liggghts_get_maxtag(lmp_);
+  return getNumberOfParticlesFromDEM();
 }
 
 }  // namespace Foam

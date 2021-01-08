@@ -79,6 +79,9 @@ class cfdemCloud {
   //! \brief Destructor
   virtual ~cfdemCloud();
 
+  //! \brief 初始化函数，用于在构造函数中执行
+  virtual void init();
+
   //! \brief 重新分配内存
   virtual void reallocate();
 
@@ -200,6 +203,12 @@ class cfdemCloud {
 
   inline const std::string& ddtVoidFractionType() const { return cProps_.ddtVoidFractionType(); }
 
+  inline bool checkFineParticle(int index) const { return cProps_.checkFineParticle(getDimensionRatio(index)); }
+
+  inline bool checkMiddleParticle(int index) const { return cProps_.checkMiddleParticle(getDimensionRatio(index)); }
+
+  inline bool checkCoarseParticle(int index) const { return cProps_.checkCoarseParticle(getDimensionRatio(index)); }
+
   /* ------------------------- interface of particleCloud ------------------------------- */
 
   inline int numberOfParticles() const { return parCloud_.numberOfParticles_; }
@@ -236,6 +245,8 @@ class cfdemCloud {
 
   inline double** velocitiesPtr() const { return parCloud_.velocitiesPtr_; }
 
+  inline double** initVelocitiesPtr() const { return parCloud_.initVelocitiesPtr_; }
+
   inline double** angularVelocitiesPtr() const { return parCloud_.angularVelocitiesPtr_; }
 
   inline double** DEMForcesPtr() const { return parCloud_.DEMForcesPtr_; }
@@ -252,6 +263,8 @@ class cfdemCloud {
 
   inline const base::CDExTensor2& velocities() const { return parCloud_.velocities_; }
 
+  inline const base::CDExTensor2& initVelocities() const { return parCloud_.initVelocities_; }
+
   inline const base::CDExTensor2& angularVelocities() const { return parCloud_.angularVelocities_; }
 
   inline const base::CDExTensor2& DEMForces() const { return parCloud_.DEMForces_; }
@@ -262,9 +275,13 @@ class cfdemCloud {
 
   inline double getRadius(int index) const { return parCloud_.getRadius(index); }
 
+  inline double getDimensionRatio(int index) const { return parCloud_.getDimensionRatio(index); }
+
   inline Foam::vector getPosition(int index) const { return parCloud_.getPosition(index); }
 
   inline Foam::vector getVelocity(int index) const { return parCloud_.getVelocity(index); }
+
+  inline Foam::vector getInitVelocity(int index) const { return parCloud_.getInitVelocity(index); }
 
   inline Foam::vector getAngularVelocity(int index) const { return parCloud_.getAngularVelocity(index); }
 
@@ -308,18 +325,6 @@ class cfdemCloud {
   autoPtr<locateModel> locateModel_;
 
   autoPtr<averagingModel> averagingModel_;
-
-// autoPtr<IOModel> IOModel_;
-
-// autoPtr<probeModel> probeModel_;
-
-// autoPtr<registryModel> registryModel_;
-
-// autoPtr<clockModel> clockModel_;
-
-// autoPtr<smoothingModel> smoothingModel_;
-
-// autoPtr<meshMotionModel> meshMotionModel_;
 
 #if defined(version24Dev)
   const turbulenceModel& turbulence_;

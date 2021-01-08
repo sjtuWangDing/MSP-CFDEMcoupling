@@ -23,28 +23,12 @@ License
   You should have received a copy of the GNU General Public License
   along with CFDEMcoupling; if not, write to the Free Software Foundation,
   Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
-
-Description
-  The force model performs the calculation of forces (e.g. fluid-particle
-  interaction forces) acting on each DEM particle. The DiFeliceDrag model
-  is a model that calculates the particle drag force based on Gauss function.
-
-Syntax
-  forceModels
-  (
-    GaussDiFeliceDrag
-  );
-  GaussDiFeliceDragProps
-  {
-    velFieldName "U";
-    voidFractionFieldName "voidFraction";
-    granVelFieldName "Us";
-  };
 \*---------------------------------------------------------------------------*/
 
 #ifndef __GAUSS_DIFELICE_DRAG_H__
 #define __GAUSS_DIFELICE_DRAG_H__
 
+#include <unordered_set>
 #include "./force_model.h"
 
 namespace Foam {
@@ -64,6 +48,9 @@ class GaussDiFeliceDrag : public forceModel {
 
   void setForce();
 
+  void buildExpandedCellSet(std::unordered_set<int>& set, const int cellID, const Foam::vector& particlePos,
+                            const double radius, const double scale) const;
+
  private:
   //! \note subPropsDict_ should be declared in front of other members
   dictionary subPropsDict_;
@@ -71,15 +58,10 @@ class GaussDiFeliceDrag : public forceModel {
   //! \brief 速度场名称
   std::string velFieldName_;
 
-  //! \brief 局部平均颗粒速度场名称
-  std::string UsFieldName_;
-
   //! \brief 空隙率场的名称
   std::string voidFractionFieldName_;
 
   const volVectorField& U_;
-
-  const volVectorField& UsField_;
 
   const volScalarField& voidFraction_;
 };
