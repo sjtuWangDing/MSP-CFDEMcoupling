@@ -1,6 +1,7 @@
 # .gitignore file for test case
 
 # mesh and result from every processor
+*/res/
 */CFD/processor*/
 
 # polyMesh from every case
