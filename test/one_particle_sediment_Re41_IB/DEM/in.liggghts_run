@@ -18,7 +18,6 @@ create_box      1 reg
 neighbor        0.003 bin
 neigh_modify    delay 0 binsize 0.0001
 
-
 # Material properties required for new pair styles
 
 fix             m1 all property/global youngsModulus peratomtype 5.e7

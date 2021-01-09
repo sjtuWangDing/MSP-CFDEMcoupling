@@ -1,0 +1,42 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  1.6                                   |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "constant";
+    object      dynamicMeshDict;
+}
+
+dynamicFvMesh   dynamicRefineFvMesh; // dynamicRefineFvMesh;  // staticFvMesh
+
+dynamicRefineFvMeshCoeffs
+{
+    refineInterval    1;          // refine every refineInterval timesteps
+    field             interface;  // field to be refinement on
+    lowerRefineLevel  0.0001;     // refine field inbetween lower and upper
+    upperRefineLevel  0.99;
+    unrefineLevel     4;          // if value < unrefineLevel (default = GREAT) unrefine
+    nBufferLayers     10;         // unrefine pointCells that are within nBufferLayers of points marked for refinement
+    maxRefinement     3;          // refine cells only up to maxRefinement levels (start with 0)
+    maxCells          10000000;    // stop refinement if maxCells reached
+    // Flux field and corresponding velocity field.
+    // Fluxes on changed faces get recalculated by interpolating the velocity.
+    // Use 'none' on surfaceScalarFields that do not need to be reinterpolated,
+    // use NaN to detect use of mapped variable.
+    // First is name of the flux to adapt, second is velocity that will
+    // be interpolated and inner-producted with the face area vector.
+    correctFluxes
+    (
+        (phi                U)
+        (phi_0              U)
+        (phiByVoidfraction  none)
+    );
+    dumpLevel         false;      // write the refinement level as a volScalarField
+}
