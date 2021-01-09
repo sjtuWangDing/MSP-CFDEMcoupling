@@ -58,5 +58,5 @@ fi
 
 #- keep terminal open (if started in new terminal)
 echo
-echo "press Ctr+C kill process"
+echo "press Ctrl+C kill process"
 read
