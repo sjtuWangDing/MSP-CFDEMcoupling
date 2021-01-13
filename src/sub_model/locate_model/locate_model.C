@@ -24,10 +24,6 @@ License
   along with CFDEMcoupling; if not, write to the Free Software Foundation,
   Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-  This code is designed to realize coupled CFD-DEM simulations using LIGGGHTS
-  and OpenFOAM(R). Note: this code is not part of OpenFOAM(R) (see DISCLAIMER).
-
 Class
   locateModel
 \*---------------------------------------------------------------------------*/

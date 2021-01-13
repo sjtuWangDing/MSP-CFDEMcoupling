@@ -48,7 +48,7 @@ namespace Foam {
 class locateModel {
  public:
   //! \brief Runtime type information
-  cfdemTypeName("locateModel");
+  cfdemBaseTypeName("locateModel", "");
 
   //! \brief Declare runtime constructor selection
   cfdemDeclareRunTimeSelection(autoPtr, locateModel, (cfdemCloud & cloud), (cloud));

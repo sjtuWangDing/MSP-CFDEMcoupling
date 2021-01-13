@@ -42,6 +42,9 @@ namespace Foam {
 
 class cfdemCloud;
 
+//! \brief particle dimension type enum
+enum ParType { kFine = 0, kMiddle, kCoarse };
+
 //! \brief The basic class for particles
 class ParticleCloud {
   friend class cfdemCloud;
@@ -54,6 +57,7 @@ class ParticleCloud {
         cdsPtr_(nullptr),
         positionsPtr_(nullptr),
         velocitiesPtr_(nullptr),
+        initVelocitiesPtr_(nullptr),
         angularVelocitiesPtr_(nullptr),
         DEMForcesPtr_(nullptr),
         DEMTorquesPtr_(nullptr),
@@ -69,23 +73,21 @@ class ParticleCloud {
 
   inline base::CDTensor1& dimensionRatios() { return dimensionRatios_; }
 
-  inline base::CDTensor1& volumes() { return volumes_; }
-
   inline base::CDTensor2& fAcc() { return fAcc_; }
 
   inline base::CDTensor2& impForces() { return impForces_; }
 
   inline base::CDTensor2& expForces() { return expForces_; }
 
-  inline base::CDTensor2& particleWeights() { return particleWeights_; }
-
-  inline base::CDTensor2& particleVolumes() { return particleVolumes_; }
-
   inline std::vector<base::CITensor1>& cellIDs() { return cellIDs_; }
 
   inline std::vector<base::CDTensor1>& voidFractions() { return voidFractions_; }
 
   inline std::vector<base::CDTensor1>& volumeFractions() { return volumeFractions_; }
+
+  inline std::vector<base::CDTensor1>& particleWeights() { return particleWeights_; }
+
+  inline std::vector<base::CDTensor1>& particleVolumes() { return particleVolumes_; }
 
   inline double**& radiiPtr() { return radiiPtr_; }
 
@@ -94,6 +96,8 @@ class ParticleCloud {
   inline double**& positionsPtr() { return positionsPtr_; }
 
   inline double**& velocitiesPtr() { return velocitiesPtr_; }
+
+  inline double**& initVelocitiesPtr() { return initVelocitiesPtr_; }
 
   inline double**& angularVelocitiesPtr() { return angularVelocitiesPtr_; }
 
@@ -111,6 +115,8 @@ class ParticleCloud {
 
   inline base::CDExTensor2& velocities() { return velocities_; }
 
+  inline base::CDExTensor2& initVelocities() { return initVelocities_; }
+
   inline base::CDExTensor2& angularVelocities() { return angularVelocities_; }
 
   inline base::CDExTensor2& DEMForces() { return DEMForces_; }
@@ -120,10 +126,16 @@ class ParticleCloud {
   inline base::CDExTensor2& fluidVel() { return fluidVel_; }
 
   inline double getRadius(int index) const {
-    CHECK_EQ(numberOfParticles_, static_cast<int>(radii_.size(0))) << "getRadius: Number of particle is not match";
-    CHECK_GT(radii_[index], Foam::SMALL) << "getRadius: Radius of particle " << index << " is < "
+    CHECK_EQ(numberOfParticles_, static_cast<int>(radii_.size(0))) << __func__ << ": Number of particle is not match";
+    CHECK_GT(radii_[index], Foam::SMALL) << __func__ << ": Radius of particle " << index << " is < "
                                          << "Foam::SMALL";
     return radii_[index];
+  }
+
+  inline double getDimensionRatio(int index) const {
+    CHECK_EQ(numberOfParticles_, static_cast<int>(dimensionRatios_.size(0)))
+        << __func__ << ": Number of particle is not match";
+    return dimensionRatios_[index];
   }
 
   inline Foam::vector getPosition(int index) const {
@@ -144,6 +156,17 @@ class ParticleCloud {
 #pragma unroll
     for (int i = 0; i < 3; ++i) {
       vel[i] = velocities_[index][i];
+    }
+    return vel;
+  }
+
+  inline Foam::vector getInitVelocity(int index) const {
+    CHECK_EQ(numberOfParticles_, static_cast<int>(initVelocities_.size(0)))
+        << "getInitVelocity: Number of particle is not match";
+    Foam::vector vel = Foam::vector::zero;
+#pragma unroll
+    for (int i = 0; i < 3; ++i) {
+      vel[i] = initVelocities_[index][i];
     }
     return vel;
   }
@@ -174,19 +197,19 @@ class ParticleCloud {
   base::CITensor1 particleOverMeshNumber_;
   base::CITensor1 findCellIDs_;
   base::CDTensor1 dimensionRatios_;
-  base::CDTensor1 volumes_;
   base::CDTensor2 fAcc_;
   base::CDTensor2 impForces_;
   base::CDTensor2 expForces_;
-  base::CDTensor2 particleWeights_;
-  base::CDTensor2 particleVolumes_;
   std::vector<base::CITensor1> cellIDs_;
   std::vector<base::CDTensor1> voidFractions_;
   std::vector<base::CDTensor1> volumeFractions_;
+  std::vector<base::CDTensor1> particleWeights_;
+  std::vector<base::CDTensor1> particleVolumes_;
   double** radiiPtr_;
   double** cdsPtr_;
   double** positionsPtr_;
   double** velocitiesPtr_;
+  double** initVelocitiesPtr_;
   double** angularVelocitiesPtr_;
   double** DEMForcesPtr_;
   double** DEMTorquesPtr_;
@@ -195,6 +218,7 @@ class ParticleCloud {
   base::CDExTensor1 cds_;
   base::CDExTensor2 positions_;
   base::CDExTensor2 velocities_;
+  base::CDExTensor2 initVelocities_;
   base::CDExTensor2 angularVelocities_;
   base::CDExTensor2 DEMForces_;
   base::CDExTensor2 DEMTorques_;

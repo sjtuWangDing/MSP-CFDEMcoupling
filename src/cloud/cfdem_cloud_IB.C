@@ -33,6 +33,7 @@ Class
 
 #include <mutex>
 #include "cloud/cfdem_cloud_IB.h"
+#include "mpi.h"
 #include "sub_model/data_exchange_model/data_exchange_model.h"
 #include "sub_model/force_model/force_model.h"
 
@@ -79,6 +80,30 @@ void cfdemCloudIB::giveDEMData() const {
   dataExchangeM().giveData("dragforce", "vector-atom", DEMForcesPtr());
 }
 
+void cfdemCloudIB::printParticleInfo() const {
+  int nProcs = 0, id = 0;
+  MPI_Comm_size(MPI_COMM_WORLD, &nProcs);
+  MPI_Comm_rank(MPI_COMM_WORLD, &id);
+  base::MPI_Barrier();
+  if (0 == id) {
+    for (int index = 0; index < numberOfParticles(); ++index) {
+      Pout << "  position[" << index << "]: " << positions()[index][0] << ", " << positions()[index][1] << ", "
+           << positions()[index][2] << endl;
+    }
+    for (int index = 0; index < numberOfParticles(); ++index) {
+      Pout << "  velocity[" << index << "]: " << velocities()[index][0] << ", " << velocities()[index][1] << ", "
+           << velocities()[index][2] << endl;
+    }
+  }
+  base::MPI_Barrier();
+  for (int index = 0; index < numberOfParticles(); ++index) {
+    Pout << "  DEMForce[" << index << "]: " << DEMForces()[index][0] << ", " << DEMForces()[index][1] << ", "
+         << DEMForces()[index][2] << endl;
+  }
+  base::MPI_Barrier();
+  voidFractionM().printVoidFractionInfo();
+}
+
 //! \brief 确定颗粒周围 refined 网格的区域
 void cfdemCloudIB::setInterface(volScalarField& interface,
                                 const double scale /* = cfdemCloudIB::particleMeshScale_ */) const {
@@ -93,24 +118,6 @@ void cfdemCloudIB::setInterface(volScalarField& interface,
       }
     }
   }
-}
-
-void cfdemCloudIB::printParticleInfo() const {
-  base::MPI_Barrier();
-  for (int i = 0; i < numberOfParticles(); ++i) {
-    Info << "position of par " << i << ": " << positions()[i][0] << ", " << positions()[i][1] << ", "
-         << positions()[i][2] << endl;
-  }
-  for (int i = 0; i < numberOfParticles(); ++i) {
-    Info << "velocity of par " << i << ": " << velocities()[i][0] << ", " << velocities()[i][1] << ", "
-         << velocities()[i][2] << endl;
-  }
-  base::MPI_Barrier();
-  for (int i = 0; i < numberOfParticles(); ++i) {
-    Pout << "DEMForces of par " << i << ": " << DEMForces()[i][0] << ", " << DEMForces()[i][1] << ", "
-         << DEMForces()[i][2] << endl;
-  }
-  base::MPI_Barrier();
 }
 
 void cfdemCloudIB::calcVelocityCorrection(volScalarField& p, volVectorField& U, volScalarField& phiIB,
@@ -128,7 +135,7 @@ void cfdemCloudIB::calcVelocityCorrection(volScalarField& p, volVectorField& U, 
       angVel = getAngularVelocity(index);  // 颗粒角速度
       for (int subCell = 0; subCell < particleOverMeshNumber()[index]; ++subCell) {
         int cellID = cellIDs()[index][subCell];
-        if (cellID > -1) {
+        if (cellID >= 0) {
           for (int i = 0; i < 3; ++i) {
             rVec[i] = U.mesh().C()[cellID][i] - parPos[i];
           }

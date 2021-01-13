@@ -37,10 +37,14 @@ Class
 
 namespace Foam {
 
-const int forceSubModel::Switches::kNum = 4;
+const int forceSubModel::Switches::kNum = 6;
 
-const char* forceSubModel::Switches::kNameList[] = {"treatForceExplicitInMomEquation", "treatForceBothCFDAndDEM",
-                                                    "treatDEMForceImplicit", "verbose"};
+const char* forceSubModel::Switches::kNameList[] = {"treatForceExplicitInMomEquation",
+                                                    "treatForceBothCFDAndDEM",
+                                                    "treatDEMForceImplicit",
+                                                    "verbose",
+                                                    "interpolation",
+                                                    "scalarViscosity"};
 
 //! \brief Constructor
 forceSubModel::forceSubModel(cfdemCloud& cloud, forceModel& forceModel, const dictionary& subPropsDict)
@@ -49,7 +53,10 @@ forceSubModel::forceSubModel(cfdemCloud& cloud, forceModel& forceModel, const di
       subPropsDict_(subPropsDict),
       switches_(),
       densityFieldName_(subPropsDict.lookupOrDefault<Foam::word>("densityFieldName", "rho").c_str()),
-      rho_(cloud.mesh().lookupObject<volScalarField>(densityFieldName_)) {}
+      rho_(cloud.mesh().lookupObject<volScalarField>(densityFieldName_)),
+      nu_(IOobject("scalarViscosity", cloud.mesh().time().timeName(), cloud.mesh(), IOobject::NO_READ,
+                   IOobject::NO_WRITE),
+          cloud.mesh(), dimensionedScalar("nu0", dimensionSet(0, 2, -1, 0, 0), 1.0)) {}
 
 //! \brief Destructor
 forceSubModel::~forceSubModel() {}
@@ -63,8 +70,7 @@ forceSubModel::~forceSubModel() {}
  */
 void forceSubModel::partToArray(const int& index, const Foam::vector& dragTot, const Foam::vector& dragEx,
                                 const Foam::vector& Ufluid, scalar Cd) const {
-  if (treatForceBothCFDAndDEM()) {
-    // CFD 与 DEM 求解器都考虑耦合力
+  if (treatForceBothCFDAndDEM()) {  // CFD 与 DEM 求解器都考虑耦合力
     if (treatForceExplicitInMomEquation()) {
 #pragma unroll
       // 耦合力为显式力
@@ -126,6 +132,13 @@ void forceSubModel::readSwitches() {
       Info << " not found in dict, using false" << endl;
     }
   }
+  // try to read scalarViscosity
+  if (switches_.isTrue(kScalarViscosity)) {
+    dimensionedScalar nu0_("nu", dimensionSet(0, 2, -1, 0, 0), subPropsDict_.lookup("nu"));
+    nu_ = volScalarField(IOobject("scalarViscosity", cloud_.mesh().time().timeName(), cloud_.mesh(), IOobject::NO_READ,
+                                  IOobject::NO_WRITE),
+                         cloud_.mesh(), nu0_);
+  }
   // TODO: 检查 switch 是否存在冲突
 }
 
@@ -164,6 +177,17 @@ volVectorField forceSubModel::IBDrag(const volVectorField& U, const volScalarFie
   return muField() * fvc::laplacian(U) - fvc::grad(p);
 #else
   return rhoField() * (nuField() * fvc::laplacian(U) - fvc::grad(p));
+#endif
+}
+
+volVectorField forceSubModel::divTauField(const volVectorField& U) const {
+#ifdef compre
+  const volScalarField& mu_ = muField();
+  return -fvc::laplacian(mu_, U) - fvc::div(mu_ * dev(fvc::grad(U)().T()));
+#else
+  const volScalarField& nu_ = nuField();
+  const volScalarField& rho_ = rhoField();
+  return -fvc::laplacian(nu_ * rho_, U) - fvc::div(nu_ * rho_ * dev(fvc::grad(U)().T()));
 #endif
 }
 

@@ -33,6 +33,7 @@ Class
 \*---------------------------------------------------------------------------*/
 
 #include "./void_fraction_model.h"
+#include "sub_model/data_exchange_model/data_exchange_model.h"
 
 namespace Foam {
 
@@ -49,6 +50,8 @@ cfdmeDefineBaseTypeNew(autoPtr, voidFractionModel, (cfdemCloud & cloud, const di
 //! \brief Constructor
 voidFractionModel::voidFractionModel(cfdemCloud& cloud)
     : cloud_(cloud),
+      weight_(1.0),
+      porosity_(1.0),
       voidFractionPrev_(IOobject("voidFractionPrev", cloud.mesh().time().timeName(), cloud.mesh(),
                                  IOobject::READ_IF_PRESENT,  // or MUST_READ,
                                  IOobject::AUTO_WRITE),
@@ -76,46 +79,20 @@ voidFractionModel::voidFractionModel(cfdemCloud& cloud)
 //! \brief Destructor
 voidFractionModel::~voidFractionModel() {}
 
-/*!
- * \brief 构建颗粒覆盖的所有网格的哈希集合
- * \note 设置为递归函数，通过哈希器将网格编号转换为哈希值，并存入 set 中以便于搜索
- * \param hashSett    <[in, out] 需要构建的哈希集
- * \param cellID      <[in] 递归循环中要检索网格编号
- * \param particlePos <[in] 颗粒中心位置
- * \param radius      <[in] 颗粒半径
- * \param scale       <[in] 颗粒半径扩大系数
- */
-void voidFractionModel::buildLabelHashSetForCoveredCell(labelHashSet& hashSett, const int cellID,
-                                                        const Foam::vector& particlePos, const double radius,
-                                                        const double scale) const {
-  // 如果搜索到网格的边界，则结束搜索
-  if (cellID < 0) {
-    return;
-  }
-  // 将 cellID 插入到哈希集合中
-  hashSett.insert(cellID);
-  // 获取 cellID 网格的所有 neighbour cell 的链表
-  const labelList& nc = cloud_.mesh().cellCells()[cellID];
-  // 网格中心坐标
-  Foam::vector neighbourPos = Foam::vector::zero;
-  // 遍历链表
-  for (int i = 0; i < nc.size(); ++i) {
-    int neighbour = nc[i];
-    neighbourPos = cloud_.mesh().C()[neighbour];
-    if (false == hashSett.found(neighbour) && pointInParticle(neighbourPos, particlePos, radius, scale) < 0.0) {
-      // 如果 neighbour 网格中心在颗粒中, 并且在哈希集合中没有 neighbour 网格的索引
-      // 以 neighbour 为中心递归构建哈希集合
-      buildLabelHashSetForCoveredCell(hashSett, neighbour, particlePos, radius, scale);
-    }
-  }  // end loop of neighbour list
+tmp<volScalarField> voidFractionModel::voidFractionInterp() const {
+  double tsf = cloud_.dataExchangeM().timeStepFraction();
+  return tmp<volScalarField>(
+      new volScalarField("voidFractionInterp", tsf * voidFractionPrev_ + (1.0 - tsf) * voidFractionNext_));
 }
 
-//! \brief 计算颗粒尺寸与其周围网格平均尺寸的比值, 并将颗粒索引按照颗粒尺寸归类
-void voidFractionModel::getDimensionRatios(const base::CITensor1& findCellIDs, const base::CDTensor1& dimensionRatios,
+//! \brief 计算颗粒尺寸与其周围网格平均尺寸的比值
+void voidFractionModel::getDimensionRatios(const base::CDTensor1& dimensionRatios,
                                            const double scale /* = 1.0 */) const {
   base::fillTensor(cloud_.dimensionRatios(), -1.0);
+  std::unordered_set<int> set;  // 颗粒扩展网格的集合
   for (int index = 0; index < cloud_.numberOfParticles(); ++index) {
-    int findCellID = findCellIDs[index];
+    set.clear();
+    int findCellID = cloud_.findCellIDs()[index];
     if (findCellID < 0) {
       continue;
     }
@@ -123,13 +100,71 @@ void voidFractionModel::getDimensionRatios(const base::CITensor1& findCellIDs, c
     double radius = cloud_.getRadius(index);
     // 获取颗粒中心位置
     Foam::vector particlePos = cloud_.getPosition(index);
-    // 定义哈希集合
-    labelHashSet initHashSett;
-    // 构建初始化哈希集合
-    buildLabelHashSetForCoveredCell(initHashSett, findCellID, particlePos, radius, scale);
+    // 构建集合
+    buildExpandedCellSet(set, findCellID, particlePos, radius, 1.0);
     // 计算颗粒周围网格的平均尺寸
-    Pout << __func__ << ": " << findCellID << ", " << initHashSett.size() << endl;
+    double sumVCell = 0.0;
+    for (auto cellID : set) {
+      sumVCell += cloud_.mesh().V()[cellID];
+    }
+    // 计算颗粒尺寸与颗粒中心所在网格尺寸的比值
+    double ratio = pow(sumVCell / static_cast<double>(set.size()), 1.0 / 3.0) / (2.0 * radius);
+    cloud_.dimensionRatios()[index] = ratio;
   }  // end loop of particles
+}
+
+/*!
+ * \brief 构建颗粒覆盖的所有网格的集合
+ * \param set         <[in, out] 需要构建的集合
+ * \param cellID      <[in] 递归循环中要检索网格编号
+ * \param particlePos <[in] 颗粒中心位置
+ * \param radius      <[in] 颗粒半径
+ * \param scale       <[in] 颗粒半径扩大系数
+ */
+void voidFractionModel::buildExpandedCellSet(std::unordered_set<int>& set, const int cellID,
+                                             const Foam::vector& particlePos, const double radius,
+                                             const double scale) const {
+  // 如果搜索到网格的边界，则结束搜索
+  if (cellID < 0) {
+    return;
+  }
+  // 将 cellID 插入到哈希集合中
+  set.insert(cellID);
+  // 获取 cellID 网格的所有 neighbour cell 的链表
+  const labelList& nc = cloud_.mesh().cellCells()[cellID];
+  // 网格中心坐标
+  Foam::vector neighbourPos = Foam::vector::zero;
+  // 遍历链表
+  for (int i = 0; i < nc.size(); ++i) {
+    int neighbourCellID = nc[i];
+    neighbourPos = cloud_.mesh().C()[neighbourCellID];
+    // 在集合中没有 neighbour 网格的索引
+    if (set.end() == set.find(neighbourCellID)) {
+      if (pointInParticle(neighbourPos, particlePos, radius, scale) < 0.0) {
+        // neighbour 网格中心在颗粒中，以 neighbour 为中心递归构建集合
+        buildExpandedCellSet(set, neighbourCellID, particlePos, radius, scale);
+      } else {
+        bool vertexPointInParticle = false;
+        // 遍历网格的角点
+        const labelList& vertexPoints = cloud_.mesh().cellPoints()[neighbourCellID];
+        // 遍历当前网格的所有角点
+        forAll(vertexPoints, i) {
+          // 获取第 i 角点坐标
+          vector vertexPosition = cloud_.mesh().points()[vertexPoints[i]];
+          // 判断角点是否在颗粒中
+          double fv = pointInParticle(vertexPosition, particlePos, radius, scale);
+          if (fv < 0.0) {
+            vertexPointInParticle = true;
+            break;
+          }
+        }
+        if (vertexPointInParticle) {
+          // 如果有一个角点在颗粒中，则以 neighbour 为中心递归构建集合
+          buildExpandedCellSet(set, neighbourCellID, particlePos, radius, scale);
+        }
+      }
+    }
+  }  // end loop of neighbour list
 }
 
 }  // namespace Foam

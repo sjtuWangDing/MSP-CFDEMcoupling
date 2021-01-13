@@ -38,6 +38,7 @@ Class
 #include "./force_sub_model.h"
 #include "base/run_time_selection_tables.h"
 #include "cloud/cfdem_cloud.h"
+#include "interpolationCellPointFace.H"
 
 namespace Foam {
 
@@ -45,7 +46,7 @@ namespace Foam {
 class forceModel {
  public:
   //! \brief Runtime type information
-  cfdemTypeName("forceModel");
+  cfdemBaseTypeName("forceModel", "");
 
   //! \brief Declare runtime constructor selection
   cfdemDeclareRunTimeSelection(std::unique_ptr, forceModel, (cfdemCloud & cloud), (cloud));
@@ -64,11 +65,6 @@ class forceModel {
                << abort(FatalError);
   }
 
-  // virtual void setMixForce(const std::vector<double>& dimensionRatios) {
-  //   FatalError << "forceModel:setMixForce(): using base class function, please use derived class function\n"
-  //     << abort(FatalError);
-  // }
-
   /*!
    * \brief create forceSubModel_
    * \param subPropsDict the dictionary of current force model
@@ -76,15 +72,14 @@ class forceModel {
    */
   void createForceSubModels(const dictionary& subPropsDict, EForceType forceType);
 
-  // inline const base::CDTensor2& impForces() const { return cloud_.pCloud().impForces(); }
+  //! \brief 高斯核函数
+  inline double GaussCore(const Foam::vector& particlePos, const Foam::vector& cellPos, const double radius,
+                          const double gaussEff) const {
+    double dist = mag(particlePos - cellPos);
+    return exp(-1.0 * dist * dist / (2 * pow(radius * gaussEff, 2)));
+  }
 
-  // inline const base::CDTensor2& expForces() const { return cloud_.pCloud().expForces(); }
-
-  // inline const base::CDTensor2& DEMForces() const { return cloud_.pCloud().DEMForces(); }
-
-  // inline const base::CDTensor2& fluidVel() const { return cloud_.pCloud().fluidVel(); }
-
-  // inline const base::CDTensor1& cds() const { return cloud_.pCloud().cds(); }
+  inline std::shared_ptr<forceSubModel> forceSubM() const { return forceSubModel_; }
 
  protected:
   cfdemCloud& cloud_;
@@ -95,11 +90,13 @@ class forceModel {
   //! \brief 是否激活探针
   bool useProbe_;
 
-  //! \brief 颗粒隐式力的总和 [N]
-  volVectorField impParticleForces_;
+  autoPtr<interpolation<Foam::vector>> UInterpolator_;
 
-  //! \brief 颗粒显式力的总和 [N]
-  volVectorField expParticleForces_;
+  autoPtr<interpolation<Foam::scalar>> voidFractionInterpolator_;
+
+  autoPtr<interpolation<Foam::vector>> divTauInterpolator_;
+
+  autoPtr<interpolation<Foam::vector>> gradPInterpolator_;
 };
 
 }  // namespace Foam

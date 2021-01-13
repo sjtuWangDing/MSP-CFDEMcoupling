@@ -63,10 +63,13 @@ namespace Foam {
 class liggghtsCommandModel;
 class momCoupleModel;
 class forceModel;
-class averagingModel;
+class globalForce;
 class voidFractionModel;
 class dataExchangeModel;
 class locateModel;
+class averagingModel;
+
+typedef std::unordered_map<std::string, std::shared_ptr<momCoupleModel>> momCoupleModelMap;
 
 class cfdemCloud {
  public:
@@ -76,21 +79,41 @@ class cfdemCloud {
   //! \brief Destructor
   virtual ~cfdemCloud();
 
+  //! \brief 初始化函数，用于在构造函数中执行
+  virtual void init();
+
   //! \brief 重新分配内存
   virtual void reallocate();
+
+  virtual void getDEMData();
+
+  virtual void giveDEMData() const;
+
+  virtual void printParticleInfo() const;
 
   /*!
    * \brief 更新函数
    * \note used for cfdemSolverPiso
-   * \param voidFraction  <[in, out] 小颗粒空隙率场
-   * \param Us            <[in, out] 局部平均小颗粒速度场
-   * \param U             <[in] 流体速度场
+   * \param U      <[in] 流体速度场
+   * \param voidF  <[in, out] 小颗粒空隙率场
+   * \param Us     <[in, out] 局部平均小颗粒速度场
+   * \param Ksl    <[in, out] 动量交换场
    */
-  void evolve(volScalarField& voidFraction, volVectorField& Us, volVectorField& U);
+  virtual void evolve(volVectorField& U, volScalarField& voidF, volVectorField& Us, volScalarField& Ksl);
 
   tmp<volScalarField> ddtVoidFraction() const;
 
+  tmp<volScalarField> voidFractionNuEff(volScalarField& voidFraction) const;
+
+  tmp<fvVectorMatrix> divVoidFractionTau(volVectorField& U, volScalarField& voidFraction) const;
+
+  template <typename Field>
+  inline void scaleWithVcell(Field& field) const;
+
  protected:
+  //! \brief reset field
+  void resetField();
+
   /*!
    * \brief check if simulation is fully periodic
    * \return true if simulation is fully periodic
@@ -114,7 +137,9 @@ class cfdemCloud {
 
   inline const std::vector<std::shared_ptr<forceModel>>& forceModels() const;
 
-  inline const std::vector<std::shared_ptr<momCoupleModel>>& momCoupleModels() const;
+  inline const momCoupleModelMap& momCoupleModels() const;
+
+  inline const globalForce& globalF() const;
 
   inline const dataExchangeModel& dataExchangeM() const;
 
@@ -122,11 +147,17 @@ class cfdemCloud {
 
   inline const locateModel& locateM() const;
 
+  inline const averagingModel& averagingM() const;
+
+  inline globalForce& globalF();
+
   inline dataExchangeModel& dataExchangeM();
 
   inline voidFractionModel& voidFractionM();
 
   inline locateModel& locateM();
+
+  inline averagingModel& averagingM();
 
 #if defined(version24Dev)
   inline const turbulenceModel& turbulence() const;
@@ -172,6 +203,12 @@ class cfdemCloud {
 
   inline const std::string& ddtVoidFractionType() const { return cProps_.ddtVoidFractionType(); }
 
+  inline bool checkFineParticle(int index) const { return cProps_.checkFineParticle(getDimensionRatio(index)); }
+
+  inline bool checkMiddleParticle(int index) const { return cProps_.checkMiddleParticle(getDimensionRatio(index)); }
+
+  inline bool checkCoarseParticle(int index) const { return cProps_.checkCoarseParticle(getDimensionRatio(index)); }
+
   /* ------------------------- interface of particleCloud ------------------------------- */
 
   inline int numberOfParticles() const { return parCloud_.numberOfParticles_; }
@@ -184,23 +221,21 @@ class cfdemCloud {
 
   inline const base::CDTensor1& dimensionRatios() const { return parCloud_.dimensionRatios_; }
 
-  inline const base::CDTensor1& volumes() const { return parCloud_.volumes_; }
-
   inline const base::CDTensor2& fAcc() const { return parCloud_.fAcc_; }
 
   inline const base::CDTensor2& impForces() const { return parCloud_.impForces_; }
 
   inline const base::CDTensor2& expForces() const { return parCloud_.expForces_; }
 
-  inline const base::CDTensor2& particleWeights() const { return parCloud_.particleWeights_; }
-
-  inline const base::CDTensor2& particleVolumes() const { return parCloud_.particleVolumes_; }
-
   inline const std::vector<base::CITensor1>& cellIDs() const { return parCloud_.cellIDs_; }
 
   inline const std::vector<base::CDTensor1>& voidFractions() const { return parCloud_.voidFractions_; }
 
   inline const std::vector<base::CDTensor1>& volumeFractions() const { return parCloud_.volumeFractions_; }
+
+  inline const std::vector<base::CDTensor1>& particleWeights() const { return parCloud_.particleWeights_; }
+
+  inline const std::vector<base::CDTensor1>& particleVolumes() const { return parCloud_.particleVolumes_; }
 
   inline double** radiiPtr() const { return parCloud_.radiiPtr_; }
 
@@ -209,6 +244,8 @@ class cfdemCloud {
   inline double** positionsPtr() const { return parCloud_.positionsPtr_; }
 
   inline double** velocitiesPtr() const { return parCloud_.velocitiesPtr_; }
+
+  inline double** initVelocitiesPtr() const { return parCloud_.initVelocitiesPtr_; }
 
   inline double** angularVelocitiesPtr() const { return parCloud_.angularVelocitiesPtr_; }
 
@@ -226,6 +263,8 @@ class cfdemCloud {
 
   inline const base::CDExTensor2& velocities() const { return parCloud_.velocities_; }
 
+  inline const base::CDExTensor2& initVelocities() const { return parCloud_.initVelocities_; }
+
   inline const base::CDExTensor2& angularVelocities() const { return parCloud_.angularVelocities_; }
 
   inline const base::CDExTensor2& DEMForces() const { return parCloud_.DEMForces_; }
@@ -236,9 +275,13 @@ class cfdemCloud {
 
   inline double getRadius(int index) const { return parCloud_.getRadius(index); }
 
+  inline double getDimensionRatio(int index) const { return parCloud_.getDimensionRatio(index); }
+
   inline Foam::vector getPosition(int index) const { return parCloud_.getPosition(index); }
 
   inline Foam::vector getVelocity(int index) const { return parCloud_.getVelocity(index); }
+
+  inline Foam::vector getInitVelocity(int index) const { return parCloud_.getInitVelocity(index); }
 
   inline Foam::vector getAngularVelocity(int index) const { return parCloud_.getAngularVelocity(index); }
 
@@ -271,7 +314,9 @@ class cfdemCloud {
 
   std::vector<std::shared_ptr<forceModel>> forceModels_;
 
-  std::vector<std::shared_ptr<momCoupleModel>> momCoupleModels_;
+  momCoupleModelMap momCoupleModels_;
+
+  autoPtr<globalForce> globalForce_;
 
   autoPtr<dataExchangeModel> dataExchangeModel_;
 
@@ -279,19 +324,7 @@ class cfdemCloud {
 
   autoPtr<locateModel> locateModel_;
 
-// autoPtr<averagingModel> averagingModel_;
-
-// autoPtr<IOModel> IOModel_;
-
-// autoPtr<probeModel> probeModel_;
-
-// autoPtr<registryModel> registryModel_;
-
-// autoPtr<clockModel> clockModel_;
-
-// autoPtr<smoothingModel> smoothingModel_;
-
-// autoPtr<meshMotionModel> meshMotionModel_;
+  autoPtr<averagingModel> averagingModel_;
 
 #if defined(version24Dev)
   const turbulenceModel& turbulence_;

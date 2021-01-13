@@ -34,6 +34,7 @@ Class
 #include <mutex>
 #include "cloud/cfdem_cloud_IB_opti.h"
 #include "dynamicFvMesh.H"
+#include "mpi.h"
 #include "sub_model/data_exchange_model/data_exchange_model.h"
 #include "sub_model/force_model/force_model.h"
 
@@ -80,6 +81,30 @@ void cfdemCloudIBOpti::giveDEMData() const {
   dataExchangeM().giveData("dragforce", "vector-atom", DEMForcesPtr());
 }
 
+void cfdemCloudIBOpti::printParticleInfo() const {
+  int nProcs = 0, id = 0;
+  MPI_Comm_size(MPI_COMM_WORLD, &nProcs);
+  MPI_Comm_rank(MPI_COMM_WORLD, &id);
+  base::MPI_Barrier();
+  if (0 == id) {
+    for (int index = 0; index < numberOfParticles(); ++index) {
+      Pout << "  position[" << index << "]: " << positions()[index][0] << ", " << positions()[index][1] << ", "
+           << positions()[index][2] << endl;
+    }
+    for (int index = 0; index < numberOfParticles(); ++index) {
+      Pout << "  velocity[" << index << "]: " << velocities()[index][0] << ", " << velocities()[index][1] << ", "
+           << velocities()[index][2] << endl;
+    }
+  }
+  base::MPI_Barrier();
+  for (int index = 0; index < numberOfParticles(); ++index) {
+    Pout << "  DEMForce[" << index << "]: " << DEMForces()[index][0] << ", " << DEMForces()[index][1] << ", "
+         << DEMForces()[index][2] << endl;
+  }
+  base::MPI_Barrier();
+  voidFractionM().printVoidFractionInfo();
+}
+
 /*!
  * \brief 更新网格，如果 mesh 是 Foam::dynamicRefineFvMesh 类型，则更新网格，如果是 Foam::staticFvMesh
  * 或者其他类型，则不更新
@@ -123,24 +148,6 @@ void cfdemCloudIBOpti::setInterface(volScalarField& interface,
   }
 }
 
-void cfdemCloudIBOpti::printParticleInfo() const {
-  base::MPI_Barrier();
-  for (int i = 0; i < numberOfParticles(); ++i) {
-    Info << "position of par " << i << ": " << positions()[i][0] << ", " << positions()[i][1] << ", "
-         << positions()[i][2] << endl;
-  }
-  for (int i = 0; i < numberOfParticles(); ++i) {
-    Info << "velocity of par " << i << ": " << velocities()[i][0] << ", " << velocities()[i][1] << ", "
-         << velocities()[i][2] << endl;
-  }
-  base::MPI_Barrier();
-  for (int i = 0; i < numberOfParticles(); ++i) {
-    Pout << "DEMForces of par " << i << ": " << DEMForces()[i][0] << ", " << DEMForces()[i][1] << ", "
-         << DEMForces()[i][2] << endl;
-  }
-  base::MPI_Barrier();
-}
-
 void cfdemCloudIBOpti::calcVelocityCorrection(volScalarField& p, volVectorField& U, volScalarField& phiIB,
                                               volScalarField& volumeFraction) {
   if (validCouplingStep_) {
@@ -156,7 +163,7 @@ void cfdemCloudIBOpti::calcVelocityCorrection(volScalarField& p, volVectorField&
       angVel = getAngularVelocity(index);  // 颗粒角速度
       for (int subCell = 0; subCell < particleOverMeshNumber()[index]; ++subCell) {
         int cellID = cellIDs()[index][subCell];
-        if (cellID > -1) {
+        if (cellID >= 0) {
           for (int i = 0; i < 3; ++i) {
             rVec[i] = U.mesh().C()[cellID][i] - parPos[i];
           }
@@ -268,11 +275,11 @@ void cfdemCloudIBOpti::evolve(volScalarField& volumeFraction, volScalarField& in
 //           if (false == cellInParticle) {
 //             // cellI 目前不在任何颗粒中
 //             if (refineMeshKeepStep[cellI] > Foam::SMALL && false == cellFirstEntryRefineMeshKeepStep) {
-//               // refineMeshKeepStep[cellI] > 0.0，则保持 interFace 值
+//               // refineMeshKeepStep[cellI] > 0.0，则保持 interface 值
 //               cellFirstEntryRefineMeshKeepStep = true;  // 确保对每一个 cellI 只执行一次
 //               refineMeshKeepStep[cellI] -= 1.0;
 //             } else {
-//               // 设置 interFace 为 0.0
+//               // 设置 interface 为 0.0
 //               interface[cellI] = 0.0;
 //             }
 //           }

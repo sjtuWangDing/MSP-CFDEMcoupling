@@ -14,7 +14,7 @@ FoamFile
     object      dynamicMeshDict;
 }
 
-dynamicFvMesh   dynamicRefineFvMesh; // staticFvMesh;
+dynamicFvMesh   dynamicRefineFvMesh; // dynamicRefineFvMesh; // staticFvMesh;
 
 dynamicRefineFvMeshCoeffs
 {

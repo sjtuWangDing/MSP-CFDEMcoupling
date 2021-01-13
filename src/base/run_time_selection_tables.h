@@ -3,13 +3,21 @@
 
 /*!
  * \brief 在所有 sub model 的类声明中声明 type name 以及函数
- *        无论是这个模型的基类，还是子类都需要声明
  * \param typeNameCString type name，类型应该是 const char*
  */
 #define cfdemTypeName(typeNameCString)                       \
   static const char* cTypeName() { return typeNameCString; } \
   static const std::string typeName_;                        \
   virtual const std::string& typeName() const { return typeName_; }
+
+/*!
+ * \brief 在所有 base model 的类声明中声明 type name 以及函数
+ * \param baseTypeNameCString base type name，类型应该是 const char*
+ * \param defaultDerivedTypeNameCString default derived type name，类型应该是 const char*
+ */
+#define cfdemBaseTypeName(baseTypeNameCString, defaultDerivedTypeNameCString) \
+  cfdemTypeName(baseTypeNameCString);                                         \
+  static const char* cDefaultDerivedTypeName() { return defaultDerivedTypeNameCString; }
 
 /*!
  * \brief 在所有 sub model 的类定义中初始化静态成员 typeName_
@@ -137,23 +145,24 @@
  * \param paramDict NewArgList 中 const dicttionary& 类型的实参
  * \param paramConstructorList 构造函数的实参
  */
-#define cfdmeDefineBaseTypeNew(AutoPtr, BaseType, NewArgList, paramDict, paramConstructorList)               \
-  AutoPtr<BaseType> BaseType::New NewArgList {                                                               \
-    std::string name = paramDict.found(#BaseType) ? word(paramDict.lookup(#BaseType)).c_str() : "";          \
-    const char* pName = name.c_str();                                                                        \
-    Info << "\nSelecting " << #BaseType << ": " << pName << endl;                                            \
-    if (BaseType::newFunctionMapPtr_->find(pName) == BaseType::newFunctionMapPtr_->end()) {                  \
-      FatalError << #BaseType << "::New" << #NewArgList << ": "                                              \
-                 << "unknow " << #BaseType << " type " << pName << ", constructor not in map" << endl        \
-                 << "Valid " << #BaseType << " types are: [";                                                \
-      for (const std::pair<std::string, BaseType::NewFunctionPtr>& item : *(BaseType::newFunctionMapPtr_)) { \
-        Info << item.first << ", ";                                                                          \
-      }                                                                                                      \
-      Info << "]" << endl << abort(FatalError);                                                              \
-    }                                                                                                        \
-    BaseType::NewFunctionPtr selectNewFunction = (BaseType::newFunctionMapPtr_)->operator[](pName);          \
-    Info << "Construct " << pName << " model..." << endl;                                                    \
-    return selectNewFunction paramConstructorList;                                                           \
+#define cfdmeDefineBaseTypeNew(AutoPtr, BaseType, NewArgList, paramDict, paramConstructorList)                        \
+  AutoPtr<BaseType> BaseType::New NewArgList {                                                                        \
+    std::string name =                                                                                                \
+        paramDict.found(#BaseType) ? word(paramDict.lookup(#BaseType)).c_str() : BaseType::cDefaultDerivedTypeName(); \
+    const char* pName = name.c_str();                                                                                 \
+    Info << "\nSelecting " << #BaseType << ": " << pName << endl;                                                     \
+    if (BaseType::newFunctionMapPtr_->find(pName) == BaseType::newFunctionMapPtr_->end()) {                           \
+      FatalError << #BaseType << "::New" << #NewArgList << ": "                                                       \
+                 << "unknow " << #BaseType << " type " << pName << ", constructor not in map" << endl                 \
+                 << "Valid " << #BaseType << " types are: [";                                                         \
+      for (const std::pair<std::string, BaseType::NewFunctionPtr>& item : *(BaseType::newFunctionMapPtr_)) {          \
+        Info << item.first << ", ";                                                                                   \
+      }                                                                                                               \
+      Info << "]" << endl << abort(FatalError);                                                                       \
+    }                                                                                                                 \
+    BaseType::NewFunctionPtr selectNewFunction = (BaseType::newFunctionMapPtr_)->operator[](pName);                   \
+    Info << "Construct " << pName << " model..." << endl;                                                             \
+    return selectNewFunction paramConstructorList;                                                                    \
   }
 
 #define cfdemDefineNewFunctionAdder(BaseType, DerivedType) \

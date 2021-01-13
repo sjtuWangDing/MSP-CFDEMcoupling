@@ -1,5 +1,6 @@
 source_path = ../src
 cloud = $(source_path)/cloud
+cfdem_tools = $(source_path)/cfdem_tools
 sub_model = $(source_path)/sub_model
 
 $(cloud)/cfdem_base.C
@@ -8,16 +9,29 @@ $(cloud)/cfdem_cloud_IB.C
 $(cloud)/cfdem_cloud_IB_opti.C
 $(cloud)/coupling_properties.C
 
+$(cfdem_tools)/check_model_type.C
+
 $(sub_model)/averaging_model/averaging_model.C
+$(sub_model)/averaging_model/no_averaging_model.C
+$(sub_model)/averaging_model/dense.C
+$(sub_model)/averaging_model/dilute.C
 
 $(sub_model)/data_exchange_model/data_exchange_model.C
 $(sub_model)/data_exchange_model/two_way_mpi.C
 
+$(sub_model)/force_model/global_force.C
 $(sub_model)/force_model/force_model.C
 $(sub_model)/force_model/force_sub_model.C
 $(sub_model)/force_model/Archimedes_IB.C
 $(sub_model)/force_model/Archimedes_IB_test.C
 $(sub_model)/force_model/Shirgaonkar_IB.C
+$(sub_model)/force_model/Archimedes.C
+$(sub_model)/force_model/DiFeliceDrag.C
+$(sub_model)/force_model/GaussDiFeliceDrag.C
+$(sub_model)/force_model/visc_force.C
+$(sub_model)/force_model/grad_p_force.C
+$(sub_model)/force_model/virtual_mass_force.C
+$(sub_model)/force_model/Basset_force.C
 
 $(sub_model)/liggghts_command_model/liggghts_command_model.C
 $(sub_model)/liggghts_command_model/run_liggghts.C
@@ -26,8 +40,13 @@ $(sub_model)/locate_model/locate_model.C
 $(sub_model)/locate_model/engine_search.C
 $(sub_model)/locate_model/engine_search_IB.C
 
+$(sub_model)/mom_couple_model/mom_couple_model.C
+$(sub_model)/mom_couple_model/implicit_couple.C
+
 $(sub_model)/void_fraction_model/void_fraction_model.C
 $(sub_model)/void_fraction_model/no_void_fraction.C
 $(sub_model)/void_fraction_model/IB_void_fraction.C
+$(sub_model)/void_fraction_model/centre_void_fraction.C
+$(sub_model)/void_fraction_model/divided_void_fraction.C
 
 LIB = $(MSP_CFDEM_LIB_DIR)/libMSP-CFDEMcoupling-5.x_1.0

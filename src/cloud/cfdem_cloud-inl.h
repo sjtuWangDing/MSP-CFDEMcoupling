@@ -46,8 +46,10 @@ Class
 // Need include header files of class which uses Foam::autoPtr to
 // wrap model For liggghtsCommandModel, forceModel and momCoupleModel,
 // not need to include header because they use share_ptr
+#include "./cfdem_cloud.h"
 #include "sub_model/averaging_model/averaging_model.h"
 #include "sub_model/data_exchange_model/data_exchange_model.h"
+#include "sub_model/force_model/global_force.h"
 #include "sub_model/locate_model/locate_model.h"
 #include "sub_model/void_fraction_model/void_fraction_model.h"
 
@@ -61,7 +63,7 @@ inline const std::vector<std::shared_ptr<forceModel>>& cfdemCloud::forceModels()
   return forceModels_;
 }
 
-inline const std::vector<std::shared_ptr<momCoupleModel>>& cfdemCloud::momCoupleModels() const {
+inline const momCoupleModelMap& cfdemCloud::momCoupleModels() const {
   return momCoupleModels_;
 }
 
@@ -78,6 +80,14 @@ inline const locateModel& cfdemCloud::locateM() const {
   return locateModel_;
 }
 
+inline const averagingModel& cfdemCloud::averagingM() const {
+  return averagingModel_;
+}
+
+inline const globalForce& cfdemCloud::globalF() const {
+  return globalForce_;
+}
+
 inline dataExchangeModel& cfdemCloud::dataExchangeM() {
   return dataExchangeModel_();
 }
@@ -88,6 +98,14 @@ inline voidFractionModel& cfdemCloud::voidFractionM() {
 
 inline locateModel& cfdemCloud::locateM() {
   return locateModel_();
+}
+
+inline averagingModel& cfdemCloud::averagingM() {
+  return averagingModel_();
+}
+
+inline globalForce& cfdemCloud::globalF() {
+  return globalForce_();
 }
 
 #if defined(version24Dev)
@@ -103,6 +121,11 @@ inline const incompressible::RASModel& cfdemCloud::turbulence() const
 #endif
 {
   return turbulence_;
+}
+
+template <typename Field>
+void cfdemCloud::scaleWithVcell(Field& field) const {
+  forAll(field, cellID) { field[cellID] *= mesh_.V()[cellID]; }
 }
 
 }  // namespace Foam

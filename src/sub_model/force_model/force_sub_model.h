@@ -68,7 +68,19 @@ enum ESwitch {
    *   true - 调试信息输出到屏幕
    *   false - 调试信息不输出到屏幕 (default)
    */
-  kVerbose
+  kVerbose,
+  /*!
+   * \brief kInterpolation
+   *   true - 将欧拉场使用插值模型插值到拉格朗日场
+   *   false - 只使用网格中心的值 (default)
+   */
+  kInterpolation,
+  /*!
+   * \brief kScalarViscosity
+   *   true - 使用用户自定义动力粘度 nu 进行阻力计算，CFD 计算仍然使用 transportDict 指定的动力粘度
+   *   false - 不使用用户自定义动力粘度 nu 进行阻力计算 (default)
+   */
+  kScalarViscosity
 };
 
 //! \brief force type enum
@@ -115,6 +127,12 @@ class forceSubModel {
         case kVerbose:
           value_ |= (1 << kVerbose);
           break;
+        case kInterpolation:
+          value_ |= (1 << kInterpolation);
+          break;
+        case kScalarViscosity:
+          value_ |= (1 << kScalarViscosity);
+          break;
         default:
           FatalError << "Error: illegal switch enum: " << value << " in forceSubModel" << abort(FatalError);
       }
@@ -129,6 +147,10 @@ class forceSubModel {
           return value_ & (1 << kTreatDEMForceImplicit);
         case kVerbose:
           return value_ & (1 << kVerbose);
+        case kInterpolation:
+          return value_ & (1 << kInterpolation);
+        case kScalarViscosity:
+          return value_ & (1 << kScalarViscosity);
         default:
           FatalError << "Error: illegal switch enum: " << value << " in forceSubModel" << abort(FatalError);
       }
@@ -174,6 +196,8 @@ class forceSubModel {
    */
   volVectorField IBDrag(const volVectorField& U, const volScalarField& p) const;
 
+  volVectorField divTauField(const volVectorField& U) const;
+
   inline const volScalarField& rhoField() const { return rho_; }
 
   inline const volScalarField& nuField() const {
@@ -181,7 +205,11 @@ class forceSubModel {
     nu_ = cloud_.turbulence().mu() / rho_;
     return nu_;
 #else
-    return cloud_.turbulence().nu();
+    if (switches_.isTrue(kScalarViscosity)) {
+      return nu_;
+    } else {
+      return cloud_.turbulence().nu();
+    }
 #endif
   }
 
@@ -189,7 +217,11 @@ class forceSubModel {
 #ifdef compre
     return cloud_.turbulence().mu();
 #else
-    return cloud_.turbulence().nu() * rho_;
+    if (switches_.isTrue(kScalarViscosity)) {
+      return nu_ * rho_;
+    } else {
+      return cloud_.turbulence().nu() * rho_;
+    }
 #endif
   }
 
@@ -200,6 +232,10 @@ class forceSubModel {
   inline bool treatDEMForceImplicit() const { return switches_.isTrue(kTreatDEMForceImplicit); }
 
   inline bool verbose() const { return switches_.isTrue(kVerbose); }
+
+  inline bool interpolation() const { return switches_.isTrue(kInterpolation); }
+
+  inline bool scalarViscosity() const { return switches_.isTrue(kScalarViscosity); }
 
  protected:
   cfdemCloud& cloud_;
@@ -214,6 +250,9 @@ class forceSubModel {
 
   //! \brief 密度
   const volScalarField& rho_;
+
+  //! \brief 自定义动力粘度场
+  volScalarField nu_;
 };
 
 }  // namespace Foam

@@ -23,30 +23,6 @@ License
   You should have received a copy of the GNU General Public License
   along with CFDEMcoupling; if not, write to the Free Software Foundation,
   Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
-
-Description
-  The force model performs the calculation of forces (e.g. fluid-particle
-  interaction forces) acting on each DEM particle. The ArchimedesIB model
-  is a model that calculates the ArchimedesIB’s volumetric lift force
-  stemming from density difference of fluid and particle. This model is
-  especially suited for resolved CFD-DEM simulations where the particle
-  is represented by immersed boundary method.
-
-Syntax
-  forceModels
-  (
-    ArchimedesIB
-  );
-  ArchimedesIBProps
-  {
-    gravityFieldName "g";
-    voidfractionFieldName "voidfractionNext";
-    treatForceExplicit true;
-    verbose true;
-  };
-
-Restrictions
-  Only for immersed boundary solvers.
 \*---------------------------------------------------------------------------*/
 
 #include "./Archimedes_IB.h"
@@ -89,10 +65,10 @@ void ArchimedesIB::setForce() {
     buoyancy = Foam::vector::zero;
     // loop all mesh of current particle
     for (int subCell = 0; subCell < cloud_.particleOverMeshNumber()[index]; ++subCell) {
-      label cellI = cloud_.cellIDs()[index][subCell];
-      if (cellI > -1) {  // cell found
-        buoyancy +=
-            -g_.value() * forceSubModel_->rhoField()[cellI] * cloud_.mesh().V()[cellI] * (1.0 - volumeFraction_[cellI]);
+      int cellID = cloud_.cellIDs()[index][subCell];
+      if (cellID >= 0) {  // cell found
+        buoyancy += -g_.value() * forceSubModel_->rhoField()[cellID] * cloud_.mesh().V()[cellID] *
+                    (1.0 - volumeFraction_[cellID]);
       }
     }
     // write particle data to global array

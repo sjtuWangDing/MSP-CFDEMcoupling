@@ -43,7 +43,7 @@ namespace Foam {
 class dataExchangeModel {
  public:
   //! \brief Runtime type information
-  cfdemTypeName("dataExchangeModel");
+  cfdemBaseTypeName("dataExchangeModel", "");
 
   //! \brief Declare runtime constructor selection
   cfdemDeclareRunTimeSelection(autoPtr, dataExchangeModel, (cfdemCloud & cloud), (cloud));
@@ -109,11 +109,12 @@ class dataExchangeModel {
       CHECK_EQ(pData[0], tensor.optr_) << "dataExchangeModel::free: tensor's optr_ not match with pData[0]";
       // 释放 pData[0] 指向的内存
       TENSOR_MALLOC_ALLOC(DType)::deallocate(pData[0], tensor.mSize());
+      // 重置 pData[0]
+      pData[0] = nullptr;
       // 释放 pData 指向的内存
       TENSOR_MALLOC_ALLOC(DType*)::deallocate(pData, tensor.size(0));
-      // reset pointer
-      // note: must reset pointer of pData to nullptr, otherwise liggghts will allocate memory failed.
-      pData[0] = nullptr;
+      // Note: reset pointer
+      // Note: must reset pointer of pData to nullptr, otherwise liggghts will allocate memory failed!
       pData = nullptr;
       tensor.optr_ = nullptr;
     } else {
@@ -185,51 +186,8 @@ class dataExchangeModel {
   //! \brief Allocate 2-D int array using liggghts interface
   virtual void liggghtsAllocate(int**& array, int length, int width, int initVal = 0) const = 0;
 
-  // //! \brief Allocate and destroy for 2-D double array
-  // virtual void destroy(double**& array) {};
-  // virtual void destroy(double**& array, int) {};
-  // virtual void allocateArray(double**& array, double initVal, int width, int length) {};
-  // virtual void allocateArray(double**& array, double initVal, int width, const char* length = "nparticles") {};
-
-  // //! \brief Allocate and destroy for 2-D int array
-  // virtual void destroy(int**& array) {};
-  // virtual void destroy(int**& array, int) {};
-  // virtual void allocateArray(int**& array, int initVal, int width, int length) {};
-  // virtual void allocateArray(int**& array, int initVal, int width, const char* length  = "nparticles") {};
-
-  // //! \brief Allocate and destroy for 1-D double array
-  // virtual void destroy(double*& array) {};
-  // virtual void allocateArray(double*& array, double initVal, int length) {};
-
-  // //! \brief Allocate and destroy for 1-D int array
-  // virtual void destroy(int*& array) {};
-  // virtual void allocateArray(int*& array, int initVal, int length) {};
-
-  // virtual void getData(const std::string& dataName,
-  //                      const std::string& dataType,
-  //                      double** const& field,
-  //                      label step) = 0;
-  // virtual void getData(const std::string& dataName,
-  //                      const std::string& dataType,
-  //                      int** const& field,
-  //                      label step) = 0;
-  // virtual void giveData(const std::string& dataName,
-  //                       const std::string& dataType,
-  //                       double** const& field,
-  //                       const char* fieldType = "double") = 0;
-
-  // //! \brief 释放离散内存
-  // virtual void destroyDiscreteMemory(double** const& array, int length) {
-  //   FatalError << "dataExchangeModel::destroyDiscreteMemory(): "
-  //     << "using base class function, please use derived class function\n"
-  //     << abort(FatalError);
-  // }
-  // //! \brief 释放离散内存
-  // virtual void destroyDiscreteMemory(int** const& array, int length) {
-  //   FatalError << "dataExchangeModel::destroyDiscreteMemory(): "
-  //     << "using base class function, please use derived class function\n"
-  //     << abort(FatalError);
-  // }
+  //! \brief 从 DEM 求解器获取颗粒数量
+  virtual int getNumberOfParticlesFromDEM() const = 0;
 
   inline int couplingStep() const { return couplingStep_; }
 
@@ -239,17 +197,20 @@ class dataExchangeModel {
   inline double couplingTime() const { return cloud_.cProps().couplingInterval() * DEMts_; }
 
   //! \brief 当前耦合时间步的起始时间（全局时间）
-  inline double TSstart() const {
-    return cloud_.mesh().time().startTime().value() + (couplingStep_ - 1) * couplingTime();
-  }
+  inline double TSstart() const { return cloud_.mesh().time().startTime().value() + couplingStep_ * couplingTime(); }
 
   //! \brief 当前耦合时间步的结束时间（全局时间）
-  inline double TSend() const { return cloud_.mesh().time().startTime().value() + couplingStep_ * couplingTime(); }
+  inline double TSend() const {
+    return cloud_.mesh().time().startTime().value() + (couplingStep_ + 1) * couplingTime();
+  }
 
   //! \brief 计算指定时间的 DEM 步
   inline int DEMstepsTillT(double t) const {
     return (t - (cloud_.mesh().time().value() - couplingTime()) + SMALL) / DEMts_;
   }
+
+  //! \brief 判断是否是第一个耦合时间步
+  inline bool isFirstCouplingStep() const { return 0 == couplingStep_; }
 
  protected:
   cfdemCloud& cloud_;

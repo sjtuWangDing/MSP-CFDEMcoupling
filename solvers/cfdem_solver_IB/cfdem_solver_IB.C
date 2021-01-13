@@ -75,7 +75,7 @@ int main(int argc, char* argv[]) {
 
   Info << "\nStarting time loop\n" << endl;
 
-  while(runTime.loop()) {
+  while (runTime.loop()) {
 
     Info << "\nTime = " << runTime.timeName() << endl << endl;
 
@@ -193,7 +193,7 @@ int main(int argc, char* argv[]) {
          << endl;
   } // end of runtime loop
 
-  Info << "cfdemCloudIB - done\n" << endl;
+  Info << "cfdemSolverIB - done\n" << endl;
 
   return 0;
 }

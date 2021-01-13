@@ -61,7 +61,6 @@ ArchimedesIBTestProps
     gravityFieldName "g";
 }
 
-
 twoWayMPIProps
 {
     liggghtsPath "../DEM/in.liggghts_run";
@@ -73,7 +72,7 @@ IBProps
 
 engineIBProps
 {
-    treeSearch false;
+    treeSearch true;
     zSplit 8;
     xySplit 16;
 }
