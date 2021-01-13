@@ -39,6 +39,7 @@ $(sub_model)/liggghts_command_model/run_liggghts.C
 $(sub_model)/locate_model/locate_model.C
 $(sub_model)/locate_model/engine_search.C
 $(sub_model)/locate_model/engine_search_IB.C
+$(sub_model)/locate_model/engine_search_mix.C
 
 $(sub_model)/mom_couple_model/mom_couple_model.C
 $(sub_model)/mom_couple_model/implicit_couple.C

@@ -217,17 +217,21 @@ class cfdemCloud {
 
   inline const base::CITensor1& particleOverMeshNumber() const { return parCloud_.particleOverMeshNumber_; }
 
+  inline const base::CITensor1& findParticleCentreCellIDs() { return parCloud_.findParticleCentreCellIDs_; }
+
   inline const base::CITensor1& findCellIDs() const { return parCloud_.findCellIDs_; }
 
-  inline const base::CDTensor1& dimensionRatios() const { return parCloud_.dimensionRatios_; }
+  inline const base::CITensor1& findExpandedCellIDs() const { return parCloud_.findExpandedCellIDs_; }
 
-  inline const base::CDTensor2& fAcc() const { return parCloud_.fAcc_; }
+  inline const base::CDTensor1& dimensionRatios() const { return parCloud_.dimensionRatios_; }
 
   inline const base::CDTensor2& impForces() const { return parCloud_.impForces_; }
 
   inline const base::CDTensor2& expForces() const { return parCloud_.expForces_; }
 
   inline const std::vector<base::CITensor1>& cellIDs() const { return parCloud_.cellIDs_; }
+
+  inline const std::vector<base::CITensor1>& expandedCellIDs() const { return parCloud_.expandedCellIDs_; }
 
   inline const std::vector<base::CDTensor1>& voidFractions() const { return parCloud_.voidFractions_; }
 
@@ -289,7 +293,6 @@ class cfdemCloud {
 
  protected:
   //! \note 在当前类中一定要最先声明 couplingPropertiesDict_ 和 liggghtsCommandsDict_
-
   const fvMesh& mesh_;
 
   IOdictionary couplingPropertiesDict_;
@@ -302,10 +305,8 @@ class cfdemCloud {
 
   bool writeTimePassed_;
 
-  /*!
-   * \brief 判断 mesh 是否被更新过
-   * \note 在求解器中使用 dynamic mesh，如果 mesh 更新，则 mesh.update() 返回 true，否则返回 false
-   */
+  //! \brief 判断 mesh 是否被更新过，在求解器中使用 dynamic mesh，如果 mesh 更新，则 mesh.update() 返回 true，否则返回
+  //!   false
   bool meshHasUpdated_;
 
   bool validCouplingStep_;
@@ -347,12 +348,9 @@ class cfdemCloud {
   //! \brief Variable used to de-activate mirroring across periodic boundary conditions.
   Switch checkPeriodicCells_;
 
-  /*!
-   * \brief De-activation and tolerance variables, if set to (for a specific direction),
-   *        the periodic check will NOT be done. Important for probing ambient points.
-   *        Only read-in in case checkPeriodicCells is active.
-   * \note default = (1, 1, 1), i.e., periodic checks will be done
-   */
+  //! \brief De-activation and tolerance variables, if set to (for a specific direction), the periodic check will NOT be
+  //!   done. Important for probing ambient points. Only read-in in case checkPeriodicCells is active.
+  //! \note default = (1, 1, 1), i.e., periodic checks will be done.
   vector wallPeriodicityCheckRange_;
 
   scalar wallPeriodicityCheckTolerance_;

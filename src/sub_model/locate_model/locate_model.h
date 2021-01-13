@@ -64,7 +64,7 @@ class locateModel {
 
   /*!
    * \brief use search engine to get cell id of particle center
-   * \param findCellIDs 颗粒覆盖网格的编号
+   * \param findCellIDs 颗粒中心覆盖网格的编号
    */
   virtual void findCell(const base::CITensor1& findCellIDs) const = 0;
 

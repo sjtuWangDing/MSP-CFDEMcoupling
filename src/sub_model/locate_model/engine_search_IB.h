@@ -52,12 +52,12 @@ Syntax
     xySplit value2;
   }
 
-Restrictions
-  Only for immersed boundary solvers.
-
 Class
   engineSearchIB
 \*---------------------------------------------------------------------------*/
+
+#ifndef __ENGINE_SEARCH_IB_H__
+#define __ENGINE_SEARCH_IB_H__
 
 #include "./engine_search.h"
 
@@ -131,3 +131,5 @@ class engineSearchIB : public engineSearch {
 };
 
 }  // namespace Foam
+
+#endif  // __ENGINE_SEARCH_IB_H__

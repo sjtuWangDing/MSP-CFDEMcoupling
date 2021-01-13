@@ -132,6 +132,7 @@ void cfdemCloud::reallocate() {
   dataExchangeM().realloc(parCloud_.fluidVel(), base::makeShape2(number, 3), parCloud_.fluidVelPtr(), 0.0);
   // allocate memory of data not exchanged with liggghts
   parCloud_.particleOverMeshNumber() = std::move(base::CITensor1(base::makeShape1(number), 0));
+  parCloud_.findParticleCentreCellIDs() = std::move(base::CITensor1(base::makeShape1(number), -1));
   parCloud_.findCellIDs() = std::move(base::CITensor1(base::makeShape1(number), -1));
   parCloud_.dimensionRatios() = std::move(base::CDTensor1(base::makeShape1(number), -1.0));
   parCloud_.impForces() = std::move(base::CDTensor2(base::makeShape2(number, 3), 0.0));
@@ -244,7 +245,7 @@ void cfdemCloud::evolve(volVectorField& U, volScalarField& voidF, volVectorField
     reallocate();
     // 获取 DEM data
     getDEMData();
-    // 获取到在当前 processor 上颗粒覆盖的某一个网格编号，如果获取到的网格编号为 -1，则表示颗粒不覆盖当前 processor
+    // 获取颗粒覆盖的任何一个网格编号，如果获取到的网格编号为 -1，则表示颗粒不覆盖当前 processor 的网格中
     locateM().findCell(parCloud_.findCellIDs());
     // 计算颗粒尺度
     voidFractionM().getDimensionRatios(parCloud_.dimensionRatios());

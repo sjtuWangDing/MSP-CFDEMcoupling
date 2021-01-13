@@ -23,68 +23,37 @@ License
   You should have received a copy of the GNU General Public License
   along with CFDEMcoupling; if not, write to the Free Software Foundation,
   Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
-
-Description
-  The locateModel “engine” locates the CFD cell and cellID corresponding
-  to a given position.
-
-Syntax
-  locateModel engine;
-  engineProps
-  {
-    treeSearch switch1;
-  }
-
-Class
-  engineSearch
 \*---------------------------------------------------------------------------*/
 
-#ifndef __ENGINE_SEARCH_H__
-#define __ENGINE_SEARCH_H__
+#ifndef __ENGINE_SEARCH_MIX_H__
+#define __ENGINE_SEARCH_MIX_H__
 
-#include "./locate_model.h"
-#include "meshSearch.H"
+#include "./engine_search_IB.h"
 
 namespace Foam {
 
-class engineSearch : public locateModel {
+class engineSearchMix : public engineSearchIB {
  public:
   //! \brief Runtime type information
-  cfdemTypeName("engine");
+  cfdemTypeName("engineMix");
 
-  cfdemDefineNewFunctionAdder(locateModel, engineSearch);
+  cfdemDefineNewFunctionAdder(locateModel, engineSearchMix);
 
   //! \brief Constructor
-  engineSearch(cfdemCloud& cloud, const std::string& derivedTypeName = cTypeName());
+  engineSearchMix(cfdemCloud& cloud, const std::string& typeName = cTypeName());
 
   //! \brief Destructor
-  ~engineSearch();
+  ~engineSearchMix();
 
   /*!
    * \brief use search engine to get cell id of particle center
-   * \param findCellIDs 颗粒中心覆盖网格的编号
+   * \param findCellIDs 颗粒覆盖网格的编号
    */
   void findCell(const base::CITensor1& findCellIDs) const;
 
-  /*!
-   * \brief use search engine to get cell id of certain vector
-   * \param position 颗粒中心的位置
-   * \param oldCellID old cell ID
-   */
-  label findSingleCell(const Foam::vector& position, label oldCellID) const;
-
-  //! \brief 如果网格更新，则调用该函数修正 searchEngine_
-  virtual void correctSearchEngine() { searchEngine_.correct(); }
-
- protected:
-  dictionary subPropsDict_;
-
-  //! \brief 是否开启 octree 搜索，default - true
-  bool treeSearch_;
-
-  Foam::meshSearch searchEngine_;
+  void findExpandCell() const;
 };
 
 }  // namespace Foam
 
-#endif  // __ENGINE_SEARCH_H__
+#endif  // __ENGINE_SEARCH_MIX_H__
