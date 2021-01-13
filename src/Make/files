@@ -7,6 +7,7 @@ $(cloud)/cfdem_base.C
 $(cloud)/cfdem_cloud.C
 $(cloud)/cfdem_cloud_IB.C
 $(cloud)/cfdem_cloud_IB_opti.C
+$(cloud)/cfdem_cloud_mix.C
 $(cloud)/coupling_properties.C
 
 $(cfdem_tools)/check_model_type.C
@@ -39,6 +40,7 @@ $(sub_model)/liggghts_command_model/run_liggghts.C
 $(sub_model)/locate_model/locate_model.C
 $(sub_model)/locate_model/engine_search.C
 $(sub_model)/locate_model/engine_search_IB.C
+$(sub_model)/locate_model/engine_search_mix.C
 
 $(sub_model)/mom_couple_model/mom_couple_model.C
 $(sub_model)/mom_couple_model/implicit_couple.C
@@ -48,5 +50,6 @@ $(sub_model)/void_fraction_model/no_void_fraction.C
 $(sub_model)/void_fraction_model/IB_void_fraction.C
 $(sub_model)/void_fraction_model/centre_void_fraction.C
 $(sub_model)/void_fraction_model/divided_void_fraction.C
+$(sub_model)/void_fraction_model/mix_void_fraction.C
 
 LIB = $(MSP_CFDEM_LIB_DIR)/libMSP-CFDEMcoupling-5.x_1.0

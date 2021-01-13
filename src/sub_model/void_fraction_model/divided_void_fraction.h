@@ -77,12 +77,6 @@ class dividedVoidFraction : public voidFractionModel {
   //! \brief Destructor
   virtual ~dividedVoidFraction();
 
-  /*!
-   * \brief 当颗粒的体积在CFD单元的尺寸范围内时，应使用分割(divided)空隙率模型
-   * \note 粒子的半径为R，颗粒的体积被划分为29个等体积的不重叠区域
-   */
-  static const int numberOfMarkerPoints_ = 29;
-
   //! \brief 计算空隙率
   void setVoidFraction();
 
@@ -92,6 +86,11 @@ class dividedVoidFraction : public voidFractionModel {
  protected:
   //! \brief 设置索引为 index 的单个颗粒的空隙率
   void setVoidFractionForSingleParticle(const int index, std::unordered_map<int, Foam::vector>& parMap);
+
+ public:
+  static int numberOfMarkerPoints();
+
+  static const std::vector<Foam::vector>& offsets();
 
  private:
   dictionary subPropsDict_;
@@ -106,10 +105,14 @@ class dividedVoidFraction : public voidFractionModel {
   double tooMuch_;
 
   /*!
-   * \brief 标志点坐标
-   * \note 这里 offsets_ = (标志点中心到颗粒中心的矢量 / 半径)，不是实际坐标
+   * \brief 当颗粒的体积在CFD单元的尺寸范围内时，应使用分割(divided)空隙率模型
+   * \note 粒子的半径为R，颗粒的体积被划分为29个等体积的不重叠区域
    */
-  Foam::vector offsets_[numberOfMarkerPoints_];
+  static const int numberOfMarkerPoints_;
+
+  //! \brief 标志点坐标
+  //! \note 这里 offsets_ = (标志点中心到颗粒中心的矢量 / 半径)，不是实际坐标
+  static std::vector<Foam::vector> offsets_;
 };
 
 }  // namespace Foam

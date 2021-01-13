@@ -44,6 +44,7 @@ Class
 #include "base/logging.h"
 #include "base/memory/x_alloc.h"
 #include "base/tensor/tensor.h"
+#include "base/run_time_selection_tables.h"
 #include "base/type_cast.h"
 #include "cloud/cfdem_base.h"
 #include "cloud/coupling_properties.h"
@@ -78,6 +79,9 @@ class cfdemCloud {
 
   //! \brief Destructor
   virtual ~cfdemCloud();
+
+  //! \brief Runtime type information
+  cfdemTypeName("cfdemCloud");
 
   //! \brief 初始化函数，用于在构造函数中执行
   virtual void init();
@@ -219,9 +223,11 @@ class cfdemCloud {
 
   inline const base::CITensor1& findCellIDs() const { return parCloud_.findCellIDs_; }
 
-  inline const base::CDTensor1& dimensionRatios() const { return parCloud_.dimensionRatios_; }
+  inline const base::CITensor1& findMpiCellIDs() { return parCloud_.findMpiCellIDs_; }
 
-  inline const base::CDTensor2& fAcc() const { return parCloud_.fAcc_; }
+  inline const base::CITensor1& findExpandedCellIDs() { return parCloud_.findExpandedCellIDs_; }
+
+  inline const base::CDTensor1& dimensionRatios() const { return parCloud_.dimensionRatios_; }
 
   inline const base::CDTensor2& impForces() const { return parCloud_.impForces_; }
 

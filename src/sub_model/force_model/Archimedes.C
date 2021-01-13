@@ -76,6 +76,7 @@ void Archimedes::setForce() {
     if (forceSubModel_->verbose()) {
       Pout << "Archimedes buoyancy on particle " << index << ": [" << buoyancy[0] << ", " << buoyancy[1] << ", "
            << buoyancy[2] << "]" << endl;
+      base::MPI_Barrier();
     }
   }
   Info << "Setting Archimedes force - done" << endl;

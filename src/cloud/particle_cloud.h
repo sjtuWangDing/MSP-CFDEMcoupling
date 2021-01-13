@@ -71,9 +71,11 @@ class ParticleCloud {
 
   inline base::CITensor1& findCellIDs() { return findCellIDs_; }
 
-  inline base::CDTensor1& dimensionRatios() { return dimensionRatios_; }
+  inline base::CITensor1& findMpiCellIDs() { return findMpiCellIDs_; }
 
-  inline base::CDTensor2& fAcc() { return fAcc_; }
+  inline base::CITensor1& findExpandedCellIDs() { return findExpandedCellIDs_; }
+
+  inline base::CDTensor1& dimensionRatios() { return dimensionRatios_; }
 
   inline base::CDTensor2& impForces() { return impForces_; }
 
@@ -133,8 +135,8 @@ class ParticleCloud {
   }
 
   inline double getDimensionRatio(int index) const {
-    CHECK_EQ(numberOfParticles_, static_cast<int>(dimensionRatios_.size(0)))
-        << __func__ << ": Number of particle is not match";
+    CHECK_EQ(numberOfParticles_, static_cast<int>(dimensionRatios_.size(0))) << __func__
+                                                                             << ": Number of particle is not match";
     return dimensionRatios_[index];
   }
 
@@ -191,103 +193,101 @@ class ParticleCloud {
  private:
   //! \brief 颗粒总数
   int numberOfParticles_;
+
   //! \brief 颗粒总数是否发生变化
   bool numberOfParticlesChanged_;
-#if CFDEM_USE_TENSOR
+
+  //! \brief 颗粒覆盖的当前求解器上的网格数量
   base::CITensor1 particleOverMeshNumber_;
+
+  //! \brief 使用搜索模型获取到颗粒中心所在的网格索引
   base::CITensor1 findCellIDs_;
+
+  //! \brief 使用搜索模型获取到颗粒覆盖当前处理器上的某一个网格索引
+  base::CITensor1 findMpiCellIDs_;
+
+  //! \brief 使用搜索模型获取到被尺度因子放大的颗粒覆盖当前处理器上的某一个网格索引
+  base::CITensor1 findExpandedCellIDs_;
+
+  //! \brief 颗粒尺度
   base::CDTensor1 dimensionRatios_;
-  base::CDTensor2 fAcc_;
-  base::CDTensor2 impForces_;
-  base::CDTensor2 expForces_;
-  std::vector<base::CITensor1> cellIDs_;
-  std::vector<base::CDTensor1> voidFractions_;
-  std::vector<base::CDTensor1> volumeFractions_;
-  std::vector<base::CDTensor1> particleWeights_;
-  std::vector<base::CDTensor1> particleVolumes_;
-  double** radiiPtr_;
-  double** cdsPtr_;
-  double** positionsPtr_;
-  double** velocitiesPtr_;
-  double** initVelocitiesPtr_;
-  double** angularVelocitiesPtr_;
-  double** DEMForcesPtr_;
-  double** DEMTorquesPtr_;
-  double** fluidVelPtr_;
-  base::CDExTensor1 radii_;
-  base::CDExTensor1 cds_;
-  base::CDExTensor2 positions_;
-  base::CDExTensor2 velocities_;
-  base::CDExTensor2 initVelocities_;
-  base::CDExTensor2 angularVelocities_;
-  base::CDExTensor2 DEMForces_;
-  base::CDExTensor2 DEMTorques_;
-  base::CDExTensor2 fluidVel_;
-#else
-  //! \brief 颗粒半径
-  //! \note radii_[index][0]
-  double** radii_;
-
-  //! \brief 颗粒体积
-  //! \note volumes_[index][0]
-  double** volumes_;
-
-  //! \brief 颗粒阻力系数
-  //         当 forceSubModel implForceDEM 为 true 时候，该 cds_ 和 fluidVel_ 传递给 DEM 求解器，
-  //         DEM 求解器使用颗粒中心处的流体速度与阻力系数一起计算颗粒受到的阻力
-  //! \note cds_[index][0]
-  double** cds_;
-
-  //! \brief 颗粒位置矢量
-  //! \note positions_[index][0 ~ 2]
-  double** positions_;
-
-  //! \brief 颗粒速度
-  //! \note velocities_[index][0 ~ 2]
-  double** velocities_;
-
-  //! \brief 小颗粒的中心处的流体速度
-  //         当 forceSubModel implForceDEM 为 true 时候，该 cds_ 和 fluidVel_ 传递给 DEM 求解器，
-  //         DEM 求解器使用颗粒中心处的流体速度与阻力系数一起计算颗粒受到的阻力
-  //! \note fluidVel_[index][0 ~ 2]
-  double** fluidVel_;
-
-  //! \brief 在一个耦合时间间隔中，小颗粒所受的阻力的累计，将在下个耦合步中，传递给流场
-  //! \note fAcc_[index][0 ~ 2] ??????????
-  double** fAcc_;
 
   //! \brief 颗粒对流体的隐式作用力
-  //! \note impForces_[index][0 ~ 2]
-  double** impForces_;
+  base::CDTensor2 impForces_;
 
-  //! \brief 颗粒对流体的显式作用力
-  //! \note expForces_[index][0 ~ 2]
-  double** expForces_;
+  //! \brief 颗粒对流体的显示作用力
+  base::CDTensor2 expForces_;
 
-  //! \brief 流体对颗粒的总作用力，如果不设置 cds_，则
-  //! \note DEMForces_[index][0 ~ 2]
-  double** DEMForces_;
+  //! \brief 颗粒覆盖的当前处理器上的所有网格的编号
+  std::vector<base::CITensor1> cellIDs_;
 
-  //! \brief 空隙率
+  //! \brief 被尺度因子放大的颗粒覆盖的当前处理器上的所有网格的编号
+  std::vector<base::CITensor1> expandedCellIDs_;
+
+  //! \brief 小颗粒空隙率
   //! \note voidFractions_[index][subcell]
-  double** voidFractions_;
+  std::vector<base::CDTensor1> voidFractions_;
 
-  //! \brief 颗粒覆盖的所有网格的编号
-  //! \note cellIDs_[index][subcell]
-  double** cellIDs_;
+  //! \brief 大颗粒空隙率
+  //! \note volumeFractions_[index][subcell]
+  std::vector<base::CDTensor1> volumeFractions_;
 
-  //! \brief 颗粒对所覆盖网格的影响系数
-  //         如果使用 divided 空隙率模型，则对颗粒覆盖的某个网格 subcell，
-  //         只要有一个颗粒标志点在网格中，particleWeights_[index][subcell] += 1.0 / 29.0
+  //! \brief 颗粒对所覆盖网格的影响系数，如果使用 divided 空隙率模型，则对颗粒覆盖的某个网格
+  //!   subcell，只要有一个颗粒标志点在网格中，particleWeights_[index][subcell] += 1.0 / 29.0
   //! \note particleWeights_[index][subcell]
-  double** particleWeights_;
+  std::vector<base::CDTensor1> particleWeights_;
 
-  //! \brief 颗粒对所覆盖网格的覆盖体积
-  //         如果使用 divided 空隙率模型，则对颗粒覆盖的某个网格 subcell，
-  //         只要有一个颗粒标志点在网格中，particleVolumes_[index][subcell] += (1.0 / 29.0) * 颗粒体积
+  //! \brief 颗粒对所覆盖网格的覆盖体积，如果使用 divided 空隙率模型，则对颗粒覆盖的某个网格
+  //!   subcell，只要有一个颗粒标志点在网格中，particleVolumes_[index][subcell] += (1.0 / 29.0) * 颗粒体积
   //! \note particleVolumes_[index][subcell]
-  double** particleVolumes_;
-#endif  // CFDEM_CLOUD_USE_TENSOR
+  std::vector<base::CDTensor1> particleVolumes_;
+
+  //! \brief 颗粒半径
+  base::CDExTensor1 radii_;
+
+  //! \brief 颗粒阻力系数，当 forceSubModel implForceDEM 为 true 时候，该 cds_ 和 fluidVel_ 传递给 DEM 求解器，DEM
+  //!   求解器使用颗粒中心处的流体速度与阻力系数一起计算颗粒受到的阻力
+  base::CDExTensor1 cds_;
+
+  //! \brief 颗粒位置矢量
+  base::CDExTensor2 positions_;
+
+  //! \brief 颗粒速度
+  base::CDExTensor2 velocities_;
+
+  //! \brief 颗粒初始速度
+  base::CDExTensor2 initVelocities_;
+
+  //! \brief 颗粒角速度
+  base::CDExTensor2 angularVelocities_;
+
+  //! \brief 流体对颗粒的总作用力
+  base::CDExTensor2 DEMForces_;
+
+  //! \brief 流体对颗粒的总力矩
+  base::CDExTensor2 DEMTorques_;
+
+  //! \brief 颗粒的中心处的流体速度，当 forceSubModel implForceDEM 为 true 时候，该 cds_ 和 fluidVel_ 传递给 DEM
+  //! 求解器，DEM 求解器使用颗粒中心处的流体速度与阻力系数一起计算颗粒受到的阻力
+  base::CDExTensor2 fluidVel_;
+
+  double** radiiPtr_;
+
+  double** cdsPtr_;
+
+  double** positionsPtr_;
+
+  double** velocitiesPtr_;
+
+  double** initVelocitiesPtr_;
+
+  double** angularVelocitiesPtr_;
+
+  double** DEMForcesPtr_;
+
+  double** DEMTorquesPtr_;
+
+  double** fluidVelPtr_;
 };
 
 }  // namespace Foam

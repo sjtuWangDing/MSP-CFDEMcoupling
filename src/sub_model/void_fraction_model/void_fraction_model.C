@@ -113,6 +113,95 @@ void voidFractionModel::getDimensionRatios(const base::CDTensor1& dimensionRatio
   }  // end loop of particles
 }
 
+//! \brief 计算颗粒尺寸与其周围网格平均尺寸的比值
+void voidFractionModel::getDimensionRatiosForMix(const base::CDTensor1& dimensionRatios,
+                                                 const double scale /* = 1.0 */) const {
+  // reset dimensionRatios
+  base::fillTensor(cloud_.dimensionRatios(), -1.0);
+  int number = cloud_.numberOfParticles();                      // 颗粒总数
+  double radius = 0.0;                                          // 颗粒半径
+  Foam::vector particlePos = Foam::vector::zero;                // 颗粒中心坐标
+  base::CITensor1 sumCellsNumber(base::makeShape1(number), 0);  // 颗粒覆盖当前求解器的网格数量
+  base::CDTensor1 sumCellsV(base::makeShape1(number), 0.0);     // 颗粒覆盖当前求解器的网格总体积
+  std::unordered_set<int> set;                                  // 颗粒扩展网格的集合
+  for (int index = 0; index < cloud_.numberOfParticles(); ++index) {
+    set.clear();
+    radius = cloud_.getRadius(index);
+    particlePos = cloud_.getPosition(index);
+    int findMpiCellID = cloud_.findMpiCellIDs()[index];
+    if (findMpiCellID < 0) {
+      continue;
+    }
+    // 构建集合
+    buildExpandedCellSet(set, findMpiCellID, particlePos, radius, 1.0);
+    // 计算颗粒周围网格的平均尺寸
+    double sumV = 0.0;
+    for (auto cellID : set) {
+      sumV += cloud_.mesh().V()[cellID];
+    }
+    sumCellsNumber[index] = static_cast<int>(set.size());
+    sumCellsV[index] = sumV;
+  }
+  // 主节点汇总其他节点的 dimension ratio 等信息
+  int procId = base::procId();
+  int numProc = base::numProc();
+  int rTag = 100;
+  int nTag = 101;
+  int vTag = 102;
+  if (0 != procId) {
+    MPI_Request rq1, rq2, rq3;
+    MPI_Status ms;
+    // 发送 sumCellsNumber 给主节点( MPI_Isend 非阻塞)
+    base::MPI_Isend(sumCellsNumber, 0, nTag, &rq1);
+    base::MPI_Isend(sumCellsV, 0, vTag, &rq2);
+    // 从主节点接收 globalDimensionRatios
+    base::MPI_Irecv(dimensionRatios, 0, rTag, &rq3);
+    MPI_Wait(&rq3, &ms);
+  }
+  if (0 == procId) {
+    std::vector<MPI_Request> rVec(numProc);
+    std::vector<MPI_Status> sVec(numProc);
+    std::vector<base::CITensor1> sumCellsNumberVec;
+    std::vector<base::CDTensor1> sumCellsVVec;
+    // 接收其他节点的 sumCellsNumber 信息
+    for (int inode = 1; inode < numProc; ++inode) {
+      sumCellsNumberVec.emplace_back(base::makeShape1(number), 0);
+      base::MPI_Irecv(sumCellsNumberVec[inode - 1], inode, nTag, rVec.data() + inode);
+    }
+    // 主节点等待 Irecv 执行完成
+    MPI_Waitall(numProc - 1, rVec.data() + 1, sVec.data() + 1);
+    // 接收其他节点的 sumCellsV 信息
+    for (int inode = 1; inode < numProc; ++inode) {
+      sumCellsVVec.emplace_back(base::makeShape1(number), 0.0);
+      base::MPI_Irecv(sumCellsVVec[inode - 1], inode, vTag, rVec.data() + inode);
+    }
+    // 主节点等待 Irecv 执行完成
+    MPI_Waitall(numProc - 1, rVec.data() + 1, sVec.data() + 1);
+    // 由主节点计算 dimension ratio
+    for (int index = 0; index < number; ++index) {
+      radius = cloud_.getRadius(index);
+      int Nmesh = 0;
+      double Vmesh = 0;
+      for (int j = 0; j < numProc; ++j) {
+        if (0 == j) {
+          Nmesh += std::max(sumCellsNumber[index], 0);
+          Vmesh += std::max(sumCellsV[index], 0.0);
+        } else {
+          Nmesh += std::max(sumCellsNumberVec[j - 1][index], 0);
+          Vmesh += std::max(sumCellsVVec[j - 1][index], 0.0);
+        }
+      }
+      double ratio = pow(Vmesh / Nmesh, 1.0 / 3.0) / (2.0 * radius);
+      dimensionRatios[index] = ratio;
+    }
+    // 由主节点将 dimension ratio 传递给子节点
+    for (int inode = 1; inode < numProc; ++inode) {
+      base::MPI_Isend(dimensionRatios, inode, rTag, rVec.data() + inode);
+    }
+  }
+  base::MPI_Barrier();
+}
+
 /*!
  * \brief 构建颗粒覆盖的所有网格的集合
  * \param set         <[in, out] 需要构建的集合

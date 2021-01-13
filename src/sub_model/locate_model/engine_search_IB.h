@@ -82,7 +82,23 @@ class engineSearchIB : public engineSearch {
    */
   void findCell(const base::CITensor1& findCellIDs) const;
 
- private:
+  /*!
+   * \brief use search engine to get id of cell which covered by processor
+   * \param findMpiCellIDs 颗粒覆盖当前求解器上任意一个网格的编号
+   */
+  void findMpiCell(const base::CITensor1& findMpiCellIDs) const {
+    FatalError << __func__ << " not implemented, please use engineSearchMix model\n" << abort(FatalError);
+  }
+
+  /*!
+   * \brief use search engine to get id of cell which covered by processor
+   * \param findExpandexCellIDs 被扩展的颗粒覆盖当前求解器上任意一个网格的编号
+   */
+  void findExpandexCell(const base::CITensor1& findExpandexCellIDs) const {
+    FatalError << __func__ << " not implemented, please use engineSearchMix model\n" << abort(FatalError);
+  }
+
+ protected:
   /*!
    * \brief 判断 pos 是否位于长方体区域中
    * \param pos 颗粒中心位置
@@ -101,7 +117,7 @@ class engineSearchIB : public engineSearch {
    * \param index particle index
    * \param satellitePointIndex satellite point index
    */
-  inline Foam::vector getSatellitePointPos(int index, int satellitePointIndex) const;
+  Foam::vector getSatellitePointPos(int index, int satellitePointIndex) const;
 
   //! \brief 如果网格更新，则调用该函数修正 searchEngine_ 以及重新设置 boundBox
   virtual void correctSearchEngine() {
@@ -114,7 +130,7 @@ class engineSearchIB : public engineSearch {
     }
   }
 
- private:
+ protected:
   bool verbose_;
 
   int zSplit_;

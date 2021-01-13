@@ -25,6 +25,7 @@ License
   Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 \*---------------------------------------------------------------------------*/
 
+#include <mutex>
 #include <unordered_map>
 #include <vector>
 #include "./divided_void_fraction.h"
@@ -35,6 +36,10 @@ namespace Foam {
 cfdemDefineTypeName(dividedVoidFraction);
 
 cfdemCreateNewFunctionAdder(voidFractionModel, dividedVoidFraction);
+
+const int dividedVoidFraction::numberOfMarkerPoints_ = 29;
+
+std::vector<Foam::vector> dividedVoidFraction::offsets_(29, Foam::vector::zero);
 
 //! \brief Constructor
 dividedVoidFraction::dividedVoidFraction(cfdemCloud& cloud)
@@ -47,8 +52,19 @@ dividedVoidFraction::dividedVoidFraction(cfdemCloud& cloud)
   porosity_ = subPropsDict_.lookupOrDefault<double>("porosity", 1.0);
   verbose_ = subPropsDict_.lookupOrDefault<bool>("verbose", false);
   alphaMin_ = subPropsDict_.lookupOrDefault<double>("alphaMin", 0.0);
+}
+
+//! \brief Destructor
+dividedVoidFraction::~dividedVoidFraction() {}
+
+int dividedVoidFraction::numberOfMarkerPoints() {
+  return numberOfMarkerPoints_;
+}
+
+const std::vector<Foam::vector>& dividedVoidFraction::offsets() {
+  static std::once_flag of;
   // 计算标志点相对颗粒中心的坐标
-  [this](void) -> void {
+  std::call_once(of, [](void) -> void {
     int idx = 0;
     // 设置中心标志点偏移
     for (int i = 0; i < 3; ++i) {
@@ -98,11 +114,9 @@ dividedVoidFraction::dividedVoidFraction(cfdemCloud& cloud)
         idx += 1;
       }
     }
-  }();
+  });
+  return offsets_;
 }
-
-//! \brief Destructor
-dividedVoidFraction::~dividedVoidFraction() {}
 
 //! \brief 输出空隙率相关信息
 void dividedVoidFraction::printVoidFractionInfo() const {
@@ -219,7 +233,7 @@ void dividedVoidFraction::setVoidFractionForSingleParticle(const int index,
     // 遍历所有标志点，除了颗粒中心处的标志点
     for (int i = 1; i < numberOfMarkerPoints_; ++i) {
       // 获取标志点的绝对位置
-      Foam::vector subPosition = particleCentre + radius * offsets_[i];
+      Foam::vector subPosition = particleCentre + radius * offsets()[i];
       if (cloud_.checkPeriodicCells()) {
         FatalError << "Error: not support periodic check!" << abort(FatalError);
       }

@@ -64,6 +64,22 @@ class engineSearch : public locateModel {
   void findCell(const base::CITensor1& findCellIDs) const;
 
   /*!
+   * \brief use search engine to get id of cell which covered by processor
+   * \param findMpiCellIDs 颗粒覆盖当前求解器上任意一个网格的编号
+   */
+  void findMpiCell(const base::CITensor1& findMpiCellIDs) const {
+    FatalError << __func__ << " not implemented, please use engineSearchMix model\n" << abort(FatalError);
+  }
+
+  /*!
+   * \brief use search engine to get id of cell which covered by processor
+   * \param findExpandexCellIDs 被扩展的颗粒覆盖当前求解器上任意一个网格的编号
+   */
+  void findExpandexCell(const base::CITensor1& findExpandexCellIDs) const {
+    FatalError << __func__ << " not implemented, please use engineSearchMix model\n" << abort(FatalError);
+  }
+
+  /*!
    * \brief use search engine to get cell id of certain vector
    * \param position 颗粒中心的位置
    * \param oldCellID old cell ID
@@ -72,6 +88,8 @@ class engineSearch : public locateModel {
 
   //! \brief 如果网格更新，则调用该函数修正 searchEngine_
   virtual void correctSearchEngine() { searchEngine_.correct(); }
+
+  inline Foam::meshSearch& searchEngine() { return searchEngine_; }
 
  protected:
   dictionary subPropsDict_;

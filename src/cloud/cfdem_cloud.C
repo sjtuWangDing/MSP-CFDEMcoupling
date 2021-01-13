@@ -47,6 +47,8 @@ Class
 
 namespace Foam {
 
+cfdemDefineTypeName(cfdemCloud);
+
 cfdemCloud::cfdemCloud(const fvMesh& mesh)
     : mesh_(mesh),
       couplingPropertiesDict_(IOobject("couplingProperties",  // coupling properties file name

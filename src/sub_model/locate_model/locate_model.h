@@ -64,9 +64,21 @@ class locateModel {
 
   /*!
    * \brief use search engine to get cell id of particle center
-   * \param findCellIDs 颗粒覆盖网格的编号
+   * \param findCellIDs 颗粒中心覆盖网格的编号
    */
   virtual void findCell(const base::CITensor1& findCellIDs) const = 0;
+
+  /*!
+   * \brief use search engine to get id of cell which covered by processor
+   * \param findMpiCellIDs 颗粒覆盖当前求解器上任意一个网格的编号
+   */
+  virtual void findMpiCell(const base::CITensor1& findMpiCellIDs) const = 0;
+
+  /*!
+   * \brief use search engine to get id of cell which covered by processor
+   * \param findExpandexCellIDs 被扩展的颗粒覆盖当前求解器上任意一个网格的编号
+   */
+  virtual void findExpandexCell(const base::CITensor1& findExpandexCellIDs) const = 0;
 
   virtual label findSingleCell(const Foam::vector& position, label oldCellID) const = 0;
 

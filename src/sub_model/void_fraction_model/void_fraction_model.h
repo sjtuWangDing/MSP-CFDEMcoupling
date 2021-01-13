@@ -66,6 +66,9 @@ class voidFractionModel {
   //! \brief 计算颗粒尺寸与其周围网格平均尺寸的比值, 并将颗粒索引按照颗粒尺寸归类
   void getDimensionRatios(const base::CDTensor1& dimensionRatios, const double scale = 1.0) const;
 
+  //! \brief 计算颗粒尺寸与其周围网格平均尺寸的比值, 并将颗粒索引按照颗粒尺寸归类
+  void getDimensionRatiosForMix(const base::CDTensor1& dimensionRatios, const double scale = 1.0) const;
+
   //! \brief 计算空隙率
   virtual void setVoidFraction() = 0;
 
@@ -115,6 +118,15 @@ class voidFractionModel {
 
   inline double pV(const double radius, const double scaleVol = 1.0) const {
     return 4.188790205 * radius * radius * radius * scaleVol;
+  }
+
+  //! \brief 高斯核函数
+  inline double GaussCore(const Foam::vector& particlePos, const Foam::vector& cellPos, const double radius) const {
+    double dist = mag(particlePos - cellPos);
+    // 计算高斯系数
+    double gaussEff = 0.2615 * 3.0 + 0.3234;
+    gaussEff *= (2 * radius);
+    return exp(-1.0 * dist * dist / sqr(gaussEff)) / pow(sqr(gaussEff) * M_PI, 1.5);
   }
 
   /*!

@@ -55,8 +55,6 @@ engineSearchIB::engineSearchIB(cfdemCloud& cloud, const std::string& derivedType
   for (int i = 0; i < numberOfSatellitePoints_; ++i) {
     satellitePoints_.push_back(generateSatellitePoint(i));
   }
-  base::MPI_Barrier(0.5);
-
   // set boundBox
   boundBoxPtr_.reset(new boundBox(cloud_.mesh().points(), false));
   if (verbose_) {
@@ -74,7 +72,7 @@ engineSearchIB::~engineSearchIB() {}
  */
 void engineSearchIB::findCell(const base::CITensor1& findCellIDs) const {
   if (cloud_.meshHasUpdated()) {
-    const_cast<engineSearchIB*>(this)->searchEngine_.correct();
+    const_cast<engineSearchIB*>(this)->searchEngine().correct();
   }
   for (int index = 0; index < cloud_.numberOfParticles(); ++index) {
     // reset findCellIDs
@@ -182,7 +180,7 @@ Foam::vector engineSearchIB::generateSatellitePoint(int index) const {
  * \param index particle index
  * \param satellitePointIndex satellite point index
  */
-inline Foam::vector engineSearchIB::getSatellitePointPos(int index, int satellitePointIndex) const {
+Foam::vector engineSearchIB::getSatellitePointPos(int index, int satellitePointIndex) const {
   double radius = cloud_.getRadius(index);
   Foam::vector particleCenterPos = cloud_.getPosition(index);
   return particleCenterPos + radius * satellitePoints_[satellitePointIndex];
