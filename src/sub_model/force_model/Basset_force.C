@@ -26,6 +26,7 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "./Basset_force.h"
+#include "./global_force.h"
 
 namespace Foam {
 
@@ -125,7 +126,7 @@ void BassetForce::setMiddleParticleForceKernel(Foam::vector& BstForce, const int
         cellPos = cloud_.mesh().C()[cellID];
         cellV = cloud_.mesh().V()[cellID];
         // 计算高斯核
-        core = GaussCore(particlePos, cellPos, radius, 6);
+        core = globalForce::GaussCore(particlePos, cellPos, radius, 6);
         // 计算累计速度
         Ufluid += voidFraction_[cellID] * U_[cellID] * core * cellV;
         // 计算累计加速度

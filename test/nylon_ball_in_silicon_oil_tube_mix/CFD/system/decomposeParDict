@@ -14,13 +14,13 @@ FoamFile
   object      decomposeParDict;
 }
 
-numberOfSubdomains 8;
+numberOfSubdomains 2;
 
 method          simple;
 
 simpleCoeffs
 {
-  n               ( 2 2 2 );
+  n               ( 1 1 2 );
   delta           0.001;
 }
 

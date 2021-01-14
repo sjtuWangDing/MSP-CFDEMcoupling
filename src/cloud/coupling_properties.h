@@ -83,6 +83,8 @@ class CouplingProperties {
 
   /* --------------------------------- interface used for cfdemCloudMix ----------------------------------- */
 
+  inline double expandedCellScale() const { return expandedCellScale_; }
+
   inline bool checkFineParticle(double ratio) const { return ratio > 0 && ratio >= fineParticleRatio_; }
 
   inline bool checkMiddleParticle(double ratio) const {
@@ -103,6 +105,9 @@ class CouplingProperties {
   double fineParticleRatio_;
 
   double coarseParticleRatio_;
+
+  //! \brief 颗粒扩展网格系数
+  double expandedCellScale_;
 
   //! \brief dict 中指定的所有 force model 的名称
   std::vector<std::string> forceModelList_;

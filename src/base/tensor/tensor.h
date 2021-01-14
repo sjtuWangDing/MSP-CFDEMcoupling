@@ -451,6 +451,18 @@ void fillTensor(const Tensor<dimension, DType, Device, Alloc>& tensor, const DTy
   std::fill_n(tensor.ptr(), tensor.mSize(), value);
 }
 
+template <int dimension, typename DType, typename Device, typename Alloc>
+void copyTensor(const Tensor<dimension, DType, Device, Alloc>& src,
+                const Tensor<dimension, DType, Device, Alloc>& dest) {
+  if (dest.isEmpty()) {
+    return;
+  }
+  CHECK_EQ(dest.mSize(), src.mSize()) << ": destination tensor's size should equal to src tensor'size";
+  for (index_t i = 0; i < dest.mSize(); ++i) {
+    dest.ptr()[i] = src.ptr()[i];
+  }
+}
+
 }  // namespace base
 
 #endif  // __TENSOR_H__

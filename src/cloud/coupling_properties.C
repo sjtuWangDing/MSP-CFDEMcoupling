@@ -46,6 +46,7 @@ CouplingProperties::CouplingProperties(const fvMesh& mesh, const IOdictionary& c
       liggghtsCommandsDict_(liggghtsCommandsDict),
       fineParticleRatio_(0.0),
       coarseParticleRatio_(0.0),
+      expandedCellScale_(0.0),
       verbose_(couplingPropertiesDict.lookupOrDefault<bool>("verbose", false)),
       solveFlow_(couplingPropertiesDict.lookupOrDefault<bool>("solveFlow", true)),
       modelType_(couplingPropertiesDict.lookupOrDefault<Foam::word>("modelType", "none").c_str()),
@@ -97,6 +98,8 @@ CouplingProperties::CouplingProperties(const fvMesh& mesh, const IOdictionary& c
   fineParticleRatio_ = couplingPropertiesDict.lookupOrDefault<double>("fineParticleRatio", 3.0);
 
   coarseParticleRatio_ = couplingPropertiesDict.lookupOrDefault<double>("coarseParticleRatio", 0.33);
+
+  expandedCellScale_ = couplingPropertiesDict.lookupOrDefault<double>("expandedCellScale", 6.0);
 
 #if CFDEM_MIX_CLOUD
   fineParticleRatio_ = couplingPropertiesDict.lookupOrDefault<double>("fineParticleRatio", 3.0);

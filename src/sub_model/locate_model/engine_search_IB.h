@@ -87,15 +87,17 @@ class engineSearchIB : public engineSearch {
    * \param findMpiCellIDs 颗粒覆盖当前求解器上任意一个网格的编号
    */
   void findMpiCell(const base::CITensor1& findMpiCellIDs) const {
-    FatalError << __func__ << " not implemented, please use engineSearchMix model\n" << abort(FatalError);
+    FatalError << __func__ << " not implemented in engineSearchIB model, please use enginehMix model\n"
+               << abort(FatalError);
   }
 
   /*!
    * \brief use search engine to get id of cell which covered by processor
-   * \param findExpandexCellIDs 被扩展的颗粒覆盖当前求解器上任意一个网格的编号
+   * \param findExpandedCellIDs 被扩展的颗粒覆盖当前求解器上任意一个网格的编号
    */
-  void findExpandexCell(const base::CITensor1& findExpandexCellIDs) const {
-    FatalError << __func__ << " not implemented, please use engineSearchMix model\n" << abort(FatalError);
+  void findExpandedCell(const base::CITensor1& findExpandedCellIDs, const double scale) const {
+    FatalError << __func__ << " not implemented in engineSearchIB model, please use enginehMix model\n"
+               << abort(FatalError);
   }
 
  protected:
@@ -117,7 +119,7 @@ class engineSearchIB : public engineSearch {
    * \param index particle index
    * \param satellitePointIndex satellite point index
    */
-  Foam::vector getSatellitePointPos(int index, int satellitePointIndex) const;
+  Foam::vector getSatellitePointPos(int index, int satellitePointIndex, const double scale = 1.0) const;
 
   //! \brief 如果网格更新，则调用该函数修正 searchEngine_ 以及重新设置 boundBox
   virtual void correctSearchEngine() {

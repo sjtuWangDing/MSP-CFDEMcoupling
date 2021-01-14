@@ -180,10 +180,11 @@ Foam::vector engineSearchIB::generateSatellitePoint(int index) const {
  * \param index particle index
  * \param satellitePointIndex satellite point index
  */
-Foam::vector engineSearchIB::getSatellitePointPos(int index, int satellitePointIndex) const {
+Foam::vector engineSearchIB::getSatellitePointPos(int index, int satellitePointIndex,
+                                                  const double scale /*  = 1.0 */) const {
   double radius = cloud_.getRadius(index);
   Foam::vector particleCenterPos = cloud_.getPosition(index);
-  return particleCenterPos + radius * satellitePoints_[satellitePointIndex];
+  return particleCenterPos + scale * radius * satellitePoints_[satellitePointIndex];
 }
 
 }  // namespace Foam

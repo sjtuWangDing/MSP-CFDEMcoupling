@@ -25,6 +25,7 @@ License
   Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 \*---------------------------------------------------------------------------*/
 
+#include "./global_force.h"
 #include "./virtual_mass_force.h"
 
 namespace Foam {
@@ -107,7 +108,7 @@ void virtualMassForce::setMiddleParticleForceKernel(Foam::vector& virtualMassFor
         cellPos = cloud_.mesh().C()[cellID];
         cellV = cloud_.mesh().V()[cellID];
         // 计算高斯核
-        core = GaussCore(particlePos, cellPos, radius, 6);
+        core = globalForce::GaussCore(particlePos, cellPos, radius, 6);
         // 计算累计速度
         UFluid += voidFraction_[cellID] * U_[cellID] * core * cellV;
         // 计算累计加速度

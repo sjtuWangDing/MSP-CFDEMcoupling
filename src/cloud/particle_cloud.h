@@ -69,6 +69,8 @@ class ParticleCloud {
 
   inline base::CITensor1& particleOverMeshNumber() { return particleOverMeshNumber_; }
 
+  inline base::CITensor1& particleRootProcIDs() { return particleRootProcIDs_; }
+
   inline base::CITensor1& findCellIDs() { return findCellIDs_; }
 
   inline base::CITensor1& findMpiCellIDs() { return findMpiCellIDs_; }
@@ -199,6 +201,9 @@ class ParticleCloud {
 
   //! \brief 颗粒覆盖的当前求解器上的网格数量
   base::CITensor1 particleOverMeshNumber_;
+
+  //! \brief 颗粒中心所在的处理器编号
+  base::CITensor1 particleRootProcIDs_;
 
   //! \brief 使用搜索模型获取到颗粒中心所在的网格索引
   base::CITensor1 findCellIDs_;

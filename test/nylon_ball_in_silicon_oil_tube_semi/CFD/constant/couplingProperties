@@ -29,7 +29,7 @@ allowUseSubCFDTimeStep false;
 forceModels
 (
   Archimedes
-  GaussDiFeliceDrag
+  mixDiFeliceDrag
   virtualMassForce
   BassetForce
   // viscForce
@@ -62,7 +62,7 @@ implicitCoupleProps
   voidFractionFieldName "voidFraction";
 }
 
-"(DiFeliceDragProps|GaussDiFeliceDragProps)"
+"(DiFeliceDragProps|mixDiFeliceDragProps)"
 {
   velFieldName "U";
   granVelFieldName "Us";

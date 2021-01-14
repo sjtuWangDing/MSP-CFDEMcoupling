@@ -68,15 +68,16 @@ class engineSearch : public locateModel {
    * \param findMpiCellIDs 颗粒覆盖当前求解器上任意一个网格的编号
    */
   void findMpiCell(const base::CITensor1& findMpiCellIDs) const {
-    FatalError << __func__ << " not implemented, please use engineSearchMix model\n" << abort(FatalError);
+    FatalError << __func__ << " not implemented in engineSearch model, please use enginehMix model\n"
+               << abort(FatalError);
   }
 
   /*!
    * \brief use search engine to get id of cell which covered by processor
-   * \param findExpandexCellIDs 被扩展的颗粒覆盖当前求解器上任意一个网格的编号
+   * \param findExpandedCellIDs 被扩展的颗粒覆盖当前求解器上任意一个网格的编号
    */
-  void findExpandexCell(const base::CITensor1& findExpandexCellIDs) const {
-    FatalError << __func__ << " not implemented, please use engineSearchMix model\n" << abort(FatalError);
+  void findExpandedCell(const base::CITensor1& findExpandedCellIDs, const double scale) const {
+    FatalError << __func__ << " not implemented engineSearch model, please use enginehMix model\n" << abort(FatalError);
   }
 
   /*!

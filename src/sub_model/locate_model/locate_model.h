@@ -76,9 +76,9 @@ class locateModel {
 
   /*!
    * \brief use search engine to get id of cell which covered by processor
-   * \param findExpandexCellIDs 被扩展的颗粒覆盖当前求解器上任意一个网格的编号
+   * \param findExpandedCellIDs 被扩展的颗粒覆盖当前求解器上任意一个网格的编号
    */
-  virtual void findExpandexCell(const base::CITensor1& findExpandexCellIDs) const = 0;
+  virtual void findExpandedCell(const base::CITensor1& findExpandedCellIDs, const double scale) const = 0;
 
   virtual label findSingleCell(const Foam::vector& position, label oldCellID) const = 0;
 

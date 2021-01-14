@@ -43,8 +43,8 @@ Class
 
 #include "base/logging.h"
 #include "base/memory/x_alloc.h"
-#include "base/tensor/tensor.h"
 #include "base/run_time_selection_tables.h"
+#include "base/tensor/tensor.h"
 #include "base/type_cast.h"
 #include "cloud/cfdem_base.h"
 #include "cloud/coupling_properties.h"
@@ -207,6 +207,8 @@ class cfdemCloud {
 
   inline const std::string& ddtVoidFractionType() const { return cProps_.ddtVoidFractionType(); }
 
+  inline double expandedCellScale() const { return cProps_.expandedCellScale(); }
+
   inline bool checkFineParticle(int index) const { return cProps_.checkFineParticle(getDimensionRatio(index)); }
 
   inline bool checkMiddleParticle(int index) const { return cProps_.checkMiddleParticle(getDimensionRatio(index)); }
@@ -221,7 +223,9 @@ class cfdemCloud {
 
   inline const base::CITensor1& particleOverMeshNumber() const { return parCloud_.particleOverMeshNumber_; }
 
-  inline const base::CITensor1& findCellIDs() const { return parCloud_.findCellIDs_; }
+  inline const base::CITensor1& particleRootProcIDs() { return parCloud_.particleRootProcIDs_; }
+
+  inline const base::CITensor1& findCellIDs() { return parCloud_.findCellIDs_; }
 
   inline const base::CITensor1& findMpiCellIDs() { return parCloud_.findMpiCellIDs_; }
 

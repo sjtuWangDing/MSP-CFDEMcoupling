@@ -50,14 +50,22 @@ class engineSearchMix : public engineSearchIB {
   /*!
    * \brief use search engine to get id of cell which covered by processor
    * \param findMpiCellIDs 颗粒覆盖当前求解器上任意一个网格的编号
+   * \param scale 颗粒半径尺度系数
    */
   void findMpiCell(const base::CITensor1& findMpiCellIDs) const;
 
   /*!
    * \brief use search engine to get id of cell which covered by processor
-   * \param findExpandexCellIDs 被扩展的颗粒覆盖当前求解器上任意一个网格的编号
+   * \param findExpandedCellIDs 被扩展的颗粒覆盖当前求解器上任意一个网格的编号
    */
-  void findExpandexCell(const base::CITensor1& findExpandexCellIDs) const;
+  void findExpandedCell(const base::CITensor1& findExpandedCellIDs, const double scale) const;
+
+ protected:
+  //! \brief 每个颗粒中心只可能位于一个网格中，但是如果颗粒位于处理器边界上，则颗粒会被边界两边的处理器都捕获到
+  //!   所以该函数会确保所有颗粒只被一个处理器捕获到
+  void uniqueFindCell(const base::CITensor1& findCellIDs) const;
+
+  void findMpiCellKernel(const int index, const base::CITensor1& findMpiCellIDs, const double scale = 1.0) const;
 };
 
 }  // namespace Foam

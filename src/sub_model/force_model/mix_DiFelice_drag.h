@@ -25,31 +25,37 @@ License
   Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 \*---------------------------------------------------------------------------*/
 
-#ifndef __GAUSS_DIFELICE_DRAG_H__
-#define __GAUSS_DIFELICE_DRAG_H__
+#ifndef __MIX_DIFELICE_DRAG_H__
+#define __MIX_DIFELICE_DRAG_H__
 
 #include <unordered_set>
 #include "./force_model.h"
 
 namespace Foam {
 
-class GaussDiFeliceDrag : public forceModel {
+class mixDiFeliceDrag : public forceModel {
  public:
   //! \brief Runtime type information
-  cfdemTypeName("GaussDiFeliceDrag");
+  cfdemTypeName("mixDiFeliceDrag");
 
-  cfdemDefineNewFunctionAdder(forceModel, GaussDiFeliceDrag);
+  cfdemDefineNewFunctionAdder(forceModel, mixDiFeliceDrag);
 
   //! \brief Constructor
-  GaussDiFeliceDrag(cfdemCloud& cloud);
+  mixDiFeliceDrag(cfdemCloud& cloud);
 
   //! \brief Destructor
-  ~GaussDiFeliceDrag();
+  ~mixDiFeliceDrag();
 
   void setForce();
 
-  void buildExpandedCellSet(std::unordered_set<int>& set, const int cellID, const Foam::vector& particlePos,
-                            const double radius, const double scale) const;
+  void getMpiData(const int index, const volVectorField& field);
+
+ protected:
+  void setForceKernel(const int index, Foam::vector& drag, Foam::vector& Ufluid, double& Cd);
+
+  Foam::vector getMpiUfluid(const int index, const int findCellID) const;
+
+  double getMpiVoidFraction(const int index, const int findCellID) const;
 
  private:
   //! \note subPropsDict_ should be declared in front of other members
@@ -68,4 +74,4 @@ class GaussDiFeliceDrag : public forceModel {
 
 }  // namespace Foam
 
-#endif  // __GAUSS_DIFELICE_DRAG_H__
+#endif  // __MIX_DIFELICE_DRAG_H__

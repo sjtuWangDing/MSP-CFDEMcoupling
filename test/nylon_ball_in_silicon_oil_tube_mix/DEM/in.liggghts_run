@@ -10,9 +10,9 @@ boundary        f f f
 newton          off
 
 units           si
-processors      2 2 2
+processors      1 1 2
 
-region          reg block 0.0 0.1 0.0 0.1 0.0 0.15 units box
+region          reg block 0.0 0.1 0.0 0.1 0.0 0.16 units box
 create_box      1 reg
 
 neighbor        0.03 bin
@@ -43,7 +43,7 @@ fix     xwalls2 all wall/gran model hertz tangential history primitive type 1 xp
 fix     ywalls1 all wall/gran model hertz tangential history primitive type 1 yplane 0.0
 fix     ywalls2 all wall/gran model hertz tangential history primitive type 1 yplane 0.1
 fix     zwalls1 all wall/gran model hertz tangential history primitive type 1 zplane 0.0
-fix     zwalls2 all wall/gran model hertz tangential history primitive type 1 zplane 0.15
+fix     zwalls2 all wall/gran model hertz tangential history primitive type 1 zplane 0.16
 
 # cfd coupling
 fix     cfd  all couple/cfd couple_every 50 mpi

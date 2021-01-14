@@ -72,13 +72,6 @@ class forceModel {
    */
   void createForceSubModels(const dictionary& subPropsDict, EForceType forceType);
 
-  //! \brief 高斯核函数
-  inline double GaussCore(const Foam::vector& particlePos, const Foam::vector& cellPos, const double radius,
-                          const double gaussEff) const {
-    double dist = mag(particlePos - cellPos);
-    return exp(-1.0 * dist * dist / (2 * pow(radius * gaussEff, 2)));
-  }
-
   inline std::shared_ptr<forceSubModel> forceSubM() const { return forceSubModel_; }
 
  protected:

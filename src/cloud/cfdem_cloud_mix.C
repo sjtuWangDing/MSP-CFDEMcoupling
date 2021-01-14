@@ -56,6 +56,7 @@ void cfdemCloudMix::reallocate() {
   parCloud_.dimensionRatios() = std::move(base::CDTensor1(base::makeShape1(number), -1.0));
   parCloud_.impForces() = std::move(base::CDTensor2(base::makeShape2(number, 3), 0.0));
   parCloud_.expForces() = std::move(base::CDTensor2(base::makeShape2(number, 3), 0.0));
+  parCloud_.particleRootProcIDs() = std::move(base::CITensor1(base::makeShape1(number), -1));
   parCloud_.findCellIDs() = std::move(base::CITensor1(base::makeShape1(number), -1));
   parCloud_.findMpiCellIDs() = std::move(base::CITensor1(base::makeShape1(number), -1));
   parCloud_.findExpandedCellIDs() = std::move(base::CITensor1(base::makeShape1(number), -1));
@@ -113,6 +114,9 @@ void cfdemCloudMix::evolve(volVectorField& U, volScalarField& voidF, volVectorFi
     locateM().findMpiCell(parCloud_.findMpiCellIDs());
     // 计算颗粒尺度
     voidFractionM().getDimensionRatiosForMix(parCloud_.dimensionRatios());
+    // 计算扩展颗粒覆盖当前处理器上的某一个网格索引
+    // 必须位于计算颗粒尺度之后，因为需要判断颗粒是否为 middle
+    locateM().findExpandedCell(parCloud_.findExpandedCellIDs(), expandedCellScale());
     // 计算颗粒空隙率
     voidFractionM().setVoidFraction();
     voidF = voidFractionM().voidFractionInterp();
@@ -120,6 +124,8 @@ void cfdemCloudMix::evolve(volVectorField& U, volScalarField& voidF, volVectorFi
     averagingM().setVectorFieldAverage(averagingM().UsNext(), averagingM().UsWeightField(), velocities(),
                                        particleWeights());
     Us = averagingM().UsInterp();
+    // 计算扩展颗粒覆盖的网格集合
+    globalF().updateExpandedCellMap();
     // 计算流体对颗粒的作用力
     for (const auto& ptr : forceModels_) {
       ptr->setForce();

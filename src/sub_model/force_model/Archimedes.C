@@ -58,6 +58,7 @@ Archimedes::~Archimedes() {}
 
 void Archimedes::setForce() {
   Info << "Setting Archimedes force..." << endl;
+  base::MPI_Barrier();
   Foam::vector buoyancy = Foam::vector::zero;
   for (int index = 0; index < cloud_.numberOfParticles(); ++index) {
     buoyancy = Foam::vector::zero;
@@ -80,6 +81,7 @@ void Archimedes::setForce() {
     }
   }
   Info << "Setting Archimedes force - done" << endl;
+  base::MPI_Barrier();
 }
 
 }  // namespace Foam

@@ -104,17 +104,11 @@ void mixVoidFraction::setVoidFraction() {
   for (int index = 0; index < cloud_.numberOfParticles(); ++index) {
     if (cloud_.checkCoarseParticle(index)) {
       // coarse particle
-    } else if (cloud_.checkMiddleParticle(index)) {
-      // middle particle
-      int findMpiCellID = cloud_.findMpiCellIDs()[index];
-      if (findMpiCellID >= 0) {
-        setVoidFractionForSingleMiddleParticle(index, findMpiCellID, parMaps[index]);
-      }
     } else {
-      // find particle
+      // find and middle particle
       int findCellID = cloud_.findCellIDs()[index];
       if (findCellID >= 0) {
-        setVoidFractionForSingleFindParticle(index, findCellID, parMaps[index]);
+        setVoidFractionForSingleParticle(index, findCellID, parMaps[index]);
       }
     }
   }  // End loop of all particles
@@ -157,43 +151,9 @@ void mixVoidFraction::setVoidFraction() {
 }
 
 //! \brief 设置索引为 index 的单个颗粒的空隙率
-//! \note used for middle particle
-void mixVoidFraction::setVoidFractionForSingleMiddleParticle(const int index, const int findMpiCellID,
-                                                             std::unordered_map<int, Foam::vector>& parMap) {
-  parMap.clear();
-  double radius = cloud_.getRadius(index);                  // 颗粒半径
-  double scaleVol = weight();                               // 颗粒体积因子
-  double scaleRadius = cbrt(porosity());                    // 颗粒半径因子
-  double particleV = pV(radius, scaleVol);                  // 颗粒体积
-  Foam::vector particleCentre = cloud_.getPosition(index);  // 颗粒中心坐标
-  Foam::vector cellPos = Foam::vector::zero;                // 网格坐标
-  radius *= scaleRadius;
-  std::unordered_set<int> set;
-  buildExpandedCellSet(set, findMpiCellID, particleCentre, radius, 1.0);
-  // 获取颗粒覆盖网格的个数
-  int meshNumber = set.size();
-  cloud_.particleOverMeshNumber()[index] = meshNumber;
-  for (int cellID : set) {
-    cellPos = cloud_.mesh().C()[cellID];
-    double core = GaussCore(particleCentre, cellPos, radius);
-    double newAlpha = voidFractionNext_[cellID] - core;
-    if (newAlpha > alphaMin_) {
-      voidFractionNext_[cellID] = newAlpha;
-    } else {
-      // 如果空隙率低于最低空隙率, 则直接赋值为 alphaMin_
-      voidFractionNext_[cellID] = alphaMin_;
-    }
-    parMap.insert(std::make_pair(cellID, Foam::vector::zero));
-    parMap[cellID][0] += core;             // add particleWeights
-    parMap[cellID][1] = particleV * core;  // add particleVolumes
-    parMap[cellID][2] = particleV * core;  // add particleVs
-  }
-}
-
-//! \brief 设置索引为 index 的单个颗粒的空隙率
 //! \note used for fine particle
-void mixVoidFraction::setVoidFractionForSingleFindParticle(const int index, const int findCellID,
-                                                           std::unordered_map<int, Foam::vector>& parMap) {
+void mixVoidFraction::setVoidFractionForSingleParticle(const int index, const int findCellID,
+                                                       std::unordered_map<int, Foam::vector>& parMap) {
   parMap.clear();
   int numberOfMarkerPoints = dividedVoidFraction::numberOfMarkerPoints();             // 标志点个数
   int findSubCellNum = 0;                                                             // 有效标记点的个数
@@ -261,5 +221,39 @@ void mixVoidFraction::setVoidFractionForSingleFindParticle(const int index, cons
   parMap[findCellID][1] += pV(radius, scaleVol) * centreWeight;  // add particleVolumes
   parMap[findCellID][2] += pV(radius, scaleVol) * centreWeight;  // add particleVs
 }
+
+// //! \brief 设置索引为 index 的单个颗粒的空隙率
+// //! \note used for middle particle
+// void mixVoidFraction::setVoidFractionForSingleMiddleParticle(const int index, const int findMpiCellID,
+//                                                              std::unordered_map<int, Foam::vector>& parMap) {
+//   parMap.clear();
+//   double radius = cloud_.getRadius(index);                  // 颗粒半径
+//   double scaleVol = weight();                               // 颗粒体积因子
+//   double scaleRadius = cbrt(porosity());                    // 颗粒半径因子
+//   double particleV = pV(radius, scaleVol);                  // 颗粒体积
+//   Foam::vector particleCentre = cloud_.getPosition(index);  // 颗粒中心坐标
+//   Foam::vector cellPos = Foam::vector::zero;                // 网格坐标
+//   radius *= scaleRadius;
+//   std::unordered_set<int> set;
+//   buildExpandedCellSet(set, findMpiCellID, particleCentre, radius, 1.0);
+//   // 获取颗粒覆盖网格的个数
+//   int meshNumber = set.size();
+//   cloud_.particleOverMeshNumber()[index] = meshNumber;
+//   for (int cellID : set) {
+//     cellPos = cloud_.mesh().C()[cellID];
+//     double core = GaussCore(particleCentre, cellPos, radius);
+//     double newAlpha = voidFractionNext_[cellID] - core * particleV;
+//     if (newAlpha > alphaMin_) {
+//       voidFractionNext_[cellID] = newAlpha;
+//     } else {
+//       // 如果空隙率低于最低空隙率, 则直接赋值为 alphaMin_
+//       voidFractionNext_[cellID] = alphaMin_;
+//     }
+//     parMap.insert(std::make_pair(cellID, Foam::vector::zero));
+//     parMap[cellID][0] += core;             // add particleWeights
+//     parMap[cellID][1] = particleV * core;  // add particleVolumes
+//     parMap[cellID][2] = particleV * core;  // add particleVs
+//   }
+// }
 
 }  // namespace Foam
