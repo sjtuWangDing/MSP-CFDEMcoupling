@@ -36,9 +36,11 @@ Class
 #define __FORCE_MODEL_H__
 
 #include "./force_sub_model.h"
+#include "./global_force.h"
 #include "base/run_time_selection_tables.h"
 #include "cloud/cfdem_cloud.h"
 #include "interpolationCellPointFace.H"
+#include "sub_model/void_fraction_model/void_fraction_model.h"
 
 namespace Foam {
 
@@ -90,6 +92,8 @@ class forceModel {
   autoPtr<interpolation<Foam::vector>> divTauInterpolator_;
 
   autoPtr<interpolation<Foam::vector>> gradPInterpolator_;
+
+  autoPtr<interpolation<Foam::vector>> DDtUInterpolator_;
 };
 
 }  // namespace Foam

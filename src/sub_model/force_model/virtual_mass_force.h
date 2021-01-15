@@ -48,8 +48,18 @@ class virtualMassForce : public forceModel {
   void setForce();
 
  protected:
-  void setMiddleParticleForceKernel(Foam::vector& force, const int index, const volScalarField& rhoField,
-                                    const volVectorField& ddtUField);
+  void setForceKernel(const int index, Foam::vector& virtualMassForce);
+
+  void setMiddleParticleForceKernel(Foam::vector& force, const int index);
+
+  //! \brief 计算颗粒 index 处的背景流体的ddtu
+  Foam::vector getBackgroundDDtU(const int index, const int findCellID) const;
+
+  //! \brief 计算颗粒 index 处的背景流体速度
+  Foam::vector getBackgroundUfluid(const int index, const int findCellID) const;
+
+  //! \brief 计算颗粒 index 处的背景流体空隙率
+  double getBackgroundVoidFraction(const int index, const int findCellID) const;
 
  private:
   //! \note subPropsDict_ should be declared in front of other members
@@ -57,15 +67,6 @@ class virtualMassForce : public forceModel {
 
   //! \brief 上一个时间步中的
   std::unordered_map<int, Foam::vector> prevParticleVelMap_;
-
-  //! \brief name of the finite volume fluid velocity field
-  std::string velFieldName_;
-
-  //! \brief 空隙率场的名称
-  std::string voidFractionFieldName_;
-
-  //! \brief name of the phi field
-  std::string phiFieldName_;
 
   const volVectorField& U_;
 

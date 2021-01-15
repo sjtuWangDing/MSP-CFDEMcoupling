@@ -30,8 +30,8 @@ forceModels
 (
   Archimedes
   mixDiFeliceDrag
-  // virtualMassForce
-  // BassetForce
+  virtualMassForce
+  BassetForce
   // viscForce
   // gradPForce
 );
@@ -62,10 +62,16 @@ implicitCoupleProps
   voidFractionFieldName "voidFraction";
 }
 
+globalForceProps
+{
+  velFieldName "U";
+  voidFractionFieldName "voidFraction";
+  gravityFieldName "g";
+}
+
 "(DiFeliceDragProps|mixDiFeliceDragProps)"
 {
   velFieldName "U";
-  granVelFieldName "Us";
   voidFractionFieldName "voidFraction";
   treatForceExplicitInMomEquation false;
   treatForceBothCFDAndDEM true;
@@ -98,9 +104,6 @@ gradPForceProps
 
 virtualMassForceProps
 {
-  velFieldName "U";
-  voidFractionFieldName "voidFraction";
-  phiFieldName_ "phi";
   treatForceExplicitInMomEquation false;
   treatForceBothCFDAndDEM true;
   treatDEMForceImplicit false;
@@ -122,8 +125,6 @@ BassetForceProps
 
 ArchimedesProps
 {
-  densityFieldName "rho";
-  gravityFieldName "g";
   verbose true;
 }
 

@@ -137,39 +137,41 @@ class cfdemCloud {
 
   inline const IOdictionary& liggghtsCommandsDict() const { return liggghtsCommandsDict_; }
 
-  inline const std::vector<std::shared_ptr<liggghtsCommandModel>>& liggghtsCommandModels() const;
+  inline const std::vector<std::shared_ptr<liggghtsCommandModel>>& liggghtsCommandModels() const {
+    return liggghtsCommandModels_;
+  }
 
-  inline const std::vector<std::shared_ptr<forceModel>>& forceModels() const;
+  inline const std::vector<std::shared_ptr<forceModel>>& forceModels() const { return forceModels_; }
 
-  inline const momCoupleModelMap& momCoupleModels() const;
+  inline const momCoupleModelMap& momCoupleModels() const { return momCoupleModels_; }
 
-  inline const globalForce& globalF() const;
+  const globalForce& globalF() const;
 
-  inline const dataExchangeModel& dataExchangeM() const;
+  const dataExchangeModel& dataExchangeM() const;
 
-  inline const voidFractionModel& voidFractionM() const;
+  const voidFractionModel& voidFractionM() const;
 
-  inline const locateModel& locateM() const;
+  const locateModel& locateM() const;
 
-  inline const averagingModel& averagingM() const;
+  const averagingModel& averagingM() const;
 
-  inline globalForce& globalF();
+  globalForce& globalF();
 
-  inline dataExchangeModel& dataExchangeM();
+  dataExchangeModel& dataExchangeM();
 
-  inline voidFractionModel& voidFractionM();
+  voidFractionModel& voidFractionM();
 
-  inline locateModel& locateM();
+  locateModel& locateM();
 
-  inline averagingModel& averagingM();
+  averagingModel& averagingM();
 
 #if defined(version24Dev)
-  inline const turbulenceModel& turbulence() const;
+  const turbulenceModel& turbulence() const;
 #elif defined(version21) || defined(version16ext)
 #ifdef compre
-  inline const compressible::turbulenceModel& turbulence() const;
+  const compressible::turbulenceModel& turbulence() const;
 #else
-  inline const incompressible::turbulenceModel& turbulence() const;
+  const incompressible::turbulenceModel& turbulence() const;
 #endif
 #elif defined(version15)
   inline const incompressible::RASModel& turbulence() const;
@@ -368,8 +370,11 @@ class cfdemCloud {
   scalar wallPeriodicityCheckTolerance_;
 };
 
-}  // namespace Foam
+template <typename Field>
+void cfdemCloud::scaleWithVcell(Field& field) const {
+  forAll(field, cellID) { field[cellID] *= mesh_.V()[cellID]; }
+}
 
-#include "cloud/cfdem_cloud-inl.h"
+}  // namespace Foam
 
 #endif  // __CFDEM_CLOUD_H__

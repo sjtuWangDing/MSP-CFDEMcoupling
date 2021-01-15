@@ -333,4 +333,60 @@ tmp<fvVectorMatrix> cfdemCloud::divVoidFractionTau(volVectorField& U, volScalarF
          fvc::div(voidFractionNuEff(voidFraction) * dev2(fvc::grad(U)().T()));
 }
 
+// Foam::autoPtr<T> 中定义了 inline operator const T&() const;
+const dataExchangeModel& cfdemCloud::dataExchangeM() const {
+  return dataExchangeModel_;
+}
+
+const voidFractionModel& cfdemCloud::voidFractionM() const {
+  return voidFractionModel_;
+}
+
+const locateModel& cfdemCloud::locateM() const {
+  return locateModel_;
+}
+
+const averagingModel& cfdemCloud::averagingM() const {
+  return averagingModel_;
+}
+
+const globalForce& cfdemCloud::globalF() const {
+  return globalForce_;
+}
+
+dataExchangeModel& cfdemCloud::dataExchangeM() {
+  return dataExchangeModel_();
+}
+
+voidFractionModel& cfdemCloud::voidFractionM() {
+  return voidFractionModel_();
+}
+
+locateModel& cfdemCloud::locateM() {
+  return locateModel_();
+}
+
+averagingModel& cfdemCloud::averagingM() {
+  return averagingModel_();
+}
+
+globalForce& cfdemCloud::globalF() {
+  return globalForce_();
+}
+
+#if defined(version24Dev)
+const turbulenceModel& cfdemCloud::turbulence() const
+#elif defined(version21) || defined(version16ext)
+#ifdef compre
+const compressible::turbulenceModel& cfdemCloud::turbulence() const
+#else
+const incompressible::turbulenceModel& cfdemCloud::turbulence() const
+#endif
+#elif defined(version15)
+const incompressible::RASModel& cfdemCloud::turbulence() const
+#endif
+{
+  return turbulence_;
+}
+
 }  // namespace Foam

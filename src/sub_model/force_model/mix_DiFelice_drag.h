@@ -48,24 +48,18 @@ class mixDiFeliceDrag : public forceModel {
 
   void setForce();
 
-  void getMpiData(const int index, const volVectorField& field);
-
  protected:
   void setForceKernel(const int index, Foam::vector& drag, Foam::vector& Ufluid, double& Cd);
 
-  Foam::vector getMpiUfluid(const int index, const int findCellID) const;
+  //! \brief 计算颗粒 index 处的背景流体速度
+  Foam::vector getBackgroundUfluid(const int index, const int findCellID) const;
 
-  double getMpiVoidFraction(const int index, const int findCellID) const;
+  //! \brief 计算颗粒 index 处的背景流体空隙率
+  double getBackgroundVoidFraction(const int index, const int findCellID) const;
 
  private:
   //! \note subPropsDict_ should be declared in front of other members
   dictionary subPropsDict_;
-
-  //! \brief 速度场名称
-  std::string velFieldName_;
-
-  //! \brief 空隙率场的名称
-  std::string voidFractionFieldName_;
 
   const volVectorField& U_;
 

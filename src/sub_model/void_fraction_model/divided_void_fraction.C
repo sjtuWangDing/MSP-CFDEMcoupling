@@ -30,6 +30,7 @@ License
 #include <vector>
 #include "./divided_void_fraction.h"
 #include "mpi.h"
+#include "sub_model/locate_model/locate_model.h"
 
 namespace Foam {
 

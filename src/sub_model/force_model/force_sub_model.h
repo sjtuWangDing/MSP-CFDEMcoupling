@@ -246,8 +246,6 @@ class forceSubModel {
 
   Switches switches_;
 
-  const std::string densityFieldName_;
-
   //! \brief 密度
   const volScalarField& rho_;
 

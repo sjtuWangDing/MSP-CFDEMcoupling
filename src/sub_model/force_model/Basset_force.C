@@ -41,13 +41,9 @@ cfdemCreateNewFunctionAdder(forceModel, BassetForce);
 BassetForce::BassetForce(cfdemCloud& cloud)
     : forceModel(cloud),
       subPropsDict_(cloud.couplingPropertiesDict().subDict(typeName_ + "Props")),
-      velFieldName_(subPropsDict_.lookupOrDefault<Foam::word>("velFieldName", "U").c_str()),
-      voidFractionFieldName_(
-          subPropsDict_.lookupOrDefault<Foam::word>("voidFractionFieldName", "voidFraction").c_str()),
-      phiFieldName_(subPropsDict_.lookupOrDefault<Foam::word>("phiFieldName", "phi").c_str()),
-      U_(cloud.mesh().lookupObject<volVectorField>(velFieldName_)),
-      voidFraction_(cloud.mesh().lookupObject<volScalarField>(voidFractionFieldName_)),
-      phi_(cloud.mesh().lookupObject<surfaceScalarField>(phiFieldName_)) {
+      U_(cloud.globalF().U()),
+      voidFraction_(cloud.globalF().voidFraction()),
+      phi_(cloud.globalF().phi()) {
   createForceSubModels(subPropsDict_, kUnResolved);
 }
 
@@ -67,6 +63,141 @@ void BassetForce::updateDDtUrHistory(const int index) {
   Pout << "DDtUrHistoryMap_: " << DDtUrHistoryMap_[0].size() << endl;
 }
 
+void BassetForce::setForce() {
+  Info << "Setting Basset force..." << endl;
+  base::MPI_Barrier();
+  if (cloud_.numberOfParticlesChanged()) {
+    FatalError << "Currently BassetForce model not allow number of particle changed\n" << abort(FatalError);
+  }
+  for (int index = 0; index < cloud_.numberOfParticles(); ++index) {
+    // 只设置 fine and middle 颗粒的 Basset force
+    if (cloud_.checkCoarseParticle(index)) {
+      continue;
+    }
+    // Basset force
+    Foam::vector BstForce = Foam::vector::zero;
+    setForceKernel(index, BstForce);
+    forceSubModel_->partToArray(index, BstForce, Foam::vector::zero, Foam::vector::zero, 0.0);
+  }
+  Info << "Setting Basset force - done" << endl;
+  base::MPI_Barrier();
+}
+
+void BassetForce::setForceKernel(const int index, Foam::vector& BstForce) {
+  // 颗粒中心所在网格的索引
+  int findCellID = cloud_.findCellIDs()[index];
+  // 获取背景流体ddtU
+  Foam::vector ddtU = getBackgroundDDtU(index, findCellID);
+  // 获取背景网格空隙率
+  double vf = getBackgroundVoidFraction(index, findCellID);
+  // 对于每一个颗粒，只需要一个处理器计算，即颗粒中心所在的处理器
+  if (findCellID >= 0) {
+    double dt = cloud_.mesh().time().deltaT().value();             // 时间步长
+    double radius = cloud_.getRadius(index);                       // 颗粒半径
+    double diameter = radius;                                      // 颗粒直径
+    double rho = cloud_.globalF().rhoField()[findCellID];          // 流体密度
+    double nu = forceSubModel_->nuField()[findCellID];             // 流体动力粘度
+    double B = 1.5 * sqr(diameter) * sqrt(M_PI * rho * rho * nu);  // Basset force 系数
+    Foam::vector Up = cloud_.getVelocity(index);                   // 颗粒速度
+    Foam::vector initUr = cloud_.globalF().getInitUr(index);       // 颗粒初始时刻的相对速度
+    Foam::vector prevUp = Foam::vector::zero;                      // 上一个时间步颗粒速度
+    Foam::vector ddtUp = Foam::vector::zero;                       // 颗粒加速度
+    Foam::vector ddtUr = Foam::vector::zero;                       // 相对加速度
+    Foam::vector ddtUrHistory = Foam::vector::zero;                // 累计相对加速度
+    // 计算颗粒加速度 ddtUp
+    prevUp = cloud_.globalF().getPrevParticleVel(index);
+    ddtUp = (Up - prevUp) / dt;
+    // 计算当前时间步的 ddtUr
+    ddtUr = ddtU - ddtUp;
+    // 计算 ddtUr 的历史累计和
+    std::vector<Foam::vector>& ddtUrVec = cloud_.globalF().getDDtUrHistory(index);
+    int size = ddtUrVec.size();
+    if (1 == size) {
+      ddtUrHistory = 2 * ddtUrVec[0] / sqrt(dt);
+    } else if (2 == size) {
+      ddtUrHistory = ddtUrVec[0] / sqrt(2 * dt) + ddtUrVec[1] / sqrt(dt);
+    } else if (2 < size) {
+      ddtUrHistory = ddtUrVec[0] / sqrt(size * dt) + ddtUrVec[size - 1] / sqrt(1 * dt);
+      for (int i = 1; i < size - 1; ++i) {
+        ddtUrHistory += 2 * ddtUrVec[i] / sqrt((size - i) * dt);
+      }
+    }  // no need to calcualte ddtUrHistory when 0 == size
+    // insert ddtUr to ddtUrVec
+    ddtUrVec.push_back(ddtUr);
+    // 计算 Basset forece
+    BstForce = 0.5 * B * dt * ddtUrHistory + 2 * B * ddtUr * sqrt(dt) +
+               B * initUr / sqrt((cloud_.dataExchangeM().couplingStep() + 1) * dt);
+    if ("B" == cloud_.modelType()) {
+      BstForce /= vf;
+    }
+    if (forceSubModel_->verbose()) {
+      Pout << "Basset force = " << BstForce << endl;
+    }
+  }
+}
+
+//! \brief 计算颗粒 index 处的背景流体的ddtu
+Foam::vector BassetForce::getBackgroundDDtU(const int index, const int findCellID) const {
+  Foam::vector ddtU = Foam::vector::zero;
+  // 如果是 fine 颗粒，则需要保证 findCellID >= 0
+  if (cloud_.checkFineParticle(index) && findCellID >= 0) {
+    if (forceSubModel_->interpolation()) {
+      // 获取颗粒中心的坐标, 将颗粒中心所在网格的空隙率和流体速度插值到颗粒中心处
+      Foam::vector pos = cloud_.getPosition(index);
+      ddtU = DDtUInterpolator_().interpolate(pos, findCellID);
+    } else {
+      // 不使用插值模型，直接设置颗粒中心处的值为颗粒中心所在网格的值
+      ddtU = cloud_.globalF().ddtU()[findCellID];
+    }
+  } else if (cloud_.checkMiddleParticle(index)) {
+    ddtU = cloud_.globalF().getBackgroundDDtU(index);
+  }
+  return ddtU;
+}
+
+//! \brief 计算颗粒 index 处的背景流体速度
+Foam::vector BassetForce::getBackgroundUfluid(const int index, const int findCellID) const {
+  // 背景流体速度
+  Foam::vector Ufluid = Foam::vector::zero;
+  // 如果是 fine 颗粒，则需要保证 findCellID >= 0
+  if (cloud_.checkFineParticle(index) && findCellID >= 0) {
+    if (forceSubModel_->interpolation()) {
+      // 获取颗粒中心的坐标, 将颗粒中心所在网格的空隙率和流体速度插值到颗粒中心处
+      Foam::vector pos = cloud_.getPosition(index);
+      Ufluid = UInterpolator_().interpolate(pos, findCellID);
+    } else {
+      // 不使用插值模型，直接设置颗粒中心处的值为颗粒中心所在网格的值
+      Ufluid = U_[findCellID];
+    }
+  } else if (cloud_.checkMiddleParticle(index)) {
+    Ufluid = cloud_.globalF().getBackgroundUfluid(index);
+  }
+  return Ufluid;
+}
+
+//! \brief 计算颗粒 index 处的背景流体空隙率
+double BassetForce::getBackgroundVoidFraction(const int index, const int findCellID) const {
+  double vf = 1.0;
+  // 如果是 fine 颗粒，则需要保证 findCellID >= 0
+  if (cloud_.checkFineParticle(index) && findCellID >= 0) {
+    if (forceSubModel_->interpolation()) {
+      // 获取颗粒中心的坐标, 将颗粒中心所在网格的空隙率和流体速度插值到颗粒中心处
+      Foam::vector pos = cloud_.getPosition(index);
+      vf = voidFractionInterpolator_().interpolate(pos, findCellID);
+      // 确保插值后颗粒中心的空隙率有意义
+      vf = vf > 1.0 ? 1.0 : vf;
+      vf = vf < Foam::SMALL ? Foam::SMALL : vf;
+    } else {
+      // 不使用插值模型，直接设置颗粒中心处的值为颗粒中心所在网格的值
+      vf = voidFraction_[findCellID];
+    }
+  } else if (cloud_.checkMiddleParticle(index)) {
+    vf = cloud_.globalF().getBackgroundVoidFraction(index);
+  }
+  return vf;
+}
+
+#if 0
 void BassetForce::setForce() {
   Info << "Setting Basset force..." << endl;
   if (cloud_.numberOfParticlesChanged()) {
@@ -194,5 +325,6 @@ void BassetForce::setMiddleParticleForceKernel(Foam::vector& BstForce, const int
     }
   }
 }
+#endif
 
 }  // namespace Foam

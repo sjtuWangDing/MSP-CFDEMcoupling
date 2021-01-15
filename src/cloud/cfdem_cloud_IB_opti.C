@@ -37,6 +37,9 @@ Class
 #include "mpi.h"
 #include "sub_model/data_exchange_model/data_exchange_model.h"
 #include "sub_model/force_model/force_model.h"
+#include "sub_model/liggghts_command_model/liggghts_command_model.h"
+#include "sub_model/locate_model/locate_model.h"
+#include "sub_model/void_fraction_model/void_fraction_model.h"
 
 namespace Foam {
 

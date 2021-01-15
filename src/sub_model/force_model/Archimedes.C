@@ -40,15 +40,7 @@ cfdemCreateNewFunctionAdder(forceModel, Archimedes);
 Archimedes::Archimedes(cfdemCloud& cloud)
     : forceModel(cloud),
       subPropsDict_(cloud.couplingPropertiesDict().subDict(typeName_ + "Props")),
-      gravityFieldName_(subPropsDict_.lookupOrDefault<Foam::word>("gravityFieldName", "g").c_str()),
-#if defined(version21)
-      g_(cloud.mesh().lookupObject<uniformDimensionedVectorField>(gravityFieldName_))
-#elif defined(version16ext) || defined(version15)
-      g_(dimensionedVector(
-             cloud.mesh().lookupObject<IOdictionary>("environmentalProperties").lookup(environmentalProperties))
-             .value())
-#endif
-{
+      g_(cloud.globalF().g()) {
   createForceSubModels(subPropsDict_, kUnResolved);
   CHECK(false == forceSubModel_->treatForceBothCFDAndDEM())
       << ": Archimedes model request treatForceBothCFDAndDEM == false";
@@ -73,7 +65,6 @@ void Archimedes::setForce() {
     // index - particle index
     // buoyancy - total buoyancy
     forceSubModel_->partToArray(index, buoyancy, Foam::vector::zero, Foam::vector::zero, 0);
-
     if (forceSubModel_->verbose()) {
       Pout << "Archimedes buoyancy on particle " << index << ": [" << buoyancy[0] << ", " << buoyancy[1] << ", "
            << buoyancy[2] << "]" << endl;

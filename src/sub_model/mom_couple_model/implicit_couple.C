@@ -26,6 +26,8 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "./implicit_couple.h"
+#include "sub_model/data_exchange_model/data_exchange_model.h"
+#include "sub_model/force_model/global_force.h"
 
 namespace Foam {
 

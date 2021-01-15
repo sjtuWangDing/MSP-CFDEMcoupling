@@ -59,11 +59,6 @@ class mixVoidFraction : public voidFractionModel {
   void setVoidFractionForSingleParticle(const int index, const int findCellID,
                                         std::unordered_map<int, Foam::vector>& parMap);
 
-  // //! \brief 设置索引为 index 的单个颗粒的空隙率
-  // //! \note used for middle particle
-  // void setVoidFractionForSingleMiddleParticle(const int index, const int findMpiCellID,
-  //                                             std::unordered_map<int, Foam::vector>& parMap);
-
  private:
   dictionary subPropsDict_;
 

@@ -41,27 +41,12 @@ cfdemCreateNewFunctionAdder(forceModel, mixDiFeliceDrag);
 mixDiFeliceDrag::mixDiFeliceDrag(cfdemCloud& cloud)
     : forceModel(cloud),
       subPropsDict_(cloud.couplingPropertiesDict().subDict(typeName_ + "Props")),
-      velFieldName_(subPropsDict_.lookupOrDefault<Foam::word>("velFieldName", "U").c_str()),
-      voidFractionFieldName_(
-          subPropsDict_.lookupOrDefault<Foam::word>("voidFractionFieldName", "voidFraction").c_str()),
-      U_(cloud.mesh().lookupObject<volVectorField>(velFieldName_)),
-      voidFraction_(cloud.mesh().lookupObject<volScalarField>(voidFractionFieldName_)) {
+      U_(cloud.globalF().U()),
+      voidFraction_(cloud_.globalF().voidFraction()) {
   createForceSubModels(subPropsDict_, kUnResolved);
-  CHECK(false == forceSubModel_->interpolation()) << ": mixDiFeliceDrag model request interpolation == false";
 }
 
 mixDiFeliceDrag::~mixDiFeliceDrag() {}
-
-void mixDiFeliceDrag::getMpiData(const int index, const volVectorField& field) {
-  CHECK(cloud_.checkMiddleParticle(index)) << __func__ << ": ask for middle particle";
-  std::unordered_set<int> set;  // 颗粒扩展网格的集合
-  double radius = cloud_.getRadius(index);
-  Foam::vector particlePos = cloud_.getPosition(index);
-  int findExpandedCellID = cloud_.findExpandedCellIDs()[index];
-  if (findExpandedCellID >= 0) {
-    cloud_.voidFractionM().buildExpandedCellSet(set, findExpandedCellID, particlePos, radius, 6);
-  }
-}
 
 void mixDiFeliceDrag::setForce() {
   Info << "Setting mix DiFelice drag force..." << endl;
@@ -85,6 +70,7 @@ void mixDiFeliceDrag::setForce() {
     dragCoefficient = 0.0;
     Ufluid = Foam::vector::zero;
     drag = Foam::vector::zero;
+    // calculate force or drag coefficient
     setForceKernel(index, drag, Ufluid, dragCoefficient);
     // write particle data to global array
     forceSubModel_->partToArray(index, drag, Foam::vector::zero, Ufluid, dragCoefficient);
@@ -94,21 +80,24 @@ void mixDiFeliceDrag::setForce() {
 
 void mixDiFeliceDrag::setForceKernel(const int index, Foam::vector& drag, Foam::vector& Ufluid,
                                      double& dragCoefficient) {
-  int findCellID = cloud_.findCellIDs()[index];       // 颗粒中心所在网格的索引
-  Ufluid = getMpiUfluid(index, findCellID);           // 获取背景流体速度
-  double vf = getMpiVoidFraction(index, findCellID);  // 获取背景网格空隙率
-  base::MPI_Barrier();
+  // 颗粒中心所在网格的索引
+  int findCellID = cloud_.findCellIDs()[index];
+  // 获取背景流体速度
+  Ufluid = getBackgroundUfluid(index, findCellID);
+  // 获取背景网格空隙率
+  double vf = getBackgroundVoidFraction(index, findCellID);
+  // 对于每一个颗粒，只需要一个处理器计算，即颗粒中心所在的处理器
   if (findCellID >= 0) {
-    double radius = cloud_.getRadius(index);              // 颗粒半径
-    double diameter = 2 * radius;                         // 颗粒直径
-    double nuf = forceSubModel_->nuField()[findCellID];   // 流体动力粘度
-    double rho = forceSubModel_->rhoField()[findCellID];  // 流体密度
-    double pRe = 0.0;                                     // 颗粒雷诺数
-    double Xi = 0.0;                                      // 模型阻力系数
-    double Cd = 0.0;                                      // 流体阻力系数
-    Foam::vector Up = cloud_.getVelocity(index);          // 颗粒速度
-    Foam::vector Ur = Ufluid - Up;                        // 相对速度
-    double magUr = mag(Ur);                               // 相对速度值
+    double radius = cloud_.getRadius(index);               // 颗粒半径
+    double diameter = 2 * radius;                          // 颗粒直径
+    double nuf = forceSubModel_->nuField()[findCellID];    // 流体动力粘度
+    double rho = cloud_.globalF().rhoField()[findCellID];  // 流体密度
+    double pRe = 0.0;                                      // 颗粒雷诺数
+    double Xi = 0.0;                                       // 模型阻力系数
+    double Cd = 0.0;                                       // 流体阻力系数
+    Foam::vector Up = cloud_.getVelocity(index);           // 颗粒速度
+    Foam::vector Ur = Ufluid - Up;                         // 相对速度
+    double magUr = mag(Ur);                                // 相对速度值
     if (magUr > 0) {
 #if 0
       // 计算颗粒雷诺数
@@ -164,6 +153,7 @@ void mixDiFeliceDrag::setForceKernel(const int index, Foam::vector& drag, Foam::
     if (forceSubModel_->verbose()) {
       Pout << "index = " << index << endl;
       Pout << "findCellID = " << findCellID << endl;
+      Pout << "Ufluid = " << Ufluid << endl;
       Pout << "Up = " << Up << endl;
       Pout << "Ur = " << Ur << endl;
       Pout << "diameter = " << diameter << endl;
@@ -178,7 +168,9 @@ void mixDiFeliceDrag::setForceKernel(const int index, Foam::vector& drag, Foam::
   }
 }
 
-Foam::vector mixDiFeliceDrag::getMpiUfluid(const int index, const int findCellID) const {
+//! \brief 计算颗粒 index 处的背景流体速度
+Foam::vector mixDiFeliceDrag::getBackgroundUfluid(const int index, const int findCellID) const {
+  // 背景流体速度
   Foam::vector Ufluid = Foam::vector::zero;
   // 如果是 fine 颗粒，则需要保证 findCellID >= 0
   if (cloud_.checkFineParticle(index) && findCellID >= 0) {
@@ -191,45 +183,44 @@ Foam::vector mixDiFeliceDrag::getMpiUfluid(const int index, const int findCellID
       Ufluid = U_[findCellID];
     }
   } else if (cloud_.checkMiddleParticle(index)) {
-    Ufluid = cloud_.globalF().getBackgroundFieldValue(index, U_, voidFraction_);
-    // if (findCellID >= 0) {
-    //   // 获取当前颗粒的 Expanded Cell 集合
-    //   std::unordered_set<int> set;
-    //   double radius = cloud_.getRadius(index);
-    //   Foam::vector particlePos = cloud_.getPosition(index);
-    //   cloud_.voidFractionM().buildExpandedCellSet(set, findCellID, particlePos, radius, 6);
-    //   double sumCore = 0.0;
-    //   double core = 0.0;
-    //   double cellV = 0.0;
-    //   double sumPV = 0.0;
-    //   double sumCV = 0.0;
-    //   Foam::vector cellPos = Foam::vector::zero;
-    //   for (int cellID : set) {
-    //     if (cellID >= 0) {  // cell found
-    //       cellPos = cloud_.mesh().C()[cellID];
-    //       cellV = cloud_.mesh().V()[cellID];
-    //       // 计算高斯核
-    //       core = globalForce::GaussCore(particlePos, cellPos, radius, 6);
-    //       // 计算累计速度
-    //       Ufluid += voidFraction_[cellID] * U_[cellID] * core * cellV;
-    //       // 计算累加因数
-    //       sumCore += voidFraction_[cellID] * core * cellV;
-    //       // 计算累加流体体积
-    //       sumPV += voidFraction_[cellID] * cellV;
-    //       // 计算累加网格体积
-    //       sumCV += cellV;
-    //     }
-    //   }
-    //   // 计算平均流体速度
-    //   Ufluid /= sumCore;
-    // }
+#if 1
+    Ufluid = cloud_.globalF().getBackgroundUfluid(index);
+#else
+    if (findCellID >= 0) {
+      // 获取当前颗粒的 Expanded Cell 集合
+      std::unordered_set<int> set;
+      double radius = cloud_.getRadius(index);
+      Foam::vector particlePos = cloud_.getPosition(index);
+      cloud_.voidFractionM().buildExpandedCellSet(set, findCellID, particlePos, radius, 6);
+      double sumCore = 0.0;
+      double core = 0.0;
+      double cellV = 0.0;
+      Foam::vector cellPos = Foam::vector::zero;
+      for (int cellID : set) {
+        if (cellID >= 0) {  // cell found
+          cellPos = cloud_.mesh().C()[cellID];
+          cellV = cloud_.mesh().V()[cellID];
+          // 计算高斯核
+          core = globalForce::GaussCore(particlePos, cellPos, radius, 6);
+          // 计算累计速度
+          Ufluid += voidFraction_[cellID] * U_[cellID] * core * cellV;
+          // 计算累加因数
+          sumCore += voidFraction_[cellID] * core * cellV;
+        }
+      }
+      // 计算平均流体速度
+      Ufluid /= sumCore;
+    }
+#endif
   }
   return Ufluid;
 }
 
-double mixDiFeliceDrag::getMpiVoidFraction(const int index, const int findCellID) const {
+//! \brief 计算颗粒 index 处的背景流体空隙率
+double mixDiFeliceDrag::getBackgroundVoidFraction(const int index, const int findCellID) const {
   double vf = 1.0;
-  if (cloud_.checkFineParticle(index)) {
+  // 如果是 fine 颗粒，则需要保证 findCellID >= 0
+  if (cloud_.checkFineParticle(index) && findCellID >= 0) {
     if (forceSubModel_->interpolation()) {
       // 获取颗粒中心的坐标, 将颗粒中心所在网格的空隙率和流体速度插值到颗粒中心处
       Foam::vector pos = cloud_.getPosition(index);
@@ -242,29 +233,31 @@ double mixDiFeliceDrag::getMpiVoidFraction(const int index, const int findCellID
       vf = voidFraction_[findCellID];
     }
   } else if (cloud_.checkMiddleParticle(index)) {
-    return cloud_.globalF().getBackgroundFieldValue<false, 1, volScalarField, scalar>(index, voidFraction_,
-                                                                                      voidFraction_);
-    // if (findCellID >= 0) {
-    //   // 获取当前颗粒的 Expanded Cell 集合
-    //   std::unordered_set<int> set;
-    //   double radius = cloud_.getRadius(index);
-    //   Foam::vector particlePos = cloud_.getPosition(index);
-    //   cloud_.voidFractionM().buildExpandedCellSet(set, findCellID, particlePos, radius, 6);
-    //   double cellV = 0.0;
-    //   double sumPV = 0.0;
-    //   double sumCV = 0.0;
-    //   for (int cellID : set) {
-    //     if (cellID >= 0) {  // cell found
-    //       cellV = cloud_.mesh().V()[cellID];
-    //       // 计算累加流体体积
-    //       sumPV += voidFraction_[cellID] * cellV;
-    //       // 计算累加网格体积
-    //       sumCV += cellV;
-    //     }
-    //   }
-    //   // 计算空隙率
-    //   vf = sumPV / sumCV;
-    // }
+#if 1
+    vf = cloud_.globalF().getBackgroundVoidFraction(index);
+#else
+    if (findCellID >= 0) {
+      // 获取当前颗粒的 Expanded Cell 集合
+      std::unordered_set<int> set;
+      double radius = cloud_.getRadius(index);
+      Foam::vector particlePos = cloud_.getPosition(index);
+      cloud_.voidFractionM().buildExpandedCellSet(set, findCellID, particlePos, radius, 6);
+      double cellV = 0.0;
+      double sumPV = 0.0;
+      double sumCV = 0.0;
+      for (int cellID : set) {
+        if (cellID >= 0) {  // cell found
+          cellV = cloud_.mesh().V()[cellID];
+          // 计算累加流体体积
+          sumPV += voidFraction_[cellID] * cellV;
+          // 计算累加网格体积
+          sumCV += cellV;
+        }
+      }
+      // 计算空隙率
+      vf = sumPV / sumCV;
+    }
+#endif
   }
   return vf;
 }

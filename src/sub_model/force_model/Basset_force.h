@@ -49,17 +49,26 @@ class BassetForce : public forceModel {
   void setForce();
 
  protected:
-  void setMiddleParticleForceKernel(Foam::vector& BstForce, const int index, const volScalarField& rhoField,
-                                    const volScalarField& nuField, const volVectorField& ddtUField);
+  void setForceKernel(const int index, Foam::vector& BstForce);
 
   void updatePrevUp(const int index);
 
   void updateDDtUrHistory(const int index);
 
+  //! \brief 计算颗粒 index 处的背景流体的ddtu
+  Foam::vector getBackgroundDDtU(const int index, const int findCellID) const;
+
+  //! \brief 计算颗粒 index 处的背景流体速度
+  Foam::vector getBackgroundUfluid(const int index, const int findCellID) const;
+
+  //! \brief 计算颗粒 index 处的背景流体空隙率
+  double getBackgroundVoidFraction(const int index, const int findCellID) const;
+
  private:
   //! \note subPropsDict_ should be declared in front of other members
   dictionary subPropsDict_;
 
+  //! \note 初始时刻的相对速度 initUr_ = Ufluid - Up
   Foam::vector initUr_;
 
   //! \brief 记录每一个颗粒的上一个耦合时间步的速度
@@ -67,15 +76,6 @@ class BassetForce : public forceModel {
 
   //! \brief 记录每一个颗粒的历史 (dU / dt - dV / dt)
   std::unordered_map<int, std::vector<Foam::vector>> DDtUrHistoryMap_;
-
-  //! \brief name of the finite volume fluid velocity field
-  std::string velFieldName_;
-
-  //! \brief 空隙率场的名称
-  std::string voidFractionFieldName_;
-
-  //! \brief name of the phi field
-  std::string phiFieldName_;
 
   const volVectorField& U_;
 

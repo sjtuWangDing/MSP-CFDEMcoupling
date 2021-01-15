@@ -26,7 +26,9 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "cloud/cfdem_cloud_mix.h"
+#include "sub_model/averaging_model/averaging_model.h"
 #include "sub_model/force_model/force_model.h"
+#include "sub_model/locate_model/locate_model.h"
 #include "sub_model/mom_couple_model/implicit_couple.h"
 #include "sub_model/mom_couple_model/mom_couple_model.h"
 #include "sub_model/void_fraction_model/void_fraction_model.h"
@@ -82,6 +84,16 @@ void cfdemCloudMix::printParticleInfo() const {
     Pout << "  dimensionRatio[" << index << "]: " << dimensionRatios()[index] << endl;
   }
   base::MPI_Barrier();
+  for (int index = 0; index < numberOfParticles(); ++index) {
+    Pout << "  DEMForce[" << index << "]: " << DEMForces()[index][0] << ", " << DEMForces()[index][1] << ", "
+         << DEMForces()[index][2] << endl;
+  }
+  base::MPI_Barrier();
+  for (int index = 0; index < numberOfParticles(); ++index) {
+    Pout << "  impForce[" << index << "]: " << impForces()[index][0] << ", " << impForces()[index][1] << ", "
+         << impForces()[index][2] << endl;
+  }
+  base::MPI_Barrier();
   voidFractionM().printVoidFractionInfo();
 }
 
@@ -124,12 +136,14 @@ void cfdemCloudMix::evolve(volVectorField& U, volScalarField& voidF, volVectorFi
     averagingM().setVectorFieldAverage(averagingM().UsNext(), averagingM().UsWeightField(), velocities(),
                                        particleWeights());
     Us = averagingM().UsInterp();
-    // 计算扩展颗粒覆盖的网格集合
-    globalF().updateExpandedCellMap();
+    // global force init
+    globalF().initBeforeSetForce();
     // 计算流体对颗粒的作用力
     for (const auto& ptr : forceModels_) {
       ptr->setForce();
     }
+    // global force end
+    globalF().endAfterSetForce();
     // 计算局部累加的流体作用力场
     averagingM().setVectorFieldSum(globalF().impParticleForce(), impForces(), particleWeights());
     // write DEM data

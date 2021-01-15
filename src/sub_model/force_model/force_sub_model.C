@@ -52,8 +52,7 @@ forceSubModel::forceSubModel(cfdemCloud& cloud, forceModel& forceModel, const di
       forceModel_(forceModel),
       subPropsDict_(subPropsDict),
       switches_(),
-      densityFieldName_(subPropsDict.lookupOrDefault<Foam::word>("densityFieldName", "rho").c_str()),
-      rho_(cloud.mesh().lookupObject<volScalarField>(densityFieldName_)),
+      rho_(cloud.globalF().rhoField()),
       nu_(IOobject("scalarViscosity", cloud.mesh().time().timeName(), cloud.mesh(), IOobject::NO_READ,
                    IOobject::NO_WRITE),
           cloud.mesh(), dimensionedScalar("nu0", dimensionSet(0, 2, -1, 0, 0), 1.0)) {}
