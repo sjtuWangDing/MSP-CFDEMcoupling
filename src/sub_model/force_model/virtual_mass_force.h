@@ -48,9 +48,7 @@ class virtualMassForce : public forceModel {
   void setForce();
 
  protected:
-  void setForceKernel(const int index, Foam::vector& virtualMassForce);
-
-  void setMiddleParticleForceKernel(Foam::vector& force, const int index);
+  void setForceKernel(const int index, Foam::vector& mixVirtualMassForce);
 
   //! \brief 计算颗粒 index 处的背景流体的ddtu
   Foam::vector getBackgroundDDtU(const int index, const int findCellID) const;
@@ -64,9 +62,6 @@ class virtualMassForce : public forceModel {
  private:
   //! \note subPropsDict_ should be declared in front of other members
   dictionary subPropsDict_;
-
-  //! \brief 上一个时间步中的
-  std::unordered_map<int, Foam::vector> prevParticleVelMap_;
 
   const volVectorField& U_;
 

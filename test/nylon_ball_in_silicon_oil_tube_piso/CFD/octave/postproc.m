@@ -11,10 +11,10 @@ linienstaerke = 1;
 MarkerGroesse = 4;
 
 figure(1)
-h = plot(particle_vel_1(:, 1), particle_vel_1(:, 4), '*');
+h = plot(particle_vel_1(:, 1), particle_vel_1(:, 4), '*', 0.2, -0.08, '+');
 set(h, 'LineWidth', linienstaerke, 'MarkerSize', MarkerGroesse);
 set(gca, 'FontSize', 12)
-axis([0.0 1.4 -0.14 0.0])
+axis([0.0 1.4 -0.18 0.0])
 xlabel('time (s)')
 ylabel('z-veloctiy (m/s)')
 title('Velocity of the settling particle', 'FontSize', 12)

@@ -24,14 +24,18 @@ modelType B; // A or B
 
 couplingInterval 50;
 
+expandedCellScale 6;
+
 allowUseSubCFDTimeStep false;
+
+globalForce mixGlobalForce;
 
 forceModels
 (
   Archimedes
-  dragForce
-  virtualMassForce
-  BassetForce
+  mixDragForce
+  mixVirtualMassForce
+  mixBassetForce
   // viscForce
   // gradPForce
 );
@@ -62,7 +66,7 @@ implicitCoupleProps
   voidFractionFieldName "voidFraction";
 }
 
-globalForceProps
+"(globalForceProps|mixGlobalForceProps)"
 {
   velFieldName "U";
   voidFractionFieldName "voidFraction";
@@ -74,7 +78,7 @@ ArchimedesProps
   verbose true;
 }
 
-dragForceProps
+mixDragForceProps
 {
   treatForceExplicitInMomEquation false;
   treatForceBothCFDAndDEM true;
@@ -86,7 +90,7 @@ dragForceProps
   // nu [0 2 -1 0 0 0 0] 1e-04;
 }
 
-virtualMassForceProps
+mixVirtualMassForceProps
 {
   treatForceExplicitInMomEquation false;
   treatForceBothCFDAndDEM true;
@@ -97,7 +101,7 @@ virtualMassForceProps
   useGaussCoreFunctionRefined true;
 }
 
-BassetForceProps
+mixBassetForceProps
 {
   treatForceExplicitInMomEquation false;
   treatForceBothCFDAndDEM true;

@@ -25,20 +25,20 @@ License
   Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 \*---------------------------------------------------------------------------*/
 
-#include "./drag_force.h"
+#include "./mix_drag_force.h"
 #include "mpi.h"
 
 namespace Foam {
 
-cfdemDefineTypeName(dragForce);
+cfdemDefineTypeName(mixDragForce);
 
-cfdemCreateNewFunctionAdder(forceModel, dragForce);
+cfdemCreateNewFunctionAdder(forceModel, mixDragForce);
 
 /*!
  * \brief Constructor
  * \note The initialization list should be in the same order as the variable declaration
  */
-dragForce::dragForce(cfdemCloud& cloud)
+mixDragForce::mixDragForce(cfdemCloud& cloud)
     : forceModel(cloud),
       subPropsDict_(cloud.couplingPropertiesDict().subDict(typeName_ + "Props")),
       U_(cloud.globalF().U()),
@@ -46,10 +46,10 @@ dragForce::dragForce(cfdemCloud& cloud)
   createForceSubModels(subPropsDict_, kUnResolved);
 }
 
-dragForce::~dragForce() {}
+mixDragForce::~mixDragForce() {}
 
-void dragForce::setForce() {
-  Info << "Setting drag force..." << endl;
+void mixDragForce::setForce() {
+  Info << "Setting mix drag force..." << endl;
   base::MPI_Barrier();
   double dragCoefficient = 0.0;              // 阻力系数
   Foam::vector Ufluid = Foam::vector::zero;  // 背景流体速度
@@ -75,10 +75,10 @@ void dragForce::setForce() {
     // write particle data to global array
     forceSubModel_->partToArray(index, drag, Foam::vector::zero, Ufluid, dragCoefficient);
   }
-  Info << "Setting drag force - done" << endl;
+  Info << "Setting mix drag force - done" << endl;
 }
 
-void dragForce::setForceKernel(const int index, Foam::vector& drag, Foam::vector& Ufluid, double& dragCoefficient) {
+void mixDragForce::setForceKernel(const int index, Foam::vector& drag, Foam::vector& Ufluid, double& dragCoefficient) {
   // 颗粒中心所在网格的索引
   int findCellID = cloud_.findCellIDs()[index];
   // 获取背景流体速度
@@ -107,14 +107,19 @@ void dragForce::setForceKernel(const int index, Foam::vector& drag, Foam::vector
       Xi = 3.7 - 0.65 * exp(-sqr(1.5 - log10(pRe)) / 2.0);
       // 计算颗粒阻力系数
       dragCoefficient = 0.125 * Cd * rho * M_PI * diameter * diameter * pow(vf, (2 - Xi)) * magUr;
-#elif 1
-      // 这个模型在两个 test 中，结果与实验值比较吻合
-      pRe = diameter * magUr * vf / (nuf + Foam::SMALL);
+#elif 0
+      // 计算颗粒雷诺数
+      pRe = diameter * magUr / (nuf + Foam::SMALL);
       Cd = 24 * pow(9.06 / sqrt(pRe) + 1, 2) / (9.06 * 9.06);
       Xi = 3.7 - 0.65 * exp(-sqr(1.5 - log10(pRe)) / 2.0);
       dragCoefficient = 0.125 * Cd * rho * M_PI * diameter * diameter * pow(vf, (2 - Xi)) * magUr;
+#elif 1
+      // Schiller Naumann Drag
+      pRe = diameter * vf * magUr / (nuf + Foam::SMALL);
+      Cd = pRe >= 1000 ? 0.44 : 24.0 * (1 + 0.15 * pow(pRe, 0.687)) / pRe;
+      dragCoefficient = 0.125 * Cd * rho * M_PI * diameter * diameter * magUr;
 #elif 0
-      // 计算颗粒雷诺数
+      // Gidaspow drag
       pRe = diameter * vf * magUr / (nuf + Foam::SMALL);
       if (vf > 0.8) {
         // 计算流体阻力系数
@@ -125,22 +130,37 @@ void dragForce::setForceKernel(const int index, Foam::vector& drag, Foam::vector
       }
       dragCoefficient *= cloud_.voidFractionM().pV(radius);
 #elif 0
-      // 计算颗粒雷诺数
       pRe = diameter * vf * magUr / (nuf + Foam::SMALL);
       if (vf > 0.74) {
         double Wd = 0.0;
         if (vf <= 0.82) {
-          Wd = 0.0214 / (4 * (vf - 0.7463) + 0.0044) - 0.576;
+          Wd = 0.0214 / (4.0 * sqr(vf - 0.7463) + 0.0044) - 0.576;
         } else if (vf > 0.97) {
           Wd = 32.8295 * vf - 31.8295;
         } else {
           Wd = 0.0038 / (4 * sqr(vf - 0.7789) + 0.004) - 0.0101;
         }
-        Cd = pRe >= 1000 ? 0.44 : 24.0 * (1 + 0.15 * pow(pRe, 0.687)) / pRe;
-        dragCoefficient = 0.75 * rho * vf * magUr * Cd * Wd / diameter;
+        Cd = pRe >= 1000 ? 0.44 : (24.0 * (1 + 0.15 * pow(pRe, 0.687)) / pRe);
+        dragCoefficient = 0.75 * rho * vf * Cd * magUr * Wd / diameter;
       } else {
         dragCoefficient = 150 * (1 - vf) * nuf * rho / (vf * diameter * diameter) + 1.75 * magUr * rho / diameter;
       }
+      dragCoefficient *= cloud_.voidFractionM().pV(radius);
+#elif 0
+      pRe = diameter * vf * magUr / (nuf + Foam::SMALL);
+      double Vrs = 0.0;
+      double A = 0.0;
+      double B = 0.0;
+      if (vf <= 0.85) {
+        A = pow(vf, 4.14);
+        B = 0.8 * pow(vf, 4.14);
+      } else {
+        A = pow(vf, 4.14);
+        B = pow(vf, 2.65);
+      }
+      Vrs = 0.5 * (A - 0.06 * pRe + sqrt(sqr(0.06 * pRe) + 0.12 * pRe * (2 * B - A) + A * A));
+      Cd = sqr(0.63 + 4.8 / sqrt(pRe / Vrs));
+      dragCoefficient = 0.75 * vf * rho * Cd * magUr / (sqr(Vrs) * diameter);
       dragCoefficient *= cloud_.voidFractionM().pV(radius);
 #endif
       if ("B" == cloud_.modelType()) {
@@ -168,7 +188,7 @@ void dragForce::setForceKernel(const int index, Foam::vector& drag, Foam::vector
 }
 
 //! \brief 计算颗粒 index 处的背景流体速度
-Foam::vector dragForce::getBackgroundUfluid(const int index, const int findCellID) const {
+Foam::vector mixDragForce::getBackgroundUfluid(const int index, const int findCellID) const {
   // 背景流体速度
   Foam::vector Ufluid = Foam::vector::zero;
   // 对于 middle 颗粒，使用高斯核函数计算
@@ -216,7 +236,7 @@ Foam::vector dragForce::getBackgroundUfluid(const int index, const int findCellI
 }
 
 //! \brief 计算颗粒 index 处的背景流体空隙率
-double dragForce::getBackgroundVoidFraction(const int index, const int findCellID) const {
+double mixDragForce::getBackgroundVoidFraction(const int index, const int findCellID) const {
   double vf = 1.0;
   // 对于 middle 颗粒，使用高斯核函数计算
   if (forceSubModel_->useGaussCoreFunctionRefined() && cloud_.checkMiddleParticle(index)) {

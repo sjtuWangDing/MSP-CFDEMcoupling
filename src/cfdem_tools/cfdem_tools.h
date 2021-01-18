@@ -9,7 +9,6 @@ class cfdemTools {
  public:
   static void checkModelType(const cfdemCloud& cloud);
 
- protected:
   static bool isUsedForceModel(const cfdemCloud& cloud, const std::string& forceModelName);
 };
 

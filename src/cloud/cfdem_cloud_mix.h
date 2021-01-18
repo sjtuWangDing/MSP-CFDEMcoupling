@@ -54,6 +54,14 @@ class cfdemCloudMix : public cfdemCloud {
 
   void printParticleInfo() const;
 
+  double expandedCellScale() const { return cProps_.expandedCellScale(); }
+
+  bool checkFineParticle(int index) const { return cProps_.checkFineParticle(getDimensionRatio(index)); }
+
+  bool checkMiddleParticle(int index) const { return cProps_.checkMiddleParticle(getDimensionRatio(index)); }
+
+  bool checkCoarseParticle(int index) const { return cProps_.checkCoarseParticle(getDimensionRatio(index)); }
+
   /*!
    * \brief 更新函数
    * \note used for cfdemSolverPiso

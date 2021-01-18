@@ -52,6 +52,9 @@ virtualMassForce::~virtualMassForce() {}
 void virtualMassForce::setForce() {
   Info << "Setting virtual mass force..." << endl;
   base::MPI_Barrier();
+  if (cloud_.numberOfParticlesChanged()) {
+    FatalError << "Currently virtualMassForce model not allow number of particle changed\n" << abort(FatalError);
+  }
   UInterpolator_.reset(
       interpolation<Foam::vector>::New(subPropsDict_.lookupOrDefault("UInterpolationType", word("cellPointFace")), U_)
           .ptr());
@@ -64,14 +67,9 @@ void virtualMassForce::setForce() {
                                  cloud_.globalF().ddtU())
           .ptr());
   for (int index = 0; index < cloud_.numberOfParticles(); ++index) {
-    // 只设置 fine and middle 颗粒的虚拟质量力
-    if (cloud_.checkCoarseParticle(index)) {
-      continue;
-    }
     // 虚拟质量力
     Foam::vector virtualMassForce = Foam::vector::zero;
     setForceKernel(index, virtualMassForce);
-    // setMiddleParticleForceKernel(virtualMassForce, index);
     forceSubModel_->partToArray(index, virtualMassForce, Foam::vector::zero, Foam::vector::zero, 0);
   }
   Info << "Setting virtual mass force - done" << endl;
@@ -81,33 +79,38 @@ void virtualMassForce::setForce() {
 void virtualMassForce::setForceKernel(const int index, Foam::vector& virtualMassForce) {
   // 颗粒中心所在网格的索引
   int findCellID = cloud_.findCellIDs()[index];
-  // 获取背景流体ddtU
-  Foam::vector ddtU = getBackgroundDDtU(index, findCellID);
-  // 获取背景流体速度
-  Foam::vector Ufluid = getBackgroundUfluid(index, findCellID);
-  // 获取背景网格空隙率
-  double vf = getBackgroundVoidFraction(index, findCellID);
   // 对于每一个颗粒，只需要一个处理器计算，即颗粒中心所在的处理器
   if (findCellID >= 0) {
-    double dt = cloud_.mesh().time().deltaT().value();     // 时间步长
-    double radius = cloud_.getRadius(index);               // 颗粒半径
-    double diameter = radius;                              // 颗粒直径
-    double rho = cloud_.globalF().rhoField()[findCellID];  // 流体密度
-    double Ac = 0.0;                                       // Ac 系数
-    Foam::vector Up = cloud_.getVelocity(index);           // 颗粒速度
-    Foam::vector prevUp = Foam::vector::zero;              // 上一个时间步颗粒速度
-    Foam::vector ddtUp = Foam::vector::zero;               // 颗粒加速度
-    Foam::vector Ur = Foam::vector::zero;                  // 相对速度
-    Foam::vector ddtUr = Foam::vector::zero;               // 相对加速度
+    double dt = cloud_.mesh().time().deltaT().value();                 // 时间步长
+    double radius = cloud_.getRadius(index);                           // 颗粒半径
+    double diameter = 2 * radius;                                      // 颗粒直径
+    double rho = cloud_.globalF().rhoField()[findCellID];              // 流体密度
+    double Vp = M_PI * diameter * diameter * diameter / 6.0;           // 颗粒体积
+    double Cvm = 0.0;                                                  // virtual mass coefficient
+    double Ac = 0.0;                                                   // used to calculate Cvm
+    double vf = getBackgroundVoidFraction(index, findCellID);          // 背景网格空隙率
+    Foam::vector Ufluid = getBackgroundUfluid(index, findCellID);      // 背景流体速度
+    Foam::vector ddtU = getBackgroundDDtU(index, findCellID);          // 背景流体ddtU
+    Foam::vector Up = cloud_.getVelocity(index);                       // 颗粒速度
+    Foam::vector prevUp = cloud_.globalF().getPrevParticleVel(index);  // 上一个时间步颗粒速度
+    Foam::vector ddtUp = Foam::vector::zero;                           // 颗粒加速度
+    Foam::vector Ur = Foam::vector::zero;                              // 相对速度
+    Foam::vector ddtUr = Foam::vector::zero;                           // 相对加速度
     // 计算颗粒加速度 ddtUp
-    prevUp = cloud_.globalF().getPrevParticleVel(index);
     ddtUp = (Up - prevUp) / dt;
-    // 计算 Ac 系数
+    // 计算相对速度
     Ur = Ufluid - Up;
+    // 计算相对加速度
     ddtUr = ddtU - ddtUp;
+    // 计算 Ac 系数
     Ac = sqr(mag(Ur)) / (diameter * mag(ddtUr));
+#if 0
+    Cvm = 2.1 - 0.132 / (0.12 + Ac * Ac);
+#else
+    Cvm = 1.0;
+#endif
     // 计算虚拟质量力
-    virtualMassForce = (2.0 / 3.0) * M_PI * (2.1 - 0.132 / (0.12 + Ac * Ac)) * pow(diameter, 3) * rho * ddtUr;
+    virtualMassForce = 0.5 * Cvm * Vp * rho * ddtUr;
     if ("B" == cloud_.modelType()) {
       virtualMassForce /= vf;
     }
@@ -118,6 +121,7 @@ void virtualMassForce::setForceKernel(const int index, Foam::vector& virtualMass
       Pout << "ddtUp = " << ddtUp << endl;
       Pout << "ddtUr = " << ddtUr << endl;
       Pout << "Ac = " << Ac << endl;
+      Pout << "Cvm = " << Cvm << endl;
       Pout << "virtual mass force = " << virtualMassForce << endl;
     }
   }
@@ -126,10 +130,7 @@ void virtualMassForce::setForceKernel(const int index, Foam::vector& virtualMass
 //! \brief 计算颗粒 index 处的背景流体的ddtu
 Foam::vector virtualMassForce::getBackgroundDDtU(const int index, const int findCellID) const {
   Foam::vector ddtU = Foam::vector::zero;
-  // 对于 middle 颗粒，使用高斯核函数计算
-  if (forceSubModel_->useGaussCoreFunctionRefined() && cloud_.checkMiddleParticle(index)) {
-    ddtU = cloud_.globalF().getBackgroundDDtU(index);
-  } else if (!cloud_.checkCoarseParticle(index) && findCellID >= 0) {
+  if (findCellID >= 0) {
     if (forceSubModel_->interpolation()) {
       // 获取颗粒中心的坐标, 将颗粒中心所在网格的空隙率和流体速度插值到颗粒中心处
       Foam::vector pos = cloud_.getPosition(index);
@@ -146,10 +147,7 @@ Foam::vector virtualMassForce::getBackgroundDDtU(const int index, const int find
 Foam::vector virtualMassForce::getBackgroundUfluid(const int index, const int findCellID) const {
   // 背景流体速度
   Foam::vector Ufluid = Foam::vector::zero;
-  // 对于 middle 颗粒，使用高斯核函数计算
-  if (forceSubModel_->useGaussCoreFunctionRefined() && cloud_.checkMiddleParticle(index)) {
-    Ufluid = cloud_.globalF().getBackgroundUfluid(index);
-  } else if (!cloud_.checkCoarseParticle(index) && findCellID >= 0) {
+  if (findCellID >= 0) {
     if (forceSubModel_->interpolation()) {
       // 获取颗粒中心的坐标, 将颗粒中心所在网格的空隙率和流体速度插值到颗粒中心处
       Foam::vector pos = cloud_.getPosition(index);
@@ -165,10 +163,7 @@ Foam::vector virtualMassForce::getBackgroundUfluid(const int index, const int fi
 //! \brief 计算颗粒 index 处的背景流体空隙率
 double virtualMassForce::getBackgroundVoidFraction(const int index, const int findCellID) const {
   double vf = 1.0;
-  // 对于 middle 颗粒，使用高斯核函数计算
-  if (forceSubModel_->useGaussCoreFunctionRefined() && cloud_.checkMiddleParticle(index)) {
-    vf = cloud_.globalF().getBackgroundVoidFraction(index);
-  } else if (!cloud_.checkCoarseParticle(index) && findCellID >= 0) {
+  if (findCellID >= 0) {
     if (forceSubModel_->interpolation()) {
       // 获取颗粒中心的坐标, 将颗粒中心所在网格的空隙率和流体速度插值到颗粒中心处
       Foam::vector pos = cloud_.getPosition(index);
@@ -182,77 +177,6 @@ double virtualMassForce::getBackgroundVoidFraction(const int index, const int fi
     }
   }
   return vf;
-}
-
-void virtualMassForce::setMiddleParticleForceKernel(Foam::vector& virtualMassForce, const int index) {
-  int findCellID = cloud_.findCellIDs()[index];
-  if (findCellID >= 0) {
-    std::unordered_set<int> set;                           // 颗粒扩展网格的集合
-    double dt = cloud_.mesh().time().deltaT().value();     // 时间步长
-    double radius = cloud_.getRadius(index);               // 颗粒半径
-    double diameter = radius;                              // 颗粒直径
-    double rho = cloud_.globalF().rhoField()[findCellID];  // 流体密度
-    double vf = 0.0;                                       // 流体空隙率
-    double Ac = 0.0;                                       // Ac 系数
-    Foam::vector particlePos = cloud_.getPosition(index);  // 颗粒中心坐标
-    Foam::vector Up = cloud_.getVelocity(index);           // 颗粒速度
-    Foam::vector prevUp = Foam::vector::zero;              // 上一个时间步颗粒速度
-    Foam::vector UFluid = Foam::vector::zero;              // 背景流体速度
-    Foam::vector ddtU = Foam::vector::zero;                // 背景流体加速度
-    Foam::vector ddtUp = Foam::vector::zero;               // 颗粒加速度
-    Foam::vector Ur = Foam::vector::zero;                  // 相对速度
-    Foam::vector ddtUr = Foam::vector::zero;               // 相对加速度
-    // 获取当前颗粒的 Expanded Cell 集合
-    cloud_.voidFractionM().buildExpandedCellSet(set, findCellID, particlePos, radius, 6);
-    // 计算背景流体速度与背景流体加速度
-    double sumCore = 0.0;
-    double core = 0.0;
-    double cellV = 0.0;
-    double sumPV = 0.0;
-    double sumCV = 0.0;
-    Foam::vector cellPos = Foam::vector::zero;
-    for (int cellID : set) {
-      if (cellID >= 0) {  // cell found
-        cellPos = cloud_.mesh().C()[cellID];
-        cellV = cloud_.mesh().V()[cellID];
-        // 计算高斯核
-        core = globalForce::GaussCore(particlePos, cellPos, radius, 6);
-        // 计算累计速度
-        UFluid += voidFraction_[cellID] * U_[cellID] * core * cellV;
-        // 计算累计加速度
-        ddtU += voidFraction_[cellID] * cloud_.globalF().ddtU()[cellID] * core * cellV;
-        // 计算累加因数
-        sumCore += voidFraction_[cellID] * core * cellV;
-        // 计算累加流体体积
-        sumPV += voidFraction_[cellID] * cellV;
-        // 计算累加网格体积
-        sumCV += cellV;
-      }
-    }
-    UFluid /= sumCore;
-    ddtU /= sumCore;
-    vf = sumPV / sumCV;
-    // 计算颗粒加速度 ddtUp
-    prevUp = cloud_.globalF().getPrevParticleVel(index);
-    ddtUp = (Up - prevUp) / dt;
-    // 计算 Ac 系数
-    Ur = UFluid - Up;
-    ddtUr = ddtU - ddtUp;
-    Ac = sqr(mag(Ur)) / (diameter * mag(ddtUr));
-    // 计算虚拟质量力
-    virtualMassForce = (2.0 / 3.0) * M_PI * (2.1 - 0.132 / (0.12 + Ac * Ac)) * pow(diameter, 3) * rho * ddtUr;
-    if ("B" == cloud_.modelType()) {
-      virtualMassForce /= vf;
-    }
-    if (forceSubModel_->verbose()) {
-      Pout << "vf = " << vf << endl;
-      Pout << "ddtU = " << ddtU << endl;
-      Pout << "ddtUp = " << ddtUp << endl;
-      Pout << "ddtUr = " << ddtUr << endl;
-      Pout << "Ac = " << Ac << endl;
-      Pout << "virtual mass force = " << virtualMassForce << endl;
-    }
-  }
 }
 
 }  // namespace Foam

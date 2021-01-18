@@ -10,7 +10,7 @@ boundary        f f f
 newton          off
 
 units           si
-processors      2 2 1
+processors      1 1 2
 
 region          reg block 0.0 0.1 0.0 0.1 0.0 0.16 units box
 create_box      1 reg
@@ -31,7 +31,7 @@ pair_style      gran model hertz tangential history
 
 #Hertzian without cohesion
 pair_coeff      * *
- 
+
 # timestep, gravity
 timestep        0.00001
 
@@ -46,7 +46,7 @@ fix     zwalls1 all wall/gran model hertz tangential history primitive type 1 zp
 fix     zwalls2 all wall/gran model hertz tangential history primitive type 1 zplane 0.16
 
 # cfd coupling
-fix     cfd  all couple/cfd couple_every 5 mpi
+fix     cfd  all couple/cfd couple_every 50 mpi
 fix     cfd2 all couple/cfd/force
 
 # create single partciles
@@ -61,8 +61,8 @@ variable        y1 equal y[1]
 variable        z1 equal z[1]
 variable        time equal step*dt
 
-fix             extra1 all print 200 "${time} ${vx1} ${vy1} ${vz1}" file ../DEM/post/velocity_particle_1.txt title "%" screen no
-fix             extra2 all print 200 "${time} ${x1}  ${y1}  ${z1}"  file ../DEM/post/position_particle_1.txt title "%" screen no
+fix             extra1 all print 1000 "${time} ${vx1} ${vy1} ${vz1}" file ../DEM/post/velocity_particle_1.txt title "%" screen no
+fix             extra2 all print 1000 "${time} ${x1}  ${y1}  ${z1}"  file ../DEM/post/position_particle_1.txt title "%" screen no
 
 # apply nve integration to all particles that are inserted as single particles
 fix             integr all nve/sphere  #wenn das ausgeblendet, dann kein vel update

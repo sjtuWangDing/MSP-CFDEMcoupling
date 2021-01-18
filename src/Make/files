@@ -27,12 +27,15 @@ $(sub_model)/force_model/Archimedes_IB.C
 $(sub_model)/force_model/Archimedes_IB_test.C
 $(sub_model)/force_model/Shirgaonkar_IB.C
 $(sub_model)/force_model/Archimedes.C
-$(sub_model)/force_model/DiFeliceDrag.C
+$(sub_model)/force_model/DiFelice_drag.C
 $(sub_model)/force_model/visc_force.C
 $(sub_model)/force_model/grad_p_force.C
 $(sub_model)/force_model/virtual_mass_force.C
 $(sub_model)/force_model/Basset_force.C
-$(sub_model)/force_model/drag_force.C
+$(sub_model)/force_model/mix_global_force.C
+$(sub_model)/force_model/mix_drag_force.C
+$(sub_model)/force_model/mix_virtual_mass_force.C
+$(sub_model)/force_model/mix_Basset_force.C
 
 $(sub_model)/liggghts_command_model/liggghts_command_model.C
 $(sub_model)/liggghts_command_model/run_liggghts.C

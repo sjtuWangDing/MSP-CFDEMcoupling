@@ -51,10 +51,6 @@ class BassetForce : public forceModel {
  protected:
   void setForceKernel(const int index, Foam::vector& BstForce);
 
-  void updatePrevUp(const int index);
-
-  void updateDDtUrHistory(const int index);
-
   //! \brief 计算颗粒 index 处的背景流体的ddtu
   Foam::vector getBackgroundDDtU(const int index, const int findCellID) const;
 
@@ -67,15 +63,6 @@ class BassetForce : public forceModel {
  private:
   //! \note subPropsDict_ should be declared in front of other members
   dictionary subPropsDict_;
-
-  //! \note 初始时刻的相对速度 initUr_ = Ufluid - Up
-  Foam::vector initUr_;
-
-  //! \brief 记录每一个颗粒的上一个耦合时间步的速度
-  std::unordered_map<int, Foam::vector> prevUpMap_;
-
-  //! \brief 记录每一个颗粒的历史 (dU / dt - dV / dt)
-  std::unordered_map<int, std::vector<Foam::vector>> DDtUrHistoryMap_;
 
   const volVectorField& U_;
 

@@ -25,7 +25,7 @@ License
   Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 \*---------------------------------------------------------------------------*/
 
-#include "./DiFeliceDrag.h"
+#include "./DiFelice_drag.h"
 
 namespace Foam {
 
@@ -113,6 +113,7 @@ void DiFeliceDrag::setForce() {
       Cd = 0.0;
       dragCoefficient = 0.0;
       if (magUr > 0) {
+#if 0
         // 计算颗粒雷诺数
         pRe = diameter * vf * magUr / (nuf + Foam::SMALL);
         // 计算流体阻力系数
@@ -121,6 +122,12 @@ void DiFeliceDrag::setForce() {
         Xi = 3.7 - 0.65 * exp(-sqr(1.5 - log10(pRe)) / 2.0);
         // 计算颗粒阻力系数
         dragCoefficient = 0.125 * Cd * rho * M_PI * diameter * diameter * pow(vf, (2 - Xi)) * magUr;
+#elif 1
+        // Schiller Naumann Drag
+        pRe = diameter * vf * magUr / (nuf + Foam::SMALL);
+        Cd = pRe >= 1000 ? 0.44 : 24.0 * (1 + 0.15 * pow(pRe, 0.687)) / pRe;
+        dragCoefficient = 0.125 * Cd * rho * M_PI * diameter * diameter * magUr;
+#endif
         if ("B" == cloud_.modelType()) {
           dragCoefficient /= vf;
         }

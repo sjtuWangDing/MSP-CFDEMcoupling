@@ -95,6 +95,26 @@ class cfdemCloud {
 
   virtual void printParticleInfo() const;
 
+  virtual double expandedCellScale() const {
+    FatalError << __func__ << " not implement in Foam::cfdemCloud, please use Foam::cfdemCloudMix" << abort(FatalError);
+    return 0.0;
+  }
+
+  virtual bool checkFineParticle(int index) const {
+    FatalError << __func__ << " not implement in Foam::cfdemCloud, please use Foam::cfdemCloudMix" << abort(FatalError);
+    return false;
+  }
+
+  virtual bool checkMiddleParticle(int index) const {
+    FatalError << __func__ << " not implement in Foam::cfdemCloud, please use Foam::cfdemCloudMix" << abort(FatalError);
+    return false;
+  }
+
+  virtual bool checkCoarseParticle(int index) const {
+    FatalError << __func__ << " not implement in Foam::cfdemCloud, please use Foam::cfdemCloudMix" << abort(FatalError);
+    return false;
+  }
+
   /*!
    * \brief 更新函数
    * \note used for cfdemSolverPiso
@@ -208,14 +228,6 @@ class cfdemCloud {
   inline const Foam::vector& periodicCheckRange() const { return cProps_.periodicCheckRange(); }
 
   inline const std::string& ddtVoidFractionType() const { return cProps_.ddtVoidFractionType(); }
-
-  inline double expandedCellScale() const { return cProps_.expandedCellScale(); }
-
-  inline bool checkFineParticle(int index) const { return cProps_.checkFineParticle(getDimensionRatio(index)); }
-
-  inline bool checkMiddleParticle(int index) const { return cProps_.checkMiddleParticle(getDimensionRatio(index)); }
-
-  inline bool checkCoarseParticle(int index) const { return cProps_.checkCoarseParticle(getDimensionRatio(index)); }
 
   /* ------------------------- interface of particleCloud ------------------------------- */
 

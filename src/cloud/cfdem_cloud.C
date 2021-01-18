@@ -60,7 +60,7 @@ cfdemCloud::cfdemCloud(const fvMesh& mesh)
       writeTimePassed_(false),
       meshHasUpdated_(false),
       validCouplingStep_(false),
-      globalForce_(new globalForce(*this)),
+      globalForce_(globalForce::New(*this, couplingPropertiesDict_)),
       dataExchangeModel_(dataExchangeModel::New(*this, couplingPropertiesDict_)),
       voidFractionModel_(voidFractionModel::New(*this, couplingPropertiesDict_)),
       locateModel_(locateModel::New(*this, couplingPropertiesDict_)),
@@ -138,6 +138,7 @@ void cfdemCloud::reallocate() {
   parCloud_.dimensionRatios() = std::move(base::CDTensor1(base::makeShape1(number), -1.0));
   parCloud_.impForces() = std::move(base::CDTensor2(base::makeShape2(number, 3), 0.0));
   parCloud_.expForces() = std::move(base::CDTensor2(base::makeShape2(number, 3), 0.0));
+  parCloud_.particleRootProcIDs() = std::move(base::CITensor1(base::makeShape1(number), -1));
 }
 
 void cfdemCloud::getDEMData() {
@@ -248,8 +249,6 @@ void cfdemCloud::evolve(volVectorField& U, volScalarField& voidF, volVectorField
     getDEMData();
     // 获取到在当前 processor 上颗粒覆盖的某一个网格编号，如果获取到的网格编号为 -1，则表示颗粒不覆盖当前 processor
     locateM().findCell(parCloud_.findCellIDs());
-    // 计算颗粒尺度
-    voidFractionM().getDimensionRatios(parCloud_.dimensionRatios());
     // 计算颗粒空隙率
     voidFractionM().setVoidFraction();
     voidF = voidFractionM().voidFractionInterp();
@@ -257,10 +256,14 @@ void cfdemCloud::evolve(volVectorField& U, volScalarField& voidF, volVectorField
     averagingM().setVectorFieldAverage(averagingM().UsNext(), averagingM().UsWeightField(), velocities(),
                                        particleWeights());
     Us = averagingM().UsInterp();
+    // global force init
+    globalF().initBeforeSetForce();
     // 计算流体对颗粒的作用力
     for (const auto& ptr : forceModels_) {
       ptr->setForce();
     }
+    // global force end
+    globalF().endAfterSetForce();
     // 计算局部累加的流体作用力场
     averagingM().setVectorFieldSum(globalF().impParticleForce(), impForces(), particleWeights());
     // write DEM data

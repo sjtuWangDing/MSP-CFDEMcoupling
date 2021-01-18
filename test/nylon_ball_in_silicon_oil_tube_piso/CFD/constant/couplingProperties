@@ -22,14 +22,22 @@ FoamFile
 
 modelType B; // A or B
 
-couplingInterval 5;
+couplingInterval 50;
+
+expandedCellScale 6;
 
 allowUseSubCFDTimeStep false;
+
+globalForce globalForce;
 
 forceModels
 (
   Archimedes
   DiFeliceDrag
+  virtualMassForce
+  BassetForce
+  // viscForce
+  // gradPForce
 );
 
 momCoupleModels
@@ -37,9 +45,9 @@ momCoupleModels
   implicitCouple
 );
 
-voidFractionModel divided; // divided centre
+voidFractionModel divided; // divided, centre, mix
 
-locateModel engine;
+locateModel engine; // engine, engineIB, engineMix
 
 meshMotionModel noMeshMotion;
 
@@ -58,10 +66,21 @@ implicitCoupleProps
   voidFractionFieldName "voidFraction";
 }
 
+"(globalForceProps|mixGlobalForceProps)"
+{
+  velFieldName "U";
+  voidFractionFieldName "voidFraction";
+  gravityFieldName "g";
+}
+
+ArchimedesProps
+{
+  verbose true;
+}
+
 DiFeliceDragProps
 {
   velFieldName "U";
-  granVelFieldName "Us";
   voidFractionFieldName "voidFraction";
   treatForceExplicitInMomEquation false;
   treatForceBothCFDAndDEM true;
@@ -72,10 +91,44 @@ DiFeliceDragProps
   // nu [0 2 -1 0 0 0 0] 1e-04;
 }
 
-ArchimedesProps
+virtualMassForceProps
 {
-  densityFieldName "rho";
-  gravityFieldName "g";
+  treatForceExplicitInMomEquation false;
+  treatForceBothCFDAndDEM true;
+  treatDEMForceImplicit false;
+  verbose true;
+  interpolation false;
+  scalarViscosity false;
+}
+
+BassetForceProps
+{
+  treatForceExplicitInMomEquation false;
+  treatForceBothCFDAndDEM true;
+  treatDEMForceImplicit false;
+  verbose true;
+  interpolation false;
+  scalarViscosity false;
+}
+
+viscForceProps
+{
+  velFieldName "U";
+  treatForceExplicitInMomEquation true;
+  treatForceBothCFDAndDEM false;
+  treatDEMForceImplicit false;
+  verbose true;
+  interpolation false;
+}
+
+gradPForceProps
+{
+  pressureFieldName "p";
+  treatForceExplicitInMomEquation true;
+  treatForceBothCFDAndDEM false;
+  treatDEMForceImplicit false;
+  verbose true;
+  interpolation false;
 }
 
 twoWayMPIProps
@@ -84,6 +137,12 @@ twoWayMPIProps
 }
 
 dividedProps
+{
+  alphaMin 0.3;
+  scaleUpVol 1.0;
+}
+
+mixProps
 {
   alphaMin 0.3;
   scaleUpVol 1.0;
@@ -104,4 +163,11 @@ bigParticleProps
 engineProps
 {
   treeSearch false;
+}
+
+engineMixProps
+{
+  treeSearch true;
+  zSplit 8;
+  xySplit 16;
 }

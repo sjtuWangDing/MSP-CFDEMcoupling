@@ -16,7 +16,7 @@ FoamFile
 
 transportModel  Newtonian;
 
-nu              nu [ 0 2 -1 0 0 0 0 ] 6.04167e-5;
+nu              nu [ 0 2 -1 0 0 0 0 ] 0.0000604167;
 
 CrossPowerLawCoeffs
 {

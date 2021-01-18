@@ -63,6 +63,10 @@ class engineSearch : public locateModel {
    */
   void findCell(const base::CITensor1& findCellIDs) const;
 
+  //! \brief 每个颗粒中心只可能位于一个网格中，但是如果颗粒位于处理器边界上，则颗粒会被边界两边的处理器都捕获到
+  //!   所以该函数会确保所有颗粒只被一个处理器捕获到
+  void uniqueFindCell(const base::CITensor1& findCellIDs) const;
+
   /*!
    * \brief use search engine to get id of cell which covered by processor
    * \param findMpiCellIDs 颗粒覆盖当前求解器上任意一个网格的编号
