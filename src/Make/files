@@ -32,7 +32,7 @@ $(sub_model)/force_model/visc_force.C
 $(sub_model)/force_model/grad_p_force.C
 $(sub_model)/force_model/virtual_mass_force.C
 $(sub_model)/force_model/Basset_force.C
-$(sub_model)/force_model/mix_DiFelice_drag.C
+$(sub_model)/force_model/drag_force.C
 
 $(sub_model)/liggghts_command_model/liggghts_command_model.C
 $(sub_model)/liggghts_command_model/run_liggghts.C

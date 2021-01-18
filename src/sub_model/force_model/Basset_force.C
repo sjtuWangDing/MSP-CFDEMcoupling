@@ -139,8 +139,10 @@ void BassetForce::setForceKernel(const int index, Foam::vector& BstForce) {
 //! \brief 计算颗粒 index 处的背景流体的ddtu
 Foam::vector BassetForce::getBackgroundDDtU(const int index, const int findCellID) const {
   Foam::vector ddtU = Foam::vector::zero;
-  // 如果是 fine 颗粒，则需要保证 findCellID >= 0
-  if (cloud_.checkFineParticle(index) && findCellID >= 0) {
+  // 对于 middle 颗粒，使用高斯核函数计算
+  if (forceSubModel_->useGaussCoreFunctionRefined() && cloud_.checkMiddleParticle(index)) {
+    ddtU = cloud_.globalF().getBackgroundDDtU(index);
+  } else if (!cloud_.checkCoarseParticle(index) && findCellID >= 0) {
     if (forceSubModel_->interpolation()) {
       // 获取颗粒中心的坐标, 将颗粒中心所在网格的空隙率和流体速度插值到颗粒中心处
       Foam::vector pos = cloud_.getPosition(index);
@@ -149,8 +151,6 @@ Foam::vector BassetForce::getBackgroundDDtU(const int index, const int findCellI
       // 不使用插值模型，直接设置颗粒中心处的值为颗粒中心所在网格的值
       ddtU = cloud_.globalF().ddtU()[findCellID];
     }
-  } else if (cloud_.checkMiddleParticle(index)) {
-    ddtU = cloud_.globalF().getBackgroundDDtU(index);
   }
   return ddtU;
 }
@@ -159,8 +159,10 @@ Foam::vector BassetForce::getBackgroundDDtU(const int index, const int findCellI
 Foam::vector BassetForce::getBackgroundUfluid(const int index, const int findCellID) const {
   // 背景流体速度
   Foam::vector Ufluid = Foam::vector::zero;
-  // 如果是 fine 颗粒，则需要保证 findCellID >= 0
-  if (cloud_.checkFineParticle(index) && findCellID >= 0) {
+  // 对于 middle 颗粒，使用高斯核函数计算
+  if (forceSubModel_->useGaussCoreFunctionRefined() && cloud_.checkMiddleParticle(index)) {
+    Ufluid = cloud_.globalF().getBackgroundUfluid(index);
+  } else if (!cloud_.checkCoarseParticle(index) && findCellID >= 0) {
     if (forceSubModel_->interpolation()) {
       // 获取颗粒中心的坐标, 将颗粒中心所在网格的空隙率和流体速度插值到颗粒中心处
       Foam::vector pos = cloud_.getPosition(index);
@@ -169,8 +171,6 @@ Foam::vector BassetForce::getBackgroundUfluid(const int index, const int findCel
       // 不使用插值模型，直接设置颗粒中心处的值为颗粒中心所在网格的值
       Ufluid = U_[findCellID];
     }
-  } else if (cloud_.checkMiddleParticle(index)) {
-    Ufluid = cloud_.globalF().getBackgroundUfluid(index);
   }
   return Ufluid;
 }
@@ -178,8 +178,10 @@ Foam::vector BassetForce::getBackgroundUfluid(const int index, const int findCel
 //! \brief 计算颗粒 index 处的背景流体空隙率
 double BassetForce::getBackgroundVoidFraction(const int index, const int findCellID) const {
   double vf = 1.0;
-  // 如果是 fine 颗粒，则需要保证 findCellID >= 0
-  if (cloud_.checkFineParticle(index) && findCellID >= 0) {
+  // 对于 middle 颗粒，使用高斯核函数计算
+  if (forceSubModel_->useGaussCoreFunctionRefined() && cloud_.checkMiddleParticle(index)) {
+    vf = cloud_.globalF().getBackgroundVoidFraction(index);
+  } else if (!cloud_.checkCoarseParticle(index) && findCellID >= 0) {
     if (forceSubModel_->interpolation()) {
       // 获取颗粒中心的坐标, 将颗粒中心所在网格的空隙率和流体速度插值到颗粒中心处
       Foam::vector pos = cloud_.getPosition(index);
@@ -191,8 +193,6 @@ double BassetForce::getBackgroundVoidFraction(const int index, const int findCel
       // 不使用插值模型，直接设置颗粒中心处的值为颗粒中心所在网格的值
       vf = voidFraction_[findCellID];
     }
-  } else if (cloud_.checkMiddleParticle(index)) {
-    vf = cloud_.globalF().getBackgroundVoidFraction(index);
   }
   return vf;
 }

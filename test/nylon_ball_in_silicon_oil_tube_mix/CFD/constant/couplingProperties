@@ -29,7 +29,7 @@ allowUseSubCFDTimeStep false;
 forceModels
 (
   Archimedes
-  mixDiFeliceDrag
+  dragForce
   virtualMassForce
   BassetForce
   // viscForce
@@ -69,17 +69,43 @@ globalForceProps
   gravityFieldName "g";
 }
 
-"(DiFeliceDragProps|mixDiFeliceDragProps)"
+ArchimedesProps
 {
-  velFieldName "U";
-  voidFractionFieldName "voidFraction";
+  verbose true;
+}
+
+dragForceProps
+{
   treatForceExplicitInMomEquation false;
   treatForceBothCFDAndDEM true;
   treatDEMForceImplicit false;
   verbose true;
   interpolation false;
-  // scalarViscosity true;
+  scalarViscosity false;
+  useGaussCoreFunctionRefined true;
   // nu [0 2 -1 0 0 0 0] 1e-04;
+}
+
+virtualMassForceProps
+{
+  treatForceExplicitInMomEquation false;
+  treatForceBothCFDAndDEM true;
+  treatDEMForceImplicit false;
+  verbose true;
+  interpolation false;
+  scalarViscosity false;
+  useGaussCoreFunctionRefined true;
+}
+
+BassetForceProps
+{
+  treatForceExplicitInMomEquation false;
+  treatForceBothCFDAndDEM true;
+  treatDEMForceImplicit false;
+  verbose true;
+  interpolation false;
+  scalarViscosity false;
+  useGaussCoreFunctionRefined true;
 }
 
 viscForceProps
@@ -102,30 +128,17 @@ gradPForceProps
   interpolation false;
 }
 
-virtualMassForceProps
-{
-  treatForceExplicitInMomEquation false;
-  treatForceBothCFDAndDEM true;
-  treatDEMForceImplicit false;
-  verbose true;
-  interpolation false;
-}
-
-BassetForceProps
+DiFeliceDragProps
 {
   velFieldName "U";
   voidFractionFieldName "voidFraction";
-  phiFieldName_ "phi";
   treatForceExplicitInMomEquation false;
   treatForceBothCFDAndDEM true;
   treatDEMForceImplicit false;
   verbose true;
   interpolation false;
-}
-
-ArchimedesProps
-{
-  verbose true;
+  // scalarViscosity true;
+  // nu [0 2 -1 0 0 0 0] 1e-04;
 }
 
 twoWayMPIProps

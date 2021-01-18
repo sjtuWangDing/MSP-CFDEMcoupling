@@ -25,20 +25,20 @@ License
   Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 \*---------------------------------------------------------------------------*/
 
-#include "./mix_DiFelice_drag.h"
+#include "./drag_force.h"
 #include "mpi.h"
 
 namespace Foam {
 
-cfdemDefineTypeName(mixDiFeliceDrag);
+cfdemDefineTypeName(dragForce);
 
-cfdemCreateNewFunctionAdder(forceModel, mixDiFeliceDrag);
+cfdemCreateNewFunctionAdder(forceModel, dragForce);
 
 /*!
  * \brief Constructor
  * \note The initialization list should be in the same order as the variable declaration
  */
-mixDiFeliceDrag::mixDiFeliceDrag(cfdemCloud& cloud)
+dragForce::dragForce(cfdemCloud& cloud)
     : forceModel(cloud),
       subPropsDict_(cloud.couplingPropertiesDict().subDict(typeName_ + "Props")),
       U_(cloud.globalF().U()),
@@ -46,10 +46,10 @@ mixDiFeliceDrag::mixDiFeliceDrag(cfdemCloud& cloud)
   createForceSubModels(subPropsDict_, kUnResolved);
 }
 
-mixDiFeliceDrag::~mixDiFeliceDrag() {}
+dragForce::~dragForce() {}
 
-void mixDiFeliceDrag::setForce() {
-  Info << "Setting mix DiFelice drag force..." << endl;
+void dragForce::setForce() {
+  Info << "Setting drag force..." << endl;
   base::MPI_Barrier();
   double dragCoefficient = 0.0;              // 阻力系数
   Foam::vector Ufluid = Foam::vector::zero;  // 背景流体速度
@@ -75,11 +75,10 @@ void mixDiFeliceDrag::setForce() {
     // write particle data to global array
     forceSubModel_->partToArray(index, drag, Foam::vector::zero, Ufluid, dragCoefficient);
   }
-  Info << "Setting mix DiFelice drag force - done" << endl;
+  Info << "Setting drag force - done" << endl;
 }
 
-void mixDiFeliceDrag::setForceKernel(const int index, Foam::vector& drag, Foam::vector& Ufluid,
-                                     double& dragCoefficient) {
+void dragForce::setForceKernel(const int index, Foam::vector& drag, Foam::vector& Ufluid, double& dragCoefficient) {
   // 颗粒中心所在网格的索引
   int findCellID = cloud_.findCellIDs()[index];
   // 获取背景流体速度
@@ -169,20 +168,11 @@ void mixDiFeliceDrag::setForceKernel(const int index, Foam::vector& drag, Foam::
 }
 
 //! \brief 计算颗粒 index 处的背景流体速度
-Foam::vector mixDiFeliceDrag::getBackgroundUfluid(const int index, const int findCellID) const {
+Foam::vector dragForce::getBackgroundUfluid(const int index, const int findCellID) const {
   // 背景流体速度
   Foam::vector Ufluid = Foam::vector::zero;
-  // 如果是 fine 颗粒，则需要保证 findCellID >= 0
-  if (cloud_.checkFineParticle(index) && findCellID >= 0) {
-    if (forceSubModel_->interpolation()) {
-      // 获取颗粒中心的坐标, 将颗粒中心所在网格的空隙率和流体速度插值到颗粒中心处
-      Foam::vector pos = cloud_.getPosition(index);
-      Ufluid = UInterpolator_().interpolate(pos, findCellID);
-    } else {
-      // 不使用插值模型，直接设置颗粒中心处的值为颗粒中心所在网格的值
-      Ufluid = U_[findCellID];
-    }
-  } else if (cloud_.checkMiddleParticle(index)) {
+  // 对于 middle 颗粒，使用高斯核函数计算
+  if (forceSubModel_->useGaussCoreFunctionRefined() && cloud_.checkMiddleParticle(index)) {
 #if 1
     Ufluid = cloud_.globalF().getBackgroundUfluid(index);
 #else
@@ -212,27 +202,24 @@ Foam::vector mixDiFeliceDrag::getBackgroundUfluid(const int index, const int fin
       Ufluid /= sumCore;
     }
 #endif
+  } else if (!cloud_.checkCoarseParticle(index) && findCellID >= 0) {
+    if (forceSubModel_->interpolation()) {
+      // 获取颗粒中心的坐标, 将颗粒中心所在网格的空隙率和流体速度插值到颗粒中心处
+      Foam::vector pos = cloud_.getPosition(index);
+      Ufluid = UInterpolator_().interpolate(pos, findCellID);
+    } else {
+      // 不使用插值模型，直接设置颗粒中心处的值为颗粒中心所在网格的值
+      Ufluid = U_[findCellID];
+    }
   }
   return Ufluid;
 }
 
 //! \brief 计算颗粒 index 处的背景流体空隙率
-double mixDiFeliceDrag::getBackgroundVoidFraction(const int index, const int findCellID) const {
+double dragForce::getBackgroundVoidFraction(const int index, const int findCellID) const {
   double vf = 1.0;
-  // 如果是 fine 颗粒，则需要保证 findCellID >= 0
-  if (cloud_.checkFineParticle(index) && findCellID >= 0) {
-    if (forceSubModel_->interpolation()) {
-      // 获取颗粒中心的坐标, 将颗粒中心所在网格的空隙率和流体速度插值到颗粒中心处
-      Foam::vector pos = cloud_.getPosition(index);
-      vf = voidFractionInterpolator_().interpolate(pos, findCellID);
-      // 确保插值后颗粒中心的空隙率有意义
-      vf = vf > 1.0 ? 1.0 : vf;
-      vf = vf < Foam::SMALL ? Foam::SMALL : vf;
-    } else {
-      // 不使用插值模型，直接设置颗粒中心处的值为颗粒中心所在网格的值
-      vf = voidFraction_[findCellID];
-    }
-  } else if (cloud_.checkMiddleParticle(index)) {
+  // 对于 middle 颗粒，使用高斯核函数计算
+  if (forceSubModel_->useGaussCoreFunctionRefined() && cloud_.checkMiddleParticle(index)) {
 #if 1
     vf = cloud_.globalF().getBackgroundVoidFraction(index);
 #else
@@ -258,6 +245,18 @@ double mixDiFeliceDrag::getBackgroundVoidFraction(const int index, const int fin
       vf = sumPV / sumCV;
     }
 #endif
+  } else if (!cloud_.checkCoarseParticle(index) && findCellID >= 0) {
+    if (forceSubModel_->interpolation()) {
+      // 获取颗粒中心的坐标, 将颗粒中心所在网格的空隙率和流体速度插值到颗粒中心处
+      Foam::vector pos = cloud_.getPosition(index);
+      vf = voidFractionInterpolator_().interpolate(pos, findCellID);
+      // 确保插值后颗粒中心的空隙率有意义
+      vf = vf > 1.0 ? 1.0 : vf;
+      vf = vf < Foam::SMALL ? Foam::SMALL : vf;
+    } else {
+      // 不使用插值模型，直接设置颗粒中心处的值为颗粒中心所在网格的值
+      vf = voidFraction_[findCellID];
+    }
   }
   return vf;
 }

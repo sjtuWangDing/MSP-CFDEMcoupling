@@ -25,26 +25,26 @@ License
   Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 \*---------------------------------------------------------------------------*/
 
-#ifndef __MIX_DIFELICE_DRAG_H__
-#define __MIX_DIFELICE_DRAG_H__
+#ifndef __DRAG_FORCE_H__
+#define __DRAG_FORCE_H__
 
 #include <unordered_set>
 #include "./force_model.h"
 
 namespace Foam {
 
-class mixDiFeliceDrag : public forceModel {
+class dragForce : public forceModel {
  public:
   //! \brief Runtime type information
-  cfdemTypeName("mixDiFeliceDrag");
+  cfdemTypeName("dragForce");
 
-  cfdemDefineNewFunctionAdder(forceModel, mixDiFeliceDrag);
+  cfdemDefineNewFunctionAdder(forceModel, dragForce);
 
   //! \brief Constructor
-  mixDiFeliceDrag(cfdemCloud& cloud);
+  dragForce(cfdemCloud& cloud);
 
   //! \brief Destructor
-  ~mixDiFeliceDrag();
+  ~dragForce();
 
   void setForce();
 
@@ -68,4 +68,4 @@ class mixDiFeliceDrag : public forceModel {
 
 }  // namespace Foam
 
-#endif  // __MIX_DIFELICE_DRAG_H__
+#endif  // __DRAG_FORCE_H__

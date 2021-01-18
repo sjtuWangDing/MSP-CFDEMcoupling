@@ -37,14 +37,15 @@ Class
 
 namespace Foam {
 
-const int forceSubModel::Switches::kNum = 6;
+const int forceSubModel::Switches::kNum = 7;
 
 const char* forceSubModel::Switches::kNameList[] = {"treatForceExplicitInMomEquation",
                                                     "treatForceBothCFDAndDEM",
                                                     "treatDEMForceImplicit",
                                                     "verbose",
                                                     "interpolation",
-                                                    "scalarViscosity"};
+                                                    "scalarViscosity",
+                                                    "useGaussCoreFunctionRefined"};
 
 //! \brief Constructor
 forceSubModel::forceSubModel(cfdemCloud& cloud, forceModel& forceModel, const dictionary& subPropsDict)

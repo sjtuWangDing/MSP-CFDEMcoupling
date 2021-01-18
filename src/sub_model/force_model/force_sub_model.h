@@ -80,7 +80,13 @@ enum ESwitch {
    *   true - 使用用户自定义动力粘度 nu 进行阻力计算，CFD 计算仍然使用 transportDict 指定的动力粘度
    *   false - 不使用用户自定义动力粘度 nu 进行阻力计算 (default)
    */
-  kScalarViscosity
+  kScalarViscosity,
+  /*!
+   * \brief kUseGaussCoreFunctionRefined
+   *   true - 对于middel尺度的颗粒，使用高斯核函数修正
+   *   false - 不使用高斯核函数修正
+   */
+  kUseGaussCoreFunctionRefined
 };
 
 //! \brief force type enum
@@ -133,6 +139,9 @@ class forceSubModel {
         case kScalarViscosity:
           value_ |= (1 << kScalarViscosity);
           break;
+        case kUseGaussCoreFunctionRefined:
+          value_ |= (1 << kUseGaussCoreFunctionRefined);
+          break;
         default:
           FatalError << "Error: illegal switch enum: " << value << " in forceSubModel" << abort(FatalError);
       }
@@ -151,6 +160,8 @@ class forceSubModel {
           return value_ & (1 << kInterpolation);
         case kScalarViscosity:
           return value_ & (1 << kScalarViscosity);
+        case kUseGaussCoreFunctionRefined:
+          return value_ & (1 << kUseGaussCoreFunctionRefined);
         default:
           FatalError << "Error: illegal switch enum: " << value << " in forceSubModel" << abort(FatalError);
       }
@@ -236,6 +247,8 @@ class forceSubModel {
   inline bool interpolation() const { return switches_.isTrue(kInterpolation); }
 
   inline bool scalarViscosity() const { return switches_.isTrue(kScalarViscosity); }
+
+  inline bool useGaussCoreFunctionRefined() const { return switches_.isTrue(kUseGaussCoreFunctionRefined); }
 
  protected:
   cfdemCloud& cloud_;
