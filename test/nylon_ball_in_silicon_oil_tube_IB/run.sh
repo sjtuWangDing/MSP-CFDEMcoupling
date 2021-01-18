@@ -22,13 +22,16 @@ logPath=$casePath
 logFileName="log_mpirun_$numberOfProcs_$solverName"
 
 # block mesh
-if [ -f "$casePath/CFD/constant/polyMesh/points" ]; then
-  echo "blockMesh: mesh was built before and using old mesh"
-else
-  echo "blockMesh: mesh needs to be built"
-  cd $casePath/CFD
-  blockMesh
+# if [ -f "$casePath/CFD/constant/polyMesh/points" ]; then
+#   echo "blockMesh: mesh was built before and using old mesh"
+# fi
+if [ -d "$casePath/CFD/constant/polyMesh/" ]; then
+  echo "blockMesh: remove mesh..."
+  rm -r $casePath/CFD/constant/polyMesh/
 fi
+echo "blockMesh: mesh will be built..."
+cd $casePath/CFD
+blockMesh
 
 # add post dir to DEM
 if [ ! -d "$casePath/DEM/post" ]; then
