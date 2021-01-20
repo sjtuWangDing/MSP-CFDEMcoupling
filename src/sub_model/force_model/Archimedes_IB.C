@@ -40,18 +40,8 @@ cfdemCreateNewFunctionAdder(forceModel, ArchimedesIB);
 ArchimedesIB::ArchimedesIB(cfdemCloud& cloud)
     : forceModel(cloud),
       subPropsDict_(cloud.couplingPropertiesDict().subDict(typeName_ + "Props")),
-      volumeFractionFieldName_(
-          subPropsDict_.lookupOrDefault<Foam::word>("volumeFractionFieldName", "volumeFractionNext").c_str()),
-      gravityFieldName_(subPropsDict_.lookupOrDefault<Foam::word>("gravityFieldName", "g").c_str()),
-      volumeFraction_(cloud.mesh().lookupObject<volScalarField>(volumeFractionFieldName_)),
-#if defined(version21)
-      g_(cloud.mesh().lookupObject<uniformDimensionedVectorField>(gravityFieldName_))
-#elif defined(version16ext) || defined(version15)
-      g_(dimensionedVector(
-             cloud.mesh().lookupObject<IOdictionary>("environmentalProperties").lookup(environmentalProperties))
-             .value())
-#endif
-{
+      volumeFraction_(cloud_.globalF().volumeFraction()),
+      g_(cloud_.globalF().g()) {
   createForceSubModels(subPropsDict_, kResolved);
 }
 

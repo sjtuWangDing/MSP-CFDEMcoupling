@@ -25,6 +25,8 @@ couplingInterval 5;
 
 allowUseSubCFDTimeStep false;
 
+globalForce globalForce;
+
 forceModels
 (
     ArchimedesIB
@@ -41,23 +43,26 @@ turbulenceModelType turbulenceProperties;
 
 /* ---------------------------- sub-model properties ------------------------- */
 
+"(globalForceProps|mixGlobalForceProps)"
+{
+  velFieldName "U";
+  volumeFractionFieldName "volumeFraction";
+  gravityFieldName "g";
+}
+
 ShirgaonkarIBProps
 {
-    // verbose true;
-    velFieldName "U";
-    pressureFieldName "p";
+    verbose true;
 }
 
 ArchimedesIBProps
 {
-    // verbose true;
-    gravityFieldName "g";
-    volumeFractionFieldName "volumeFractionNext";
+    verbose true;
 }
 
 ArchimedesIBTestProps
 {
-    gravityFieldName "g";
+    verbose true;
 }
 
 twoWayMPIProps

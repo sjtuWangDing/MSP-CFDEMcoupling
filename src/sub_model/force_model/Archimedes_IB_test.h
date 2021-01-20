@@ -36,7 +36,6 @@ Syntax
   );
   ArchimedesIBTestProps
   {
-    gravityFieldName "g";
     treatForceExplicit true;
     verbose true;
   };
@@ -70,9 +69,6 @@ class ArchimedesIBTest : public forceModel {
  private:
   //! \note subPropsDict_ should be declared in front of other members
   dictionary subPropsDict_;
-
-  //! \brief name of the finite volume gravity field
-  std::string gravityFieldName_;
 
 #ifdef version21
   const uniformDimensionedVectorField& g_;

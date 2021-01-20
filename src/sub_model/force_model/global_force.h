@@ -28,6 +28,7 @@ License
 #ifndef __GLOBAL_FORCE_H__
 #define __GLOBAL_FORCE_H__
 
+#include <memory>
 #include <unordered_map>
 #include "base/run_time_selection_tables.h"
 #include "cloud/cfdem_cloud.h"
@@ -108,6 +109,16 @@ class globalForce {
     expParticleForce_ == dimensionedVector("zero", expParticleForce_.dimensions(), vector::zero);
   }
 
+  inline volVectorField& impParticleForce() { return impParticleForce_; }
+
+  inline volVectorField& expParticleForce() { return expParticleForce_; }
+
+  inline const volVectorField& ddtU() const { return ddtU_; }
+
+  inline const volVectorField& impParticleForce() const { return impParticleForce_; }
+
+  inline const volVectorField& expParticleForce() const { return expParticleForce_; }
+
 #ifdef version21
   inline const uniformDimensionedVectorField& g() const { return g_; }
 #elif defined(version16ext) || defined(version15)
@@ -118,19 +129,13 @@ class globalForce {
 
   inline const volVectorField& U() const { return U_; }
 
-  inline const volScalarField& voidFraction() const { return voidFraction_; }
-
-  inline const volVectorField& impParticleForce() const { return impParticleForce_; }
-
-  inline const volVectorField& expParticleForce() const { return expParticleForce_; }
+  inline const volScalarField& p() const { return p_; }
 
   inline const surfaceScalarField& phi() const { return phi_; }
 
-  inline const volVectorField& ddtU() const { return ddtU_; }
+  inline const volScalarField& voidFraction() const { return voidFraction_; }
 
-  inline volVectorField& impParticleForce() { return impParticleForce_; }
-
-  inline volVectorField& expParticleForce() { return expParticleForce_; }
+  inline const volScalarField& volumeFraction() const { return volumeFraction_; }
 
  protected:
   cfdemCloud& cloud_;
@@ -163,11 +168,17 @@ class globalForce {
   //! \brief 速度场名称
   std::string velFieldName_;
 
-  //! \brief 空隙率场的名称
-  std::string voidFractionFieldName_;
+  //! \brief name of the finite volume pressure field
+  std::string pressureFieldName_;
 
   //! \brief 通量场的名称
   std::string phiFieldName_;
+
+  //! \brief 空隙率场的名称
+  std::string voidFractionFieldName_;
+
+  //! \brief name of the finite volume voidfraction field
+  std::string volumeFractionFieldName_;
 
 #ifdef version21
   const uniformDimensionedVectorField& g_;
@@ -179,9 +190,13 @@ class globalForce {
 
   const volVectorField& U_;
 
-  const volScalarField& voidFraction_;
+  const volScalarField& p_;
 
   const surfaceScalarField& phi_;
+
+  const volScalarField& voidFraction_;
+
+  const volScalarField& volumeFraction_;
 };
 
 }  // namespace Foam

@@ -40,15 +40,7 @@ cfdemCreateNewFunctionAdder(forceModel, ArchimedesIBTest);
 ArchimedesIBTest::ArchimedesIBTest(cfdemCloud& cloud)
     : forceModel(cloud),
       subPropsDict_(cloud.couplingPropertiesDict().subDict(typeName_ + "Props")),
-      gravityFieldName_(subPropsDict_.lookupOrDefault<Foam::word>("gravityFieldName", "g").c_str()),
-#if defined(version21)
-      g_(cloud.mesh().lookupObject<uniformDimensionedVectorField>(gravityFieldName_))
-#elif defined(version16ext) || defined(version15)
-      g_(dimensionedVector(
-             cloud.mesh().lookupObject<IOdictionary>("environmentalProperties").lookup(environmentalProperties))
-             .value())
-#endif
-{
+      g_(cloud.globalF().g()) {
   createForceSubModels(subPropsDict_, kResolved);
 }
 

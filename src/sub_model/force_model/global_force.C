@@ -32,6 +32,33 @@ License
 
 namespace Foam {
 
+class defaultField {
+ public:
+  static const volScalarField& getVoidFraction(const fvMesh& mesh) {
+    if (!voidFractionSp_) {
+      voidFractionSp_ = std::make_shared<volScalarField>(
+          IOobject("voidFractionDefault", mesh.time().timeName(), mesh, IOobject::NO_READ, IOobject::NO_WRITE), mesh,
+          dimensionedScalar("1", dimensionSet(0, 0, 0, 0, 0), 1.0));
+    }
+    return *voidFractionSp_;
+  }
+  static const volScalarField& getVolumeFraction(const fvMesh& mesh) {
+    if (!volumeFractionSp_) {
+      volumeFractionSp_ = std::make_shared<volScalarField>(
+          IOobject("volumeFractionDefault", mesh.time().timeName(), mesh, IOobject::NO_READ, IOobject::NO_WRITE), mesh,
+          dimensionedScalar("1", dimensionSet(0, 0, 0, 0, 0), 1.0));
+    }
+    return *volumeFractionSp_;
+  }
+
+ private:
+  static std::shared_ptr<volScalarField> voidFractionSp_;
+  static std::shared_ptr<volScalarField> volumeFractionSp_;
+};
+
+std::shared_ptr<volScalarField> defaultField::voidFractionSp_(nullptr);
+std::shared_ptr<volScalarField> defaultField::volumeFractionSp_(nullptr);
+
 cfdemDefineTypeName(globalForce);
 
 cfdemDefineNewFunctionMap(globalForce);
@@ -62,9 +89,12 @@ globalForce::globalForce(cfdemCloud& cloud)
       gravityFieldName_(subPropsDict_.lookupOrDefault<Foam::word>("gravityFieldName", "g").c_str()),
       densityFieldName_(subPropsDict_.lookupOrDefault<Foam::word>("densityFieldName", "rho").c_str()),
       velFieldName_(subPropsDict_.lookupOrDefault<Foam::word>("velFieldName", "U").c_str()),
+      pressureFieldName_(subPropsDict_.lookupOrDefault<Foam::word>("pressureFieldName", "p").c_str()),
+      phiFieldName_(subPropsDict_.lookupOrDefault<Foam::word>("phiFieldName", "phi").c_str()),
       voidFractionFieldName_(
           subPropsDict_.lookupOrDefault<Foam::word>("voidFractionFieldName", "voidFraction").c_str()),
-      phiFieldName_(subPropsDict_.lookupOrDefault<Foam::word>("phiFieldName", "phi").c_str()),
+      volumeFractionFieldName_(
+          subPropsDict_.lookupOrDefault<Foam::word>("volumeFractionFieldName", "volumeFraction").c_str()),
 #if defined(version21)
       g_(cloud.mesh().lookupObject<uniformDimensionedVectorField>(gravityFieldName_)),
 #elif defined(version16ext) || defined(version15)
@@ -74,8 +104,14 @@ globalForce::globalForce(cfdemCloud& cloud)
 #endif
       rho_(cloud.mesh().lookupObject<volScalarField>(densityFieldName_)),
       U_(cloud.mesh().lookupObject<volVectorField>(velFieldName_)),
-      voidFraction_(cloud.mesh().lookupObject<volScalarField>(voidFractionFieldName_)),
-      phi_(cloud.mesh().lookupObject<surfaceScalarField>(phiFieldName_)) {
+      p_(cloud.mesh().lookupObject<volScalarField>(pressureFieldName_)),
+      phi_(cloud.mesh().lookupObject<surfaceScalarField>(phiFieldName_)),
+      voidFraction_(subPropsDict_.found("voidFractionFieldName")
+                        ? cloud.mesh().lookupObject<volScalarField>(voidFractionFieldName_)
+                        : defaultField::getVoidFraction(cloud.mesh())),
+      volumeFraction_(subPropsDict_.found("volumeFractionFieldName")
+                          ? cloud.mesh().lookupObject<volScalarField>(volumeFractionFieldName_)
+                          : defaultField::getVolumeFraction(cloud.mesh())) {
 }
 
 globalForce::~globalForce() {}

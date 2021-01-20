@@ -41,8 +41,6 @@ Syntax
   );
   ShirgaonkarIBProps
   {
-    velFieldName "U";
-    pressureFieldName "p";
     verbose true;
     treatForceExplicit true;
   };
@@ -76,12 +74,6 @@ class ShirgaonkarIB : public forceModel {
  private:
   //! \note subPropsDict_ should be declared in front of other members
   dictionary subPropsDict_;
-
-  //! \brief name of the finite volume fluid velocity field
-  std::string velFieldName_;
-
-  //! \brief name of the finite volume pressure field
-  std::string pressureFieldName_;
 
   const volVectorField& U_;
 

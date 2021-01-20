@@ -83,7 +83,6 @@ surfaceScalarField phi(
   linearInterpolate(U * voidFraction) & mesh.Sf()
 );
 
-
 Info << "Generating interstitial face flux field phiByVoidFraction\n" << endl;
 surfaceScalarField phiByVoidFraction(
   IOobject(

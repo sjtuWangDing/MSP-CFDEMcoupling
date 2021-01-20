@@ -47,10 +47,8 @@ cfdemCreateNewFunctionAdder(forceModel, ShirgaonkarIB);
 ShirgaonkarIB::ShirgaonkarIB(cfdemCloud& cloud)
     : forceModel(cloud),
       subPropsDict_(cloud.couplingPropertiesDict().subDict(typeName_ + "Props")),
-      velFieldName_(subPropsDict_.lookupOrDefault<Foam::word>("velFieldName", "U").c_str()),
-      pressureFieldName_(subPropsDict_.lookupOrDefault<Foam::word>("pressureFieldName", "p").c_str()),
-      U_(cloud.mesh().lookupObject<volVectorField>(velFieldName_)),
-      p_(cloud.mesh().lookupObject<volScalarField>(pressureFieldName_)),
+      U_(cloud.globalF().U()),
+      p_(cloud.globalF().p()),
       useTorque_(subPropsDict_.lookupOrDefault<bool>("useTorque", false)) {
   createForceSubModels(subPropsDict_, kResolved);
 }

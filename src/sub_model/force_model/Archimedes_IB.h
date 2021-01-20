@@ -39,8 +39,6 @@ Syntax
   );
   ArchimedesIBProps
   {
-    gravityFieldName "g";
-    voidfractionFieldName "voidfractionNext";
     treatForceExplicit true;
     verbose true;
   };
@@ -74,12 +72,6 @@ class ArchimedesIB : public forceModel {
  private:
   //! \note subPropsDict_ should be declared in front of other members
   dictionary subPropsDict_;
-
-  //! \brief name of the finite volume voidfraction field
-  std::string volumeFractionFieldName_;
-
-  //! \brief name of the finite volume gravity field
-  std::string gravityFieldName_;
 
   const volScalarField& volumeFraction_;
 
