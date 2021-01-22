@@ -65,7 +65,7 @@ void Archimedes::setForce() {
     // index - particle index
     // buoyancy - total buoyancy
     forceSubModel_->partToArray(index, buoyancy, Foam::vector::zero, Foam::vector::zero, 0);
-    if (forceSubModel_->verbose()) {
+    if (forceSubModel_->verbose() && 0 == index) {
       Pout << "Archimedes buoyancy on particle " << index << ": [" << buoyancy[0] << ", " << buoyancy[1] << ", "
            << buoyancy[2] << "]" << endl;
       base::MPI_Barrier();

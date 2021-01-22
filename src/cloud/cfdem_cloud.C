@@ -108,6 +108,7 @@ cfdemCloud::cfdemCloud(const fvMesh& mesh)
                << abort(FatalError);
   }
   // 执行初始化函数
+  // TODO 获取颗粒初始化速度的位置需要重新考虑，在 Basset force model 中没有使用到初始化速度
   init();
 }
 
@@ -124,6 +125,8 @@ void cfdemCloud::init() {
 
 //! \brief 重新分配内存
 void cfdemCloud::reallocate() {
+  // 从执行结果来看，在颗粒数量很多的情况下，重新分配内存与 findCellID 相比，消耗的时间很少，
+  // 所以每个耦合时间步可以重新分配内存
   int number = numberOfParticles();
   // allocate memory of data exchanged with liggghts
   dataExchangeM().realloc(parCloud_.radii(), base::makeShape1(number), parCloud_.radiiPtr(), 0.0);
@@ -167,32 +170,34 @@ void cfdemCloud::printParticleInfo() const {
   MPI_Comm_size(MPI_COMM_WORLD, &nProcs);
   MPI_Comm_rank(MPI_COMM_WORLD, &id);
   base::MPI_Barrier();
+  // int number = numberOfParticles();
+  int number = 1;
   if (0 == id) {
-    for (int index = 0; index < numberOfParticles(); ++index) {
+    for (int index = 0; index < number; ++index) {
       Pout << "  position[" << index << "]: " << positions()[index][0] << ", " << positions()[index][1] << ", "
            << positions()[index][2] << endl;
     }
-    for (int index = 0; index < numberOfParticles(); ++index) {
+    for (int index = 0; index < number; ++index) {
       Pout << "  velocity[" << index << "]: " << velocities()[index][0] << ", " << velocities()[index][1] << ", "
            << velocities()[index][2] << endl;
     }
   }
   base::MPI_Barrier();
-  for (int index = 0; index < numberOfParticles(); ++index) {
+  for (int index = 0; index < number; ++index) {
     Pout << "  dimensionRatio[" << index << "]: " << dimensionRatios()[index] << endl;
   }
   base::MPI_Barrier();
-  for (int index = 0; index < numberOfParticles(); ++index) {
+  for (int index = 0; index < number; ++index) {
     Pout << "  DEMForce[" << index << "]: " << DEMForces()[index][0] << ", " << DEMForces()[index][1] << ", "
          << DEMForces()[index][2] << endl;
   }
   base::MPI_Barrier();
-  for (int index = 0; index < numberOfParticles(); ++index) {
+  for (int index = 0; index < number; ++index) {
     Pout << "  impForce[" << index << "]: " << impForces()[index][0] << ", " << impForces()[index][1] << ", "
          << impForces()[index][2] << endl;
   }
   base::MPI_Barrier();
-  voidFractionM().printVoidFractionInfo();
+  // voidFractionM().printVoidFractionInfo();
 }
 
 //! \brief reset field
@@ -249,6 +254,10 @@ void cfdemCloud::evolve(volVectorField& U, volScalarField& voidF, volVectorField
     getDEMData();
     // 获取到在当前 processor 上颗粒覆盖的某一个网格编号，如果获取到的网格编号为 -1，则表示颗粒不覆盖当前 processor
     locateM().findCell(parCloud_.findCellIDs());
+    base::MPI_Barrier();
+    // 计算 dimensionRatio
+    // 在 cfdemCloud 中，dimensionRatios 并不会使用到，只是会作为颗粒的信息，输出到屏幕
+    voidFractionM().getDimensionRatios(parCloud_.dimensionRatios());
     // 计算颗粒空隙率
     voidFractionM().setVoidFraction();
     voidF = voidFractionM().voidFractionInterp();

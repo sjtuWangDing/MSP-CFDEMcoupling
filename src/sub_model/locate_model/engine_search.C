@@ -83,7 +83,7 @@ void engineSearch::findCell(const base::CITensor1& findCellIDs) const {
   for (int index = 0; index < cloud_.numberOfParticles(); ++index) {
     int rootProc = cloud_.particleRootProcIDs()[index];
     if (rootProc == base::procId()) {
-      Pout << __func__ << ": particle " << index << " is on proc " << rootProc << endl;
+      // Pout << __func__ << ": particle " << index << " is on proc " << rootProc << endl;
       CHECK_GE(findCellIDs[index], 0) << ": findCellIDs[" << index << "] not GE -1";
     } else {
       CHECK_EQ(findCellIDs[index], -1) << ": findCellIDs[" << index << "] not EQ -1";

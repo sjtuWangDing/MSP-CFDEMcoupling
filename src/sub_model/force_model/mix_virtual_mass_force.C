@@ -52,6 +52,9 @@ mixVirtualMassForce::~mixVirtualMassForce() {}
 void mixVirtualMassForce::setForce() {
   Info << "Setting mix virtual mass force..." << endl;
   base::MPI_Barrier();
+  if (cloud_.numberOfParticlesChanged()) {
+    FatalError << "Currently mixVirtualMassForce model not allow number of particle changed\n" << abort(FatalError);
+  }
   UInterpolator_.reset(
       interpolation<Foam::vector>::New(subPropsDict_.lookupOrDefault("UInterpolationType", word("cellPointFace")), U_)
           .ptr());

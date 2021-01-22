@@ -57,6 +57,7 @@ void DiFeliceDrag::setForce() {
   const volScalarField& nuField = forceSubModel_->nuField();
   const volScalarField& rhoField = forceSubModel_->rhoField();
   int findCellID = -1;           // 颗粒中心所在网格的索引
+  double radius = 0.0;           // 颗粒半径
   double diameter = 0.0;         // 颗粒直径
   double nuf = 0.0;              // 流体动力粘度
   double rho = 0.0;              // 流体密度
@@ -104,7 +105,8 @@ void DiFeliceDrag::setForce() {
       }
       // 初始化
       Up = cloud_.getVelocity(index);
-      diameter = 2 * cloud_.getRadius(index);
+      radius = cloud_.getRadius(index);
+      diameter = 2 * radius;
       Ur = Ufluid - Up;
       magUr = mag(Ur);
       nuf = nuField[findCellID];
@@ -122,11 +124,22 @@ void DiFeliceDrag::setForce() {
         Xi = 3.7 - 0.65 * exp(-sqr(1.5 - log10(pRe)) / 2.0);
         // 计算颗粒阻力系数
         dragCoefficient = 0.125 * Cd * rho * M_PI * diameter * diameter * pow(vf, (2 - Xi)) * magUr;
-#elif 1
+#elif 0
         // Schiller Naumann Drag
         pRe = diameter * vf * magUr / (nuf + Foam::SMALL);
         Cd = pRe >= 1000 ? 0.44 : 24.0 * (1 + 0.15 * pow(pRe, 0.687)) / pRe;
         dragCoefficient = 0.125 * Cd * rho * M_PI * diameter * diameter * magUr;
+#elif 1
+        // Gidaspow drag
+        pRe = diameter * vf * magUr / (nuf + Foam::SMALL);
+        if (vf > 0.8) {
+          // 计算流体阻力系数
+          Cd = pRe >= 1000 ? 0.44 : 24.0 * (1 + 0.15 * pow(pRe, 0.687)) / pRe;
+          dragCoefficient = 0.75 * rho * vf * Cd * magUr / (diameter * Foam::pow(vf, 2.65));
+        } else {
+          dragCoefficient = 150 * (1 - vf) * nuf * rho / (vf * diameter * diameter) + 1.75 * magUr * rho / diameter;
+        }
+        dragCoefficient *= cloud_.voidFractionM().pV(diameter / 2.0);
 #endif
         if ("B" == cloud_.modelType()) {
           dragCoefficient /= vf;
@@ -134,7 +147,7 @@ void DiFeliceDrag::setForce() {
         // 计算总阻力
         drag = dragCoefficient * Ur;
       }
-      if (forceSubModel_->verbose()) {
+      if (forceSubModel_->verbose() && 0 == index) {
         Pout << "index = " << index << endl;
         Pout << "findCellID = " << findCellID << endl;
         Pout << "Up = " << Up << endl;

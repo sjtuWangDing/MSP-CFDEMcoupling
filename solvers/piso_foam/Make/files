@@ -1,3 +1,3 @@
 piso_foam.C
 
-EXE = $(MSP_CFDEM_BIN_DIR)/pisoFoam
+EXE = $(MSP_CFDEM_BIN_DIR)/pisoFoam-1.0
