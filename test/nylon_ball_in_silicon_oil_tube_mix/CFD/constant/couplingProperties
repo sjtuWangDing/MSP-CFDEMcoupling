@@ -26,6 +26,8 @@ couplingInterval 50;
 
 expandedCellScale 6;
 
+useGuoBBOEquation true;
+
 allowUseSubCFDTimeStep false;
 
 globalForce mixGlobalForce;
@@ -34,8 +36,8 @@ forceModels
 (
   Archimedes
   mixDragForce
-  mixVirtualMassForce
-  mixBassetForce
+  // mixVirtualMassForce
+  // mixBassetForce
   // viscForce
   // gradPForce
 );

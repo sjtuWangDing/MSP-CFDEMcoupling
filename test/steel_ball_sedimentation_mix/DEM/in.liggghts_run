@@ -48,8 +48,11 @@ fix     cfd  all couple/cfd couple_every 50 mpi
 fix     cfd2 all couple/cfd/force
 
 # create single partciles
+variable rhoF equal 1000
+variable rhoP equal 7820
+variable rho equal ${rhoP}+2*${rhoF}
 create_atoms 1 single 0.0575 0.015 0.275  units box
-set atom 1 diameter 0.00318 density 7820 vx 0 vy 0 vz 0
+set atom 1 diameter 0.00318 density ${rho} vx 0 vy 0 vz 0
 
 variable        vx1 equal vx[1]
 variable        vy1 equal vy[1]

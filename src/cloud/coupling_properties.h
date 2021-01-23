@@ -91,6 +91,8 @@ class CouplingProperties {
     return ratio > 0 && (coarseParticleRatio_ <= ratio && ratio < fineParticleRatio_);
   }
 
+  inline bool useGuoBBOEquation() const { return useGuoBBOEquation_; }
+
   inline bool checkCoarseParticle(double ratio) const { return ratio > 0 && ratio < coarseParticleRatio_; }
 
  protected:
@@ -108,6 +110,10 @@ class CouplingProperties {
 
   //! \brief 颗粒扩展网格系数
   double expandedCellScale_;
+
+  //! \brief 使用 Junke Guo 提出的 BBO 方程
+  //! \note 使用该方程，则不能使用 virtual mass foce 以及 basset force
+  bool useGuoBBOEquation_;
 
   //! \brief dict 中指定的所有 force model 的名称
   std::vector<std::string> forceModelList_;

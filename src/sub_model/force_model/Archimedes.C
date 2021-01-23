@@ -60,6 +60,10 @@ void Archimedes::setForce() {
     if (findCellID >= 0) {
       double pV = 4.0 * M_PI * raidus * raidus * raidus / 3.0;
       buoyancy += -g_.value() * forceSubModel_->rhoField()[findCellID] * pV;
+      // 如果使用 Junke Guo BBO Equation，则需要增加 2 倍的浮力
+      if (cloud_.useGuoBBOEquation()) {
+        buoyancy *= 3.0;
+      }
     }
     // write particle data to global array
     // index - particle index

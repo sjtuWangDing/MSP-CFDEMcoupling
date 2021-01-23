@@ -125,6 +125,12 @@ void DiFeliceDrag::setForce() {
         // 计算颗粒阻力系数
         dragCoefficient = 0.125 * Cd * rho * M_PI * diameter * diameter * pow(vf, (2 - Xi)) * magUr;
 #elif 0
+        // 计算颗粒雷诺数
+        pRe = diameter * magUr / (nuf + Foam::SMALL);
+        Cd = 24 * pow(9.06 / sqrt(pRe) + 1, 2) / (9.06 * 9.06);
+        Xi = 3.7 - 0.65 * exp(-sqr(1.5 - log10(pRe)) / 2.0);
+        dragCoefficient = 0.125 * Cd * rho * M_PI * diameter * diameter * pow(vf, (2 - Xi)) * magUr;
+#elif 0
         // Schiller Naumann Drag
         pRe = diameter * vf * magUr / (nuf + Foam::SMALL);
         Cd = pRe >= 1000 ? 0.44 : 24.0 * (1 + 0.15 * pow(pRe, 0.687)) / pRe;
@@ -139,7 +145,7 @@ void DiFeliceDrag::setForce() {
         } else {
           dragCoefficient = 150 * (1 - vf) * nuf * rho / (vf * diameter * diameter) + 1.75 * magUr * rho / diameter;
         }
-        dragCoefficient *= cloud_.voidFractionM().pV(diameter / 2.0);
+        dragCoefficient *= cloud_.voidFractionM().pV(radius);
 #endif
         if ("B" == cloud_.modelType()) {
           dragCoefficient /= vf;

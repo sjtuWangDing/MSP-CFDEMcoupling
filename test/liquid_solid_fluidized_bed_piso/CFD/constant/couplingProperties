@@ -30,6 +30,8 @@ allowUseSubCFDTimeStep false;
 
 globalForce globalForce;
 
+useGuoBBOEquation false;
+
 forceModels
 (
   Archimedes

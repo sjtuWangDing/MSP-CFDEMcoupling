@@ -45,6 +45,8 @@ mixVirtualMassForce::mixVirtualMassForce(cfdemCloud& cloud)
       voidFraction_(cloud.globalF().voidFraction()),
       phi_(cloud.globalF().phi()) {
   createForceSubModels(subPropsDict_, kUnResolved);
+  CHECK(!cloud_.useGuoBBOEquation()) << __func__
+                                     << ": Not use mixVirtualMassForce model when use Junke Guo BBO Equation.";
 }
 
 mixVirtualMassForce::~mixVirtualMassForce() {}

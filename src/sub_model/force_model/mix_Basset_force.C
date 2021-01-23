@@ -45,6 +45,7 @@ mixBassetForce::mixBassetForce(cfdemCloud& cloud)
       voidFraction_(cloud.globalF().voidFraction()),
       phi_(cloud.globalF().phi()) {
   createForceSubModels(subPropsDict_, kUnResolved);
+  CHECK(!cloud_.useGuoBBOEquation()) << __func__ << ": Not use mixBassetForce model when use Junke Guo BBO Equation.";
 }
 
 mixBassetForce::~mixBassetForce() {}

@@ -59,13 +59,22 @@ timestep        0.00002
 fix             gravi all gravity 9.81 vector 0.0 0.0 -1.0
 
 # region and particle insertion
-region          factory cylinder z 0.0 0.0 0.05 0.0 0.1 units box
+# variable couplingSteps equal 105
+# variable initVz equal 9.81*${couplingSteps}*dt
+region          factory cylinder z 0.0 0.0 0.05 0.0 0.75 units box
 fix             pts all particletemplate/sphere 15485863 atom_type 2 density constant 2500 &
                 radius constant 0.001
 fix             pdd all particledistribution/discrete 32452843 1 pts 1.0
 fix             ins all insert/rate/region seed 49979687 distributiontemplate pdd &
-                nparticles 10000 particlerate 500000000 insert_every 1 &
+                nparticles 50000 particlerate 500000000 insert_every 1 &
                 overlapcheck yes vel constant 0. 0. 0. region factory ntry_mc 10000
+
+# region and particle insertion
+# variable rhoF equal 1000
+# variable rhoP equal 2500
+# variable rho equal ${rhoP}+2*${rhoF}
+# create_atoms 1 single 0. 0. 0.2 units box
+# set atom 1 diameter 0.002 density ${rhoP} vx 0 vy 0 vz ${initVz}
 
 # cfd coupling
 fix           cfd1  all couple/cfd couple_every 100 mpi
@@ -84,4 +93,4 @@ compute_modify  thermo_temp dynamic yes
 # insert the first particles so that dump is not empty
 dump            dmp all custom 1000 ../DEM/post/dump.liggghts_run id type x y z ix iy iz vx vy vz fx fy fz omegax omegay omegaz radius
 
-run             1
+run             5

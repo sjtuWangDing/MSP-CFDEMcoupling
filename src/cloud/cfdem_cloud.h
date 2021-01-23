@@ -229,6 +229,8 @@ class cfdemCloud {
 
   inline const std::string& ddtVoidFractionType() const { return cProps_.ddtVoidFractionType(); }
 
+  inline bool useGuoBBOEquation() const { return cProps_.useGuoBBOEquation(); }
+
   /* ------------------------- interface of particleCloud ------------------------------- */
 
   inline int numberOfParticles() const { return parCloud_.numberOfParticles_; }
