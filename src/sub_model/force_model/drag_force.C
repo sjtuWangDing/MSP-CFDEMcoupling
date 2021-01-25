@@ -41,13 +41,8 @@ dragForce::dragForce(cfdemCloud& cloud)
     : forceModel(cloud),
       subPropsDict_(cloud.couplingPropertiesDict().subDict(typeName_ + "Props")),
       dragModelName_(subPropsDict_.lookupOrDefault<Foam::word>("dragModelName", "DiFelice").c_str()),
-      velFieldName_(subPropsDict_.lookupOrDefault<Foam::word>("velFieldName", "U").c_str()),
-      UsFieldName_(subPropsDict_.lookupOrDefault<Foam::word>("granVelFieldName", "Us").c_str()),
-      voidFractionFieldName_(
-          subPropsDict_.lookupOrDefault<Foam::word>("voidFractionFieldName", "voidFraction").c_str()),
-      U_(cloud.mesh().lookupObject<volVectorField>(velFieldName_)),
-      UsField_(cloud.mesh().lookupObject<volVectorField>(UsFieldName_)),
-      voidFraction_(cloud.mesh().lookupObject<volScalarField>(voidFractionFieldName_)) {
+      U_(cloud.globalF().U()),
+      voidFraction_(cloud_.globalF().voidFraction()) {
   createForceSubModels(subPropsDict_, kUnResolved);
   size_t dragModelHashValue = strHasher_(dragModelName_);
   if (DiFeliceHashValue_ != dragModelHashValue && AbrahamHashValue_ != dragModelHashValue &&

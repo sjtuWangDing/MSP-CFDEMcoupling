@@ -68,18 +68,7 @@ class dragForce : public forceModel {
   //! \brief 阻力模型名称
   std::string dragModelName_;
 
-  //! \brief 速度场名称
-  std::string velFieldName_;
-
-  //! \brief 局部平均颗粒速度场名称
-  std::string UsFieldName_;
-
-  //! \brief 空隙率场的名称
-  std::string voidFractionFieldName_;
-
   const volVectorField& U_;
-
-  const volVectorField& UsField_;
 
   const volScalarField& voidFraction_;
 
