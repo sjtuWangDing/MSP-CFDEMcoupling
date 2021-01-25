@@ -26,48 +26,47 @@ License
 
 Description
   The force model performs the calculation of forces (e.g. fluid-particle
-  interaction forces) acting on each DEM particle. The DiFeliceDrag model
-  is a model that calculates the particle based drag force following the
-  correlation of Di Felice (see Zhou et al. (2010), JFM).
+  interaction forces) acting on each DEM particle.
 
 Syntax
   forceModels
   (
-    DiFeliceDrag
+    dragForce
   );
-  DiFeliceDragProps
+  dragForceProps
   {
-    velFieldName "U";
-    voidFractionFieldName "voidFraction";
-    granVelFieldName "Us";
   };
 \*---------------------------------------------------------------------------*/
 
-#ifndef __DIFELICE_DRAG_H__
-#define __DIFELICE_DRAG_H__
+#ifndef __DRAG_FORCE_H__
+#define __DRAG_FORCE_H__
 
+#include <functional>
 #include "./force_model.h"
 
 namespace Foam {
 
-class DiFeliceDrag : public forceModel {
+class dragForce : public forceModel {
  public:
   //! \brief Runtime type information
-  cfdemTypeName("DiFeliceDrag");
+  cfdemTypeName("dragForce");
 
-  cfdemDefineNewFunctionAdder(forceModel, DiFeliceDrag);
+  cfdemDefineNewFunctionAdder(forceModel, dragForce);
 
   //! \brief Constructor
-  DiFeliceDrag(cfdemCloud& cloud);
+  dragForce(cfdemCloud& cloud);
 
   //! \brief Destructor
-  ~DiFeliceDrag();
+  ~dragForce();
 
   void setForce();
 
  private:
   //! \note subPropsDict_ should be declared in front of other members
   dictionary subPropsDict_;
+
+  //! \brief 阻力模型名称
+  std::string dragModelName_;
 
   //! \brief 速度场名称
   std::string velFieldName_;
@@ -83,8 +82,32 @@ class DiFeliceDrag : public forceModel {
   const volVectorField& UsField_;
 
   const volScalarField& voidFraction_;
+
+  static std::hash<std::string> strHasher_;
+
+  static const size_t DiFeliceHashValue_;
+
+  static const size_t AbrahamHashValue_;
+
+  static const size_t SchillerNaumannHashValue_;
+
+  static const size_t GidaspowHashValue_;
+
+  static const size_t SyamlalObrienHashValue_;
 };
+
+std::hash<std::string> dragForce::strHasher_;
+
+const size_t dragForce::DiFeliceHashValue_ = strHasher_("DiFelice");
+
+const size_t dragForce::AbrahamHashValue_ = strHasher_("Abraham");
+
+const size_t dragForce::SchillerNaumannHashValue_ = strHasher_("Schiller-Naumann");
+
+const size_t dragForce::GidaspowHashValue_ = strHasher_("Gidaspow");
+
+const size_t dragForce::SyamlalObrienHashValue_ = strHasher_("Syamlal-Obrien");
 
 }  // namespace Foam
 
-#endif  // __DIFELICE_DRAG_H__
+#endif  // __DRAG_FORCE_H__

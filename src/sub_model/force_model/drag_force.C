@@ -25,21 +25,22 @@ License
   Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 \*---------------------------------------------------------------------------*/
 
-#include "./DiFelice_drag.h"
+#include "./drag_force.h"
 
 namespace Foam {
 
-cfdemDefineTypeName(DiFeliceDrag);
+cfdemDefineTypeName(dragForce);
 
-cfdemCreateNewFunctionAdder(forceModel, DiFeliceDrag);
+cfdemCreateNewFunctionAdder(forceModel, dragForce);
 
 /*!
  * \brief Constructor
  * \note The initialization list should be in the same order as the variable declaration
  */
-DiFeliceDrag::DiFeliceDrag(cfdemCloud& cloud)
+dragForce::dragForce(cfdemCloud& cloud)
     : forceModel(cloud),
       subPropsDict_(cloud.couplingPropertiesDict().subDict(typeName_ + "Props")),
+      dragModelName_(subPropsDict_.lookupOrDefault<Foam::word>("dragModelName", "DiFelice").c_str()),
       velFieldName_(subPropsDict_.lookupOrDefault<Foam::word>("velFieldName", "U").c_str()),
       UsFieldName_(subPropsDict_.lookupOrDefault<Foam::word>("granVelFieldName", "Us").c_str()),
       voidFractionFieldName_(
@@ -48,12 +49,19 @@ DiFeliceDrag::DiFeliceDrag(cfdemCloud& cloud)
       UsField_(cloud.mesh().lookupObject<volVectorField>(UsFieldName_)),
       voidFraction_(cloud.mesh().lookupObject<volScalarField>(voidFractionFieldName_)) {
   createForceSubModels(subPropsDict_, kUnResolved);
-}
+  size_t dragModelHashValue = strHasher_(dragModelName_);
+  if (DiFeliceHashValue_ != dragModelHashValue && AbrahamHashValue_ != dragModelHashValue &&
+      SchillerNaumannHashValue_ != dragModelHashValue && GidaspowHashValue_ != dragModelHashValue &&
+      SyamlalObrienHashValue_ != dragModelHashValue) {
+    FatalError << __func__ << ": wrong drag model name: " << dragModelName_ << abort(FatalError);
+  }
+  Info << __func__ << ": choose " << dragModelName_ << " drag force model." << endl;
+}  // namespace Foam
 
-DiFeliceDrag::~DiFeliceDrag() {}
+dragForce::~dragForce() {}
 
-void DiFeliceDrag::setForce() {
-  Info << "Setting DiFeliceDrag force..." << endl;
+void dragForce::setForce() {
+  Info << "Setting " << dragModelName_ << " drag force..." << endl;
   const volScalarField& nuField = forceSubModel_->nuField();
   const volScalarField& rhoField = forceSubModel_->rhoField();
   int findCellID = -1;           // 颗粒中心所在网格的索引
@@ -115,38 +123,53 @@ void DiFeliceDrag::setForce() {
       Cd = 0.0;
       dragCoefficient = 0.0;
       if (magUr > 0) {
-#if 0
-        // 计算颗粒雷诺数
-        pRe = diameter * vf * magUr / (nuf + Foam::SMALL);
-        // 计算流体阻力系数
-        Cd = sqr(0.63 + 4.8 / sqrt(pRe));
-        // 计算模型阻力系数
-        Xi = 3.7 - 0.65 * exp(-sqr(1.5 - log10(pRe)) / 2.0);
-        // 计算颗粒阻力系数
-        dragCoefficient = 0.125 * Cd * rho * M_PI * diameter * diameter * pow(vf, (2 - Xi)) * magUr;
-#elif 0
-        // 计算颗粒雷诺数
-        pRe = diameter * magUr / (nuf + Foam::SMALL);
-        Cd = 24 * pow(9.06 / sqrt(pRe) + 1, 2) / (9.06 * 9.06);
-        Xi = 3.7 - 0.65 * exp(-sqr(1.5 - log10(pRe)) / 2.0);
-        dragCoefficient = 0.125 * Cd * rho * M_PI * diameter * diameter * pow(vf, (2 - Xi)) * magUr;
-#elif 0
-        // Schiller Naumann Drag
-        pRe = diameter * vf * magUr / (nuf + Foam::SMALL);
-        Cd = pRe >= 1000 ? 0.44 : 24.0 * (1 + 0.15 * pow(pRe, 0.687)) / pRe;
-        dragCoefficient = 0.125 * Cd * rho * M_PI * diameter * diameter * magUr;
-#elif 1
-        // Gidaspow drag
-        pRe = diameter * vf * magUr / (nuf + Foam::SMALL);
-        if (vf > 0.8) {
-          // 计算流体阻力系数
+        size_t dragModelHashValue = strHasher_(dragModelName_);
+        // 计算 drag force
+        if (DiFeliceHashValue_ == dragModelHashValue) {
+          // DiFelice drag model
+          pRe = diameter * vf * magUr / (nuf + Foam::SMALL);
+          Cd = sqr(0.63 + 4.8 / sqrt(pRe));
+          Xi = 3.7 - 0.65 * exp(-sqr(1.5 - log10(pRe)) / 2.0);
+          dragCoefficient = 0.125 * Cd * rho * M_PI * diameter * diameter * pow(vf, (2 - Xi)) * magUr;
+        } else if (AbrahamHashValue_ == dragModelHashValue) {
+          // Abraham drag model
+          pRe = diameter * magUr / (nuf + Foam::SMALL);
+          Cd = 24 * pow(9.06 / sqrt(pRe) + 1, 2) / (9.06 * 9.06);
+          Xi = 3.7 - 0.65 * exp(-sqr(1.5 - log10(pRe)) / 2.0);
+          dragCoefficient = 0.125 * Cd * rho * M_PI * diameter * diameter * pow(vf, (2 - Xi)) * magUr;
+        } else if (SchillerNaumannHashValue_ == dragModelHashValue) {
+          // Schiller-Naumann drag model
+          pRe = diameter * vf * magUr / (nuf + Foam::SMALL);
           Cd = pRe >= 1000 ? 0.44 : 24.0 * (1 + 0.15 * pow(pRe, 0.687)) / pRe;
-          dragCoefficient = 0.75 * rho * vf * Cd * magUr / (diameter * Foam::pow(vf, 2.65));
-        } else {
-          dragCoefficient = 150 * (1 - vf) * nuf * rho / (vf * diameter * diameter) + 1.75 * magUr * rho / diameter;
+          dragCoefficient = 0.125 * Cd * rho * M_PI * diameter * diameter * magUr;
+        } else if (GidaspowHashValue_ == dragModelHashValue) {
+          // Gidaspow drag model
+          pRe = diameter * vf * magUr / (nuf + Foam::SMALL);
+          if (vf > 0.8) {
+            Cd = pRe >= 1000 ? 0.44 : 24.0 * (1 + 0.15 * pow(pRe, 0.687)) / pRe;
+            dragCoefficient = 0.75 * rho * vf * Cd * magUr / (diameter * Foam::pow(vf, 2.65));
+          } else {
+            dragCoefficient = 150 * (1 - vf) * nuf * rho / (vf * diameter * diameter) + 1.75 * magUr * rho / diameter;
+          }
+          dragCoefficient *= cloud_.voidFractionM().pV(radius);
+        } else if (SyamlalObrienHashValue_ == dragModelHashValue) {
+          // Syamlal-Obrien drag model
+          pRe = diameter * vf * magUr / (nuf + Foam::SMALL);
+          double Vrs = 0.0;
+          double A = 0.0;
+          double B = 0.0;
+          if (vf <= 0.85) {
+            A = pow(vf, 4.14);
+            B = 0.8 * pow(vf, 4.14);
+          } else {
+            A = pow(vf, 4.14);
+            B = pow(vf, 2.65);
+          }
+          Vrs = 0.5 * (A - 0.06 * pRe + sqrt(sqr(0.06 * pRe) + 0.12 * pRe * (2 * B - A) + A * A));
+          Cd = sqr(0.63 + 4.8 / sqrt(pRe / Vrs));
+          dragCoefficient = 0.75 * vf * rho * Cd * magUr / (sqr(Vrs) * diameter);
+          dragCoefficient *= cloud_.voidFractionM().pV(radius);
         }
-        dragCoefficient *= cloud_.voidFractionM().pV(radius);
-#endif
         if ("B" == cloud_.modelType()) {
           dragCoefficient /= vf;
         }
@@ -171,7 +194,7 @@ void DiFeliceDrag::setForce() {
     // write particle data to global array
     forceSubModel_->partToArray(index, drag, Foam::vector::zero, Ufluid, dragCoefficient);
   }
-  Info << "Setting DiFeliceDrag - done" << endl;
+  Info << "Setting " << dragModelName_ << " drag force - done" << endl;
 }
 
 }  // namespace Foam
