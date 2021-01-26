@@ -35,7 +35,7 @@ useGuoBBOEquation false;
 forceModels
 (
   Archimedes
-  DiFeliceDrag
+  dragForce
   // virtualMassForce
   // BassetForce
   // viscForce
@@ -80,10 +80,9 @@ ArchimedesProps
   verbose true;
 }
 
-DiFeliceDragProps
+dragForceProps
 {
-  velFieldName "U";
-  voidFractionFieldName "voidFraction";
+  dragModelName "Gidaspow";
   treatForceExplicitInMomEquation false;
   treatForceBothCFDAndDEM true;
   treatDEMForceImplicit false;
