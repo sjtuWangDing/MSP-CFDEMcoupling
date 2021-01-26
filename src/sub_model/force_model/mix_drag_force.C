@@ -25,6 +25,7 @@ License
   Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 \*---------------------------------------------------------------------------*/
 
+#include "./drag_force.h"
 #include "./mix_drag_force.h"
 #include "mpi.h"
 
@@ -41,9 +42,18 @@ cfdemCreateNewFunctionAdder(forceModel, mixDragForce);
 mixDragForce::mixDragForce(cfdemCloud& cloud)
     : forceModel(cloud),
       subPropsDict_(cloud.couplingPropertiesDict().subDict(typeName_ + "Props")),
+      dragModelName_(subPropsDict_.lookupOrDefault<Foam::word>("dragModelName", "DiFelice").c_str()),
       U_(cloud.globalF().U()),
       voidFraction_(cloud_.globalF().voidFraction()) {
   createForceSubModels(subPropsDict_, kUnResolved);
+  size_t dragModelHashValue = dragForce::strHasher_(dragModelName_);
+  if (dragForce::DiFeliceHashValue_ != dragModelHashValue && dragForce::AbrahamHashValue_ != dragModelHashValue &&
+      dragForce::SchillerNaumannHashValue_ != dragModelHashValue &&
+      dragForce::GidaspowHashValue_ != dragModelHashValue && dragForce::SyamlalObrienHashValue_ != dragModelHashValue &&
+      dragForce::YangHashValue_ != dragModelHashValue) {
+    FatalError << __func__ << ": wrong drag model name: " << dragModelName_ << abort(FatalError);
+  }
+  Info << __func__ << ": choose " << dragModelName_ << " drag force model." << endl;
 }
 
 mixDragForce::~mixDragForce() {}
@@ -98,77 +108,76 @@ void mixDragForce::setForceKernel(const int index, Foam::vector& drag, Foam::vec
     Foam::vector Ur = Ufluid - Up;                         // 相对速度
     double magUr = mag(Ur);                                // 相对速度值
     if (magUr > 0) {
-#if 0
-      // 计算颗粒雷诺数
-      pRe = diameter * vf * magUr / (nuf + Foam::SMALL);
-      // 计算流体阻力系数
-      Cd = sqr(0.63 + 4.8 / sqrt(pRe));
-      // 计算模型阻力系数
-      Xi = 3.7 - 0.65 * exp(-sqr(1.5 - log10(pRe)) / 2.0);
-      // 计算颗粒阻力系数
-      dragCoefficient = 0.125 * Cd * rho * M_PI * diameter * diameter * pow(vf, (2 - Xi)) * magUr;
-#elif 1
-      // 计算颗粒雷诺数
-      pRe = diameter * magUr / (nuf + Foam::SMALL);
-      Cd = 24 * pow(9.06 / sqrt(pRe) + 1, 2) / (9.06 * 9.06);
-      Xi = 3.7 - 0.65 * exp(-sqr(1.5 - log10(pRe)) / 2.0);
-      dragCoefficient = 0.125 * Cd * rho * M_PI * diameter * diameter * pow(vf, (2 - Xi)) * magUr;
-#elif 0
-      // Schiller Naumann Drag
-      pRe = diameter * vf * magUr / (nuf + Foam::SMALL);
-      Cd = pRe >= 1000 ? 0.44 : 24.0 * (1 + 0.15 * pow(pRe, 0.687)) / pRe;
-      dragCoefficient = 0.125 * Cd * rho * M_PI * diameter * diameter * magUr;
-#elif 0
-      // Gidaspow drag
-      pRe = diameter * vf * magUr / (nuf + Foam::SMALL);
-      if (vf > 0.8) {
-        // 计算流体阻力系数
+      size_t dragModelHashValue = dragForce::strHasher_(dragModelName_);
+      // 计算 drag force
+      if (dragForce::DiFeliceHashValue_ == dragModelHashValue) {
+        // DiFelice drag model
+        pRe = diameter * vf * magUr / (nuf + Foam::SMALL);
+        Cd = sqr(0.63 + 4.8 / sqrt(pRe));
+        Xi = 3.7 - 0.65 * exp(-sqr(1.5 - log10(pRe)) / 2.0);
+        dragCoefficient = 0.125 * Cd * rho * M_PI * diameter * diameter * pow(vf, (2 - Xi)) * magUr;
+      } else if (dragForce::AbrahamHashValue_ == dragModelHashValue) {
+        // Abraham drag model
+        pRe = diameter * magUr / (nuf + Foam::SMALL);
+        Cd = 24 * pow(9.06 / sqrt(pRe) + 1, 2) / (9.06 * 9.06);
+        Xi = 3.7 - 0.65 * exp(-sqr(1.5 - log10(pRe)) / 2.0);
+        dragCoefficient = 0.125 * Cd * rho * M_PI * diameter * diameter * pow(vf, (2 - Xi)) * magUr;
+      } else if (dragForce::SchillerNaumannHashValue_ == dragModelHashValue) {
+        // Schiller-Naumann drag model
+        pRe = diameter * vf * magUr / (nuf + Foam::SMALL);
         Cd = pRe >= 1000 ? 0.44 : 24.0 * (1 + 0.15 * pow(pRe, 0.687)) / pRe;
-        dragCoefficient = 0.75 * rho * vf * Cd * magUr / (diameter * Foam::pow(vf, 2.65));
-      } else {
-        dragCoefficient = 150 * (1 - vf) * nuf * rho / (vf * diameter * diameter) + 1.75 * magUr * rho / diameter;
-      }
-      dragCoefficient *= cloud_.voidFractionM().pV(radius);
-#elif 0
-      pRe = diameter * vf * magUr / (nuf + Foam::SMALL);
-      if (vf > 0.74) {
-        double Wd = 0.0;
-        if (vf <= 0.82) {
-          Wd = 0.0214 / (4.0 * sqr(vf - 0.7463) + 0.0044) - 0.576;
-        } else if (vf > 0.97) {
-          Wd = 32.8295 * vf - 31.8295;
+        dragCoefficient = 0.125 * Cd * rho * M_PI * diameter * diameter * magUr;
+      } else if (dragForce::GidaspowHashValue_ == dragModelHashValue) {
+        // Gidaspow drag model
+        pRe = diameter * vf * magUr / (nuf + Foam::SMALL);
+        if (vf > 0.8) {
+          Cd = pRe >= 1000 ? 0.44 : 24.0 * (1 + 0.15 * pow(pRe, 0.687)) / pRe;
+          dragCoefficient = 0.75 * rho * vf * Cd * magUr / (diameter * Foam::pow(vf, 2.65));
         } else {
-          Wd = 0.0038 / (4 * sqr(vf - 0.7789) + 0.004) - 0.0101;
+          dragCoefficient = 150 * (1 - vf) * nuf * rho / (vf * diameter * diameter) + 1.75 * magUr * rho / diameter;
         }
-        Cd = pRe >= 1000 ? 0.44 : (24.0 * (1 + 0.15 * pow(pRe, 0.687)) / pRe);
-        dragCoefficient = 0.75 * rho * vf * Cd * magUr * Wd / diameter;
-      } else {
-        dragCoefficient = 150 * (1 - vf) * nuf * rho / (vf * diameter * diameter) + 1.75 * magUr * rho / diameter;
+        dragCoefficient *= cloud_.voidFractionM().pV(radius);
+      } else if (dragForce::SyamlalObrienHashValue_ == dragModelHashValue) {
+        // Syamlal-Obrien drag model
+        pRe = diameter * vf * magUr / (nuf + Foam::SMALL);
+        double Vrs = 0.0;
+        double A = 0.0;
+        double B = 0.0;
+        if (vf <= 0.85) {
+          A = pow(vf, 4.14);
+          B = 0.8 * pow(vf, 4.14);
+        } else {
+          A = pow(vf, 4.14);
+          B = pow(vf, 2.65);
+        }
+        Vrs = 0.5 * (A - 0.06 * pRe + sqrt(sqr(0.06 * pRe) + 0.12 * pRe * (2 * B - A) + A * A));
+        Cd = sqr(0.63 + 4.8 / sqrt(pRe / Vrs));
+        dragCoefficient = 0.75 * vf * rho * Cd * magUr / (sqr(Vrs) * diameter);
+        dragCoefficient *= cloud_.voidFractionM().pV(radius);
+      } else if (dragForce::YangHashValue_ == dragModelHashValue) {
+        pRe = diameter * vf * magUr / (nuf + Foam::SMALL);
+        if (vf > 0.74) {
+          double Wd = 0.0;
+          if (vf <= 0.82) {
+            Wd = 0.0214 / (4.0 * sqr(vf - 0.7463) + 0.0044) - 0.576;
+          } else if (vf > 0.97) {
+            Wd = 32.8295 * vf - 31.8295;
+          } else {
+            Wd = 0.0038 / (4 * sqr(vf - 0.7789) + 0.004) - 0.0101;
+          }
+          Cd = pRe >= 1000 ? 0.44 : (24.0 * (1 + 0.15 * pow(pRe, 0.687)) / pRe);
+          dragCoefficient = 0.75 * rho * vf * Cd * magUr * Wd / diameter;
+        } else {
+          dragCoefficient = 150 * (1 - vf) * nuf * rho / (vf * diameter * diameter) + 1.75 * magUr * rho / diameter;
+        }
+        dragCoefficient *= cloud_.voidFractionM().pV(radius);
       }
-      dragCoefficient *= cloud_.voidFractionM().pV(radius);
-#elif 0
-      pRe = diameter * vf * magUr / (nuf + Foam::SMALL);
-      double Vrs = 0.0;
-      double A = 0.0;
-      double B = 0.0;
-      if (vf <= 0.85) {
-        A = pow(vf, 4.14);
-        B = 0.8 * pow(vf, 4.14);
-      } else {
-        A = pow(vf, 4.14);
-        B = pow(vf, 2.65);
-      }
-      Vrs = 0.5 * (A - 0.06 * pRe + sqrt(sqr(0.06 * pRe) + 0.12 * pRe * (2 * B - A) + A * A));
-      Cd = sqr(0.63 + 4.8 / sqrt(pRe / Vrs));
-      dragCoefficient = 0.75 * vf * rho * Cd * magUr / (sqr(Vrs) * diameter);
-      dragCoefficient *= cloud_.voidFractionM().pV(radius);
-#endif
       if ("B" == cloud_.modelType()) {
         dragCoefficient /= vf;
       }
       // 计算总阻力
       drag = dragCoefficient * Ur;
-    }
+    }  // magUr > 0
     if (forceSubModel_->verbose()) {
       Pout << "index = " << index << endl;
       Pout << "findCellID = " << findCellID << endl;

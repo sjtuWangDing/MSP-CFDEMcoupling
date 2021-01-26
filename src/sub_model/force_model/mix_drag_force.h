@@ -61,6 +61,9 @@ class mixDragForce : public forceModel {
   //! \note subPropsDict_ should be declared in front of other members
   dictionary subPropsDict_;
 
+  //! \brief 阻力模型名称
+  std::string dragModelName_;
+
   const volVectorField& U_;
 
   const volScalarField& voidFraction_;

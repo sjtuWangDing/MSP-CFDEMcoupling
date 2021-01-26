@@ -61,17 +61,7 @@ class dragForce : public forceModel {
 
   void setForce();
 
- private:
-  //! \note subPropsDict_ should be declared in front of other members
-  dictionary subPropsDict_;
-
-  //! \brief 阻力模型名称
-  std::string dragModelName_;
-
-  const volVectorField& U_;
-
-  const volScalarField& voidFraction_;
-
+ public:
   static std::hash<std::string> strHasher_;
 
   static const size_t DiFeliceHashValue_;
@@ -83,19 +73,20 @@ class dragForce : public forceModel {
   static const size_t GidaspowHashValue_;
 
   static const size_t SyamlalObrienHashValue_;
+
+  static const size_t YangHashValue_;
+
+ private:
+  //! \note subPropsDict_ should be declared in front of other members
+  dictionary subPropsDict_;
+
+  //! \brief 阻力模型名称
+  std::string dragModelName_;
+
+  const volVectorField& U_;
+
+  const volScalarField& voidFraction_;
 };
-
-std::hash<std::string> dragForce::strHasher_;
-
-const size_t dragForce::DiFeliceHashValue_ = strHasher_("DiFelice");
-
-const size_t dragForce::AbrahamHashValue_ = strHasher_("Abraham");
-
-const size_t dragForce::SchillerNaumannHashValue_ = strHasher_("Schiller-Naumann");
-
-const size_t dragForce::GidaspowHashValue_ = strHasher_("Gidaspow");
-
-const size_t dragForce::SyamlalObrienHashValue_ = strHasher_("Syamlal-Obrien");
 
 }  // namespace Foam
 

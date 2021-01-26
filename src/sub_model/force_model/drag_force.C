@@ -33,6 +33,20 @@ cfdemDefineTypeName(dragForce);
 
 cfdemCreateNewFunctionAdder(forceModel, dragForce);
 
+std::hash<std::string> dragForce::strHasher_;
+
+const size_t dragForce::DiFeliceHashValue_ = strHasher_("DiFelice");
+
+const size_t dragForce::AbrahamHashValue_ = strHasher_("Abraham");
+
+const size_t dragForce::SchillerNaumannHashValue_ = strHasher_("Schiller-Naumann");
+
+const size_t dragForce::GidaspowHashValue_ = strHasher_("Gidaspow");
+
+const size_t dragForce::SyamlalObrienHashValue_ = strHasher_("Syamlal-Obrien");
+
+const size_t dragForce::YangHashValue_ = strHasher_("Yang");
+
 /*!
  * \brief Constructor
  * \note The initialization list should be in the same order as the variable declaration
@@ -170,7 +184,7 @@ void dragForce::setForce() {
         }
         // 计算总阻力
         drag = dragCoefficient * Ur;
-      }
+      }  // magUr > 0
       if (forceSubModel_->verbose() && 0 == index) {
         Pout << "index = " << index << endl;
         Pout << "findCellID = " << findCellID << endl;
