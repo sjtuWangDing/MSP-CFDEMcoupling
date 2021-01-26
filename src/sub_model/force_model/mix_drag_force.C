@@ -59,7 +59,7 @@ mixDragForce::mixDragForce(cfdemCloud& cloud)
 mixDragForce::~mixDragForce() {}
 
 void mixDragForce::setForce() {
-  Info << "Setting mix drag force..." << endl;
+  Info << "Setting " << dragModelName_ << " mix drag force..." << endl;
   base::MPI_Barrier();
   double dragCoefficient = 0.0;              // 阻力系数
   Foam::vector Ufluid = Foam::vector::zero;  // 背景流体速度
@@ -85,7 +85,7 @@ void mixDragForce::setForce() {
     // write particle data to global array
     forceSubModel_->partToArray(index, drag, Foam::vector::zero, Ufluid, dragCoefficient);
   }
-  Info << "Setting mix drag force - done" << endl;
+  Info << "Setting " << dragModelName_ << " mix drag force - done" << endl;
 }
 
 void mixDragForce::setForceKernel(const int index, Foam::vector& drag, Foam::vector& Ufluid, double& dragCoefficient) {
@@ -155,6 +155,7 @@ void mixDragForce::setForceKernel(const int index, Foam::vector& drag, Foam::vec
         dragCoefficient = 0.75 * vf * rho * Cd * magUr / (sqr(Vrs) * diameter);
         dragCoefficient *= cloud_.voidFractionM().pV(radius);
       } else if (dragForce::YangHashValue_ == dragModelHashValue) {
+        // Yang drag model
         pRe = diameter * vf * magUr / (nuf + Foam::SMALL);
         if (vf > 0.74) {
           double Wd = 0.0;
@@ -178,7 +179,7 @@ void mixDragForce::setForceKernel(const int index, Foam::vector& drag, Foam::vec
       // 计算总阻力
       drag = dragCoefficient * Ur;
     }  // magUr > 0
-    if (forceSubModel_->verbose()) {
+    if (forceSubModel_->verbose() && 0 == index) {
       Pout << "index = " << index << endl;
       Pout << "findCellID = " << findCellID << endl;
       Pout << "Ufluid = " << Ufluid << endl;

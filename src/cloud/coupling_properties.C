@@ -100,7 +100,7 @@ CouplingProperties::CouplingProperties(const fvMesh& mesh, const IOdictionary& c
 
   coarseParticleRatio_ = couplingPropertiesDict.lookupOrDefault<double>("coarseParticleRatio", 0.33);
 
-  expandedCellScale_ = couplingPropertiesDict.lookupOrDefault<double>("expandedCellScale", 6.0);
+  expandedCellScale_ = couplingPropertiesDict.lookupOrDefault<double>("expandedCellScale", 3.0);
 
   useGuoBBOEquation_ = couplingPropertiesDict.lookupOrDefault<bool>("useGuoBBOEquation", false);
 

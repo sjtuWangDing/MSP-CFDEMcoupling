@@ -74,6 +74,7 @@ cfdemCreateNewFunctionAdder(globalForce, globalForce);
 globalForce::globalForce(cfdemCloud& cloud)
     : cloud_(cloud),
       subPropsDict_(cloud.couplingPropertiesDict().subDict(typeName_ + "Props")),
+      verbose_(subPropsDict_.lookupOrDefault<bool>("verbose", false)),
       ddtU_(IOobject("ddtU", cloud.mesh().time().timeName(), cloud.mesh(), IOobject::READ_IF_PRESENT,
                      IOobject::AUTO_WRITE),
             cloud.mesh(),
@@ -125,6 +126,7 @@ void globalForce::initBeforeSetForce() {
     // 计算 ddtU field
     ddtU_ = fvc::ddt(U_) + fvc::div(phi_, U_);
   }
+  base::MPI_Info("globalForce: initBeforeSetForce - done", verbose_);
 }
 
 //! \brief 每一次耦合中，在 set force 后执行
@@ -142,6 +144,7 @@ void globalForce::endAfterSetForce() {
       }
     }  // end of loop particles
   }
+  base::MPI_Info("globalForce: endAfterSetForce - done", verbose_);
 }
 
 //! \brief 更新颗粒速度

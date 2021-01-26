@@ -107,7 +107,7 @@ void dataExchangeModel::checkTimeStepSize() const {
  *   timeStepFraction() 分别返回 0, 0.333333, 0.666666
  */
 double dataExchangeModel::timeStepFraction() const {
-  Info << "timeIndex: " << cloud_.mesh().time().timeIndex() << ", couplingStep: " << couplingStep_ << endl;
+  // Info << "timeIndex: " << cloud_.mesh().time().timeIndex() << ", couplingStep: " << couplingStep_ << endl;
   // 如果当前流体时间步是耦合时间步中第一个流体时间步
   if (checkValidCouplingStep()) {
     return 0;

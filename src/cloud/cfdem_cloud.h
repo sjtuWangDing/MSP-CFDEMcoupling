@@ -58,6 +58,50 @@ Class
 #include "RASModel.H"
 #endif
 
+namespace base {
+
+//! \brief multi parameter
+template <typename... Types>
+inline void MPI_Info(const Types&... args, bool verbose) {
+  if (verbose) {
+    oStreamPrint(Foam::Info, args...);
+    Foam::Info << Foam::endl;
+  }
+  MPI_Barrier();
+}
+
+//! \brief single parameter
+template <typename Type>
+inline void MPI_Info(const Type& arg, bool verbose) {
+  if (verbose) {
+    oStreamPrint(Foam::Info, arg);
+    Foam::Info << Foam::endl;
+  }
+  MPI_Barrier();
+}
+
+//! \brief multi parameter for const char *
+template <typename... CTypes>
+inline void MPI_Info(const CTypes*... args, bool verbose) {
+  if (verbose) {
+    oStreamPrint(Foam::Info, args...);
+    Foam::Info << Foam::endl;
+  }
+  MPI_Barrier();
+}
+
+//! \brief single parameter for const char *
+template <typename CType>
+inline void MPI_Info(const CType* arg, bool verbose) {
+  if (verbose) {
+    oStreamPrint(Foam::Info, arg);
+    Foam::Info << Foam::endl;
+  }
+  MPI_Barrier();
+}
+
+}  // namespace base
+
 namespace Foam {
 
 // forward declarations

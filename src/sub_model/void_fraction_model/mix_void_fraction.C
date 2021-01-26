@@ -149,6 +149,7 @@ void mixVoidFraction::setVoidFraction() {
       }
     }
   }
+  base::MPI_Info("mixVoidFraction: setVoidFraction - done", verbose_);
 }
 
 //! \brief 设置索引为 index 的单个颗粒的空隙率

@@ -69,32 +69,33 @@ void cfdemCloudMix::printParticleInfo() const {
   MPI_Comm_size(MPI_COMM_WORLD, &nProcs);
   MPI_Comm_rank(MPI_COMM_WORLD, &id);
   base::MPI_Barrier();
+  int number = 1;
   if (0 == id) {
-    for (int index = 0; index < numberOfParticles(); ++index) {
+    for (int index = 0; index < number; ++index) {
       Pout << "  position[" << index << "]: " << positions()[index][0] << ", " << positions()[index][1] << ", "
            << positions()[index][2] << endl;
     }
-    for (int index = 0; index < numberOfParticles(); ++index) {
+    for (int index = 0; index < number; ++index) {
       Pout << "  velocity[" << index << "]: " << velocities()[index][0] << ", " << velocities()[index][1] << ", "
            << velocities()[index][2] << endl;
     }
   }
   base::MPI_Barrier();
-  for (int index = 0; index < numberOfParticles(); ++index) {
+  for (int index = 0; index < number; ++index) {
     Pout << "  dimensionRatio[" << index << "]: " << dimensionRatios()[index] << endl;
   }
   base::MPI_Barrier();
-  for (int index = 0; index < numberOfParticles(); ++index) {
+  for (int index = 0; index < number; ++index) {
     Pout << "  DEMForce[" << index << "]: " << DEMForces()[index][0] << ", " << DEMForces()[index][1] << ", "
          << DEMForces()[index][2] << endl;
   }
   base::MPI_Barrier();
-  for (int index = 0; index < numberOfParticles(); ++index) {
+  for (int index = 0; index < number; ++index) {
     Pout << "  impForce[" << index << "]: " << impForces()[index][0] << ", " << impForces()[index][1] << ", "
          << impForces()[index][2] << endl;
   }
   base::MPI_Barrier();
-  voidFractionM().printVoidFractionInfo();
+  // voidFractionM().printVoidFractionInfo();
 }
 
 /*!

@@ -70,6 +70,7 @@ void dense::setVectorFieldAverage(volVectorField& valueField, volScalarField& we
     }
   }
   valueField.correctBoundaryConditions();
+  base::MPI_Info("dense: setVectorFieldAverage - done", true);
 }
 
 }  // namespace Foam

@@ -24,6 +24,8 @@ modelType B; // A or B
 
 couplingInterval 50;
 
+expandedCellScale 3;
+
 allowUseSubCFDTimeStep false;
 
 globalForce mixGlobalForce;
@@ -80,6 +82,7 @@ ArchimedesProps
 
 mixDragForceProps
 {
+  dragModelName "Abraham";
   treatForceExplicitInMomEquation false;
   treatForceBothCFDAndDEM true;
   treatDEMForceImplicit false;

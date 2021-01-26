@@ -27,6 +27,7 @@ License
 
 #include "./mix_Basset_force.h"
 #include "./mix_global_force.h"
+#include "./mix_virtual_mass_force.h"
 #include "cfdem_tools/cfdem_tools.h"
 #include "sub_model/void_fraction_model/void_fraction_model.h"
 
@@ -49,8 +50,13 @@ void mixGlobalForce::initBeforeSetForce() {
   backgroundUfluidMap_.clear();
   backgroundVoidFractionMap_.clear();
   backgroundDDtUMap_.clear();
-  // 计算 ddtU field
-  ddtU_ = fvc::ddt(U_) + fvc::div(phi_, U_);
+  bool isUsedVirtualMassForce = cfdemTools::isUsedForceModel(cloud_, mixVirtualMassForce::cTypeName());
+  bool isUsedBassetForce = cfdemTools::isUsedForceModel(cloud_, mixBassetForce::cTypeName());
+  // 如果使用了 BassetForce or virtualMassForce，则需要计算 ddtU
+  if (isUsedVirtualMassForce || isUsedBassetForce) {
+    // 计算 ddtU field
+    ddtU_ = fvc::ddt(U_) + fvc::div(phi_, U_);
+  }
   // reset data
   for (int index = 0; index < cloud_.numberOfParticles(); ++index) {
     if (cloud_.checkMiddleParticle(index)) {
@@ -68,10 +74,13 @@ void mixGlobalForce::initBeforeSetForce() {
       // 计算背景流体空隙率
       backgroundVoidFractionMap_.insert(
           std::make_pair(index, getBackgroundFieldValue<false, 1, volScalarField, scalar>(index, voidFraction_)));
-      // 计算背景流体的 ddtU
-      backgroundDDtUMap_.insert(std::make_pair(index, getBackgroundFieldValue(index, ddtU_)));
+      if (isUsedVirtualMassForce || isUsedBassetForce) {
+        // 计算背景流体的 ddtU
+        backgroundDDtUMap_.insert(std::make_pair(index, getBackgroundFieldValue(index, ddtU_)));
+      }
     }
   }
+  base::MPI_Info("mixGlobalForce: initBeforeSetForce - done", verbose_);
 }
 
 //! \brief 每一次耦合中，在 set force 后执行
@@ -83,8 +92,8 @@ void mixGlobalForce::endAfterSetForce() {
     if (cloud_.checkMiddleParticle(index) && cfdemTools::isUsedForceModel(cloud_, mixBassetForce::cTypeName())) {
       updateDDtUrHistoryMap(index);
     }
-    base::MPI_Barrier();
   }
+  base::MPI_Info("mixGlobalForce: endAfterSetForce - done", verbose_);
 }
 
 //! \brief 获取颗粒处背景流体速度

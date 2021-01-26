@@ -47,6 +47,7 @@ void engineSearchMix::findCell(const base::CITensor1& findCellIDs) const {
     dynamic_cast<engineSearchIB*>(const_cast<engineSearchMix*>(this))->searchEngine().correct();
   }
   engineSearch::findCell(findCellIDs);
+  base::MPI_Info("engineSearchMix: findCell - done", verbose_);
 }
 
 /*!
@@ -57,12 +58,12 @@ void engineSearchMix::findCell(const base::CITensor1& findCellIDs) const {
 void engineSearchMix::findMpiCell(const base::CITensor1& findMpiCellIDs) const {
   for (int index = 0; index < cloud_.numberOfParticles(); ++index) {
     findMpiCellKernel(index, findMpiCellIDs);
-    if (-1 == findMpiCellIDs[index]) {
+    if (-1 == findMpiCellIDs[index] && 0 == index && verbose_) {
       Pout << __func__ << ": Find no mesh covered by particle " << index
            << ", this could means the particle is not in the CFD domian." << endl;
     }
   }
-  base::MPI_Barrier();
+  base::MPI_Info("engineSearchMix: findMpiCell - done", verbose_);
 }
 
 /*!
@@ -75,7 +76,7 @@ void engineSearchMix::findExpandedCell(const base::CITensor1& findExpandedCellID
       findMpiCellKernel(index, findExpandedCellIDs, scale);
     }
   }
-  base::MPI_Barrier();
+  base::MPI_Info("engineSearchMix: findExpandedCell - done", verbose_);
 }
 
 void engineSearchMix::findMpiCellKernel(const int index, const base::CITensor1& findMpiCellIDs,

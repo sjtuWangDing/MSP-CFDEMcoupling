@@ -102,6 +102,8 @@ class engineSearch : public locateModel {
   //! \brief 是否开启 octree 搜索，default - true
   bool treeSearch_;
 
+  bool verbose_;
+
   Foam::meshSearch searchEngine_;
 };
 

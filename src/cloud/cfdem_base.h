@@ -37,6 +37,28 @@ void MPI_Irecv(const base::Tensor<nDim, DType, Device, Alloc>& tensor, const int
   }
 }
 
+template <typename OStreamType, typename Type>
+inline void oStreamPrint(OStreamType& oss, const Type& arg) {
+  oss << arg;
+}
+
+template <typename OStreamType, typename Type, typename... Types>
+inline void oStreamPrint(OStreamType& oss, const Type& arg, const Types&... args) {
+  oStreamPrint(oss, arg);
+  oStreamPrint(oss, args...);
+}
+
+template <typename OStreamType, typename CType>
+inline void oStreamPrint(OStreamType& oss, const CType* arg) {
+  oss << arg;
+}
+
+template <typename OStreamType, typename CType, typename... CTypes>
+inline void oStreamPrint(OStreamType& oss, const CType* arg, const CTypes*... args) {
+  oStreamPrint(oss, arg);
+  oStreamPrint(oss, args...);
+}
+
 }  // namespace base
 
 #endif  // __CFDEM_BASE_H__

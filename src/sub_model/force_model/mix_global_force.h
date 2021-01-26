@@ -203,7 +203,6 @@ DType mixGlobalForce::getBackgroundFieldValue(int index, const FieldType& field)
       }
     }
   }
-  base::MPI_Barrier();
   DType res = DType();                                 // 计算结果
   int procId = base::procId();                         // 处理器编号
   int numProc = base::numProc();                       // 处理器数量

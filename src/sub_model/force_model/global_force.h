@@ -55,7 +55,7 @@ class globalForce {
   static double GaussCore(const Foam::vector& particlePos, const Foam::vector& cellPos, const double radius,
                           const double gaussEff) {
     double dist = mag(particlePos - cellPos);
-    return exp(-1.0 * dist * dist / (2 * pow(radius * gaussEff, 2)));
+    return exp(-1.0 * dist * dist / (2 * pow(2 * radius * gaussEff, 2)));
   }
 
   globalForce(cfdemCloud& cloud);
@@ -142,6 +142,8 @@ class globalForce {
 
   //! \note subPropsDict_ should be declared in front of other members
   dictionary subPropsDict_;
+
+  bool verbose_;
 
   //! \brief 上一个时间步中的颗粒的速度
   //! \note map: 颗粒索引 --> 颗粒速度

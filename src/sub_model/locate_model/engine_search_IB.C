@@ -136,6 +136,7 @@ void engineSearchIB::findCell(const base::CITensor1& findCellIDs) const {
     }
     base::MPI_Barrier();
   }  // end loop of particle
+  base::MPI_Info("engineSearchIB: findCell - done", verbose_);
 }
 
 /*!

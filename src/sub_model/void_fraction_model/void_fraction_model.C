@@ -199,7 +199,7 @@ void voidFractionModel::getDimensionRatiosForMix(const base::CDTensor1& dimensio
       base::MPI_Isend(dimensionRatios, inode, rTag, rVec.data() + inode);
     }
   }
-  base::MPI_Barrier();
+  base::MPI_Info("voidFractionModel: getDimensionRatiosForMix - done", true);
 }
 
 /*!
