@@ -311,7 +311,10 @@ class cfdemCloud {
 
   inline Foam::vector getAngularVelocity(int index) const { return parCloud_.getAngularVelocity(index); }
 
-  inline void setNumberOfParticles(int number) { parCloud_.setNumberOfParticles(number); }
+  inline void setNumberOfParticles(int number) {
+    Info << "number of particles: " << number << endl;
+    parCloud_.setNumberOfParticles(number);
+  }
 
  protected:
   //! \note 在当前类中一定要最先声明 couplingPropertiesDict_ 和 liggghtsCommandsDict_
