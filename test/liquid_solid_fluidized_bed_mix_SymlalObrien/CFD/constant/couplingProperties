@@ -22,7 +22,7 @@ FoamFile
 
 modelType B; // A or B
 
-couplingInterval 100;
+couplingInterval 50;
 
 expandedCellScale 3;
 

@@ -11,7 +11,7 @@ newton          off
 
 units           si
 
-region          reg block -0.06 0.06 -0.06 0.06 0.0 0.9 units box
+region          reg block -0.06 0.06 -0.06 0.06 -0.05 0.85 units box
 create_box      2 reg
 
 neighbor        0.002 bin
@@ -52,12 +52,19 @@ fix             m5 all property/global coefficientRollingFriction peratomtypepai
                 2 ${CoefRollingFrictionWW} ${CoefRollingFrictionPW} ${CoefRollingFrictionPW} ${CoefRollingFrictionPP}
 
 # mesh
-fix             cad1 all mesh/surface/stress file &
-                /home/dw/CFDEM/MSP-CFDEMcoupling-5.x/test/liquid_solid_fluidized_bed_piso_Gidaspow/DEM/meshes/cyclinder.stl &
+fix             cad_wall all mesh/surface/stress file &
+                /home/dw/CFDEM/MSP-CFDEMcoupling-5.x/test/liquid_solid_fluidized_bed_mix_SymlalObrien/DEM/meshes/cyclinder.stl &
                 type 1 scale 0.001
-fix             cyclinderWall all wall/gran model hertz tangential history mesh n_meshes 1 meshes cad1
-fix             zwalls1 all wall/gran model hertz tangential history primitive type 1 zplane 0.0
-fix             zwalls2 all wall/gran model hertz tangential history primitive type 1 zplane 0.8
+
+fix             cad_bottom all mesh/surface/stress file &
+                /home/dw/CFDEM/MSP-CFDEMcoupling-5.x/test/liquid_solid_fluidized_bed_mix_SymlalObrien/DEM/meshes/bottom.stl &
+                type 1 scale 0.001
+
+fix             cad_top all mesh/surface/stress file &
+                /home/dw/CFDEM/MSP-CFDEMcoupling-5.x/test/liquid_solid_fluidized_bed_mix_SymlalObrien/DEM/meshes/top.stl &
+                type 1 scale 0.001 move 0. 0. 0.8
+
+fix             alls all wall/gran model hertz tangential history mesh n_meshes 3 meshes cad_wall cad_bottom cad_top
 
 # pair style
 pair_style      gran model hertz tangential history
@@ -84,7 +91,7 @@ fix             ins all insert/rate/region seed 49979687 distributiontemplate pd
                 overlapcheck yes vel constant 0. 0. 0. region factory ntry_mc 10000
 
 # cfd coupling
-fix           cfd1  all couple/cfd couple_every 100 mpi
+fix           cfd1  all couple/cfd couple_every 50 mpi
 fix           cfd2  all couple/cfd/force
 
 # apply nve integration to all particles that are inserted as single particles
@@ -99,5 +106,8 @@ compute_modify  thermo_temp dynamic yes
 
 # insert the first particles so that dump is not empty
 dump            dmp all custom 1000 ../DEM/post/dump.liggghts_run id type x y z ix iy iz vx vy vz fx fy fz omegax omegay omegaz radius
+# dump            dmp_particle all custom/vtk 100 ../DEM/post/dump_*.vtk id type x y z ix iy iz vx vy vz fx fy fz omegax omegay omegaz radius
+# dump            dmp_top all mesh/gran/VTK 100 ../DEM/post/mesh_top_*.vtk stress cad_top
+# dump            dmp_bottom all mesh/gran/VTK 100 ../DEM/post/mesh_bottom_*.vtk stress cad_bottom
 
 run             5
