@@ -50,7 +50,7 @@ mixDragForce::mixDragForce(cfdemCloud& cloud)
   if (dragForce::DiFeliceHashValue_ != dragModelHashValue && dragForce::AbrahamHashValue_ != dragModelHashValue &&
       dragForce::SchillerNaumannHashValue_ != dragModelHashValue &&
       dragForce::GidaspowHashValue_ != dragModelHashValue && dragForce::SyamlalObrienHashValue_ != dragModelHashValue &&
-      dragForce::YangHashValue_ != dragModelHashValue) {
+      dragForce::YangHashValue_ != dragModelHashValue && dragForce::DallavalleHashValue_ != dragModelHashValue) {
     FatalError << __func__ << ": wrong drag model name: " << dragModelName_ << abort(FatalError);
   }
   Info << __func__ << ": choose " << dragModelName_ << " drag force model." << endl;
@@ -115,6 +115,12 @@ void mixDragForce::setForceKernel(const int index, Foam::vector& drag, Foam::vec
         pRe = diameter * vf * magUr / (nuf + Foam::SMALL);
         Cd = sqr(0.63 + 4.8 / sqrt(pRe));
         Xi = 3.7 - 0.65 * exp(-sqr(1.5 - log10(pRe)) / 2.0);
+        dragCoefficient = 0.125 * Cd * rho * M_PI * diameter * diameter * pow(vf, (2 - Xi)) * magUr;
+      } else if (dragForce::DallavalleHashValue_ == dragModelHashValue) {
+        // Dallavalle drag model
+        pRe = diameter * vf * magUr / (nuf + Foam::SMALL);
+        Cd = sqr(0.63 + 4.8 / sqrt(pRe));
+        Xi = 2.65 * (vf + 1) - (5.3 - 3.5 * vf) * sqr(vf) * exp(-sqr(1.5 - log10(pRe)) / 2.0);
         dragCoefficient = 0.125 * Cd * rho * M_PI * diameter * diameter * pow(vf, (2 - Xi)) * magUr;
       } else if (dragForce::AbrahamHashValue_ == dragModelHashValue) {
         // Abraham drag model

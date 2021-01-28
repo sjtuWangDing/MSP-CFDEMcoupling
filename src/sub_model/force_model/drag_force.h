@@ -76,6 +76,8 @@ class dragForce : public forceModel {
 
   static const size_t YangHashValue_;
 
+  static const size_t DallavalleHashValue_;
+
  private:
   //! \note subPropsDict_ should be declared in front of other members
   dictionary subPropsDict_;

@@ -26,18 +26,18 @@ couplingInterval 50;
 
 expandedCellScale 3;
 
-useGuoBBOEquation true;
-
 allowUseSubCFDTimeStep false;
 
 globalForce mixGlobalForce;
+
+useGuoBBOEquation false;
 
 forceModels
 (
   Archimedes
   mixDragForce
-  // mixVirtualMassForce
-  // mixBassetForce
+  // virtualMassForce
+  // BassetForce
   // viscForce
   // gradPForce
 );
@@ -70,6 +70,7 @@ implicitCoupleProps
 
 "(globalForceProps|mixGlobalForceProps)"
 {
+  verbose true;
   velFieldName "U";
   voidFractionFieldName "voidFraction";
   gravityFieldName "g";
@@ -82,37 +83,14 @@ ArchimedesProps
 
 mixDragForceProps
 {
-  dragModelName "Dallavalle";
+  dragModelName "Yang";
   treatForceExplicitInMomEquation false;
   treatForceBothCFDAndDEM true;
   treatDEMForceImplicit false;
   verbose true;
   interpolation false;
-  scalarViscosity false;
-  useGaussCoreFunctionRefined true;
+  // scalarViscosity true;
   // nu [0 2 -1 0 0 0 0] 1e-04;
-}
-
-mixVirtualMassForceProps
-{
-  treatForceExplicitInMomEquation false;
-  treatForceBothCFDAndDEM true;
-  treatDEMForceImplicit false;
-  verbose true;
-  interpolation false;
-  scalarViscosity false;
-  useGaussCoreFunctionRefined true;
-}
-
-mixBassetForceProps
-{
-  treatForceExplicitInMomEquation false;
-  treatForceBothCFDAndDEM true;
-  treatDEMForceImplicit false;
-  verbose true;
-  interpolation false;
-  scalarViscosity false;
-  useGaussCoreFunctionRefined true;
 }
 
 viscForceProps
@@ -135,19 +113,6 @@ gradPForceProps
   interpolation false;
 }
 
-DiFeliceDragProps
-{
-  velFieldName "U";
-  voidFractionFieldName "voidFraction";
-  treatForceExplicitInMomEquation false;
-  treatForceBothCFDAndDEM true;
-  treatDEMForceImplicit false;
-  verbose true;
-  interpolation false;
-  // scalarViscosity true;
-  // nu [0 2 -1 0 0 0 0] 1e-04;
-}
-
 twoWayMPIProps
 {
   liggghtsPath "../DEM/in.liggghts_run";
@@ -161,6 +126,7 @@ dividedProps
 
 mixProps
 {
+  verbose true;
   alphaMin 0.3;
   scaleUpVol 1.0;
 }
@@ -184,6 +150,7 @@ engineProps
 
 engineMixProps
 {
+  verbose true;
   treeSearch true;
   zSplit 8;
   xySplit 16;

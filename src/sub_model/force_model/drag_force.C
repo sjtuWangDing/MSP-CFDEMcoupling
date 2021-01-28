@@ -47,6 +47,8 @@ const size_t dragForce::SyamlalObrienHashValue_ = strHasher_("Syamlal-Obrien");
 
 const size_t dragForce::YangHashValue_ = strHasher_("Yang");
 
+const size_t dragForce::DallavalleHashValue_ = strHasher_("Dallavalle");
+
 /*!
  * \brief Constructor
  * \note The initialization list should be in the same order as the variable declaration
@@ -61,7 +63,8 @@ dragForce::dragForce(cfdemCloud& cloud)
   size_t dragModelHashValue = strHasher_(dragModelName_);
   if (DiFeliceHashValue_ != dragModelHashValue && AbrahamHashValue_ != dragModelHashValue &&
       SchillerNaumannHashValue_ != dragModelHashValue && GidaspowHashValue_ != dragModelHashValue &&
-      SyamlalObrienHashValue_ != dragModelHashValue) {
+      SyamlalObrienHashValue_ != dragModelHashValue && YangHashValue_ != dragModelHashValue &&
+      DallavalleHashValue_ != dragModelHashValue) {
     FatalError << __func__ << ": wrong drag model name: " << dragModelName_ << abort(FatalError);
   }
   Info << __func__ << ": choose " << dragModelName_ << " drag force model." << endl;
@@ -140,6 +143,12 @@ void dragForce::setForce() {
           Cd = sqr(0.63 + 4.8 / sqrt(pRe));
           Xi = 3.7 - 0.65 * exp(-sqr(1.5 - log10(pRe)) / 2.0);
           dragCoefficient = 0.125 * Cd * rho * M_PI * diameter * diameter * pow(vf, (2 - Xi)) * magUr;
+        } else if (DallavalleHashValue_ == dragModelHashValue) {
+          // Dallavalle drag model
+          pRe = diameter * vf * magUr / (nuf + Foam::SMALL);
+          Cd = sqr(0.63 + 4.8 / sqrt(pRe));
+          Xi = 2.65 * (vf + 1) - (5.3 - 3.5 * vf) * sqr(vf) * exp(-sqr(1.5 - log10(pRe)) / 2.0);
+          dragCoefficient = 0.125 * Cd * rho * M_PI * diameter * diameter * pow(vf, (2 - Xi)) * magUr;
         } else if (AbrahamHashValue_ == dragModelHashValue) {
           // Abraham drag model
           pRe = diameter * magUr / (nuf + Foam::SMALL);
@@ -177,6 +186,24 @@ void dragForce::setForce() {
           Vrs = 0.5 * (A - 0.06 * pRe + sqrt(sqr(0.06 * pRe) + 0.12 * pRe * (2 * B - A) + A * A));
           Cd = sqr(0.63 + 4.8 / sqrt(pRe / Vrs));
           dragCoefficient = 0.75 * vf * rho * Cd * magUr / (sqr(Vrs) * diameter);
+          dragCoefficient *= cloud_.voidFractionM().pV(radius);
+        } else if (YangHashValue_ == dragModelHashValue) {
+          // Yang drag model
+          pRe = diameter * vf * magUr / (nuf + Foam::SMALL);
+          if (vf > 0.74) {
+            double Wd = 0.0;
+            if (vf <= 0.82) {
+              Wd = 0.0214 / (4.0 * sqr(vf - 0.7463) + 0.0044) - 0.576;
+            } else if (vf > 0.97) {
+              Wd = 32.8295 * vf - 31.8295;
+            } else {
+              Wd = 0.0038 / (4.0 * sqr(vf - 0.7789) + 0.004) - 0.0101;
+            }
+            Cd = pRe >= 1000 ? 0.44 : (24.0 * (1 + 0.15 * pow(pRe, 0.687)) / pRe);
+            dragCoefficient = 0.75 * rho * vf * Cd * magUr * Wd / diameter;
+          } else {
+            dragCoefficient = 150 * (1 - vf) * nuf * rho / (vf * diameter * diameter) + 1.75 * magUr * rho / diameter;
+          }
           dragCoefficient *= cloud_.voidFractionM().pV(radius);
         }
         if ("B" == cloud_.modelType()) {
