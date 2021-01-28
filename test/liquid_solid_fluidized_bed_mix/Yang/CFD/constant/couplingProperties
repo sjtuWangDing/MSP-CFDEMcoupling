@@ -1,0 +1,162 @@
+/*---------------------------------------------------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  1.4                                   |
+|   \\  /    A nd           | Web:      http://www.openfoam.org               |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+
+FoamFile
+{
+  version         2.0;
+  format          ascii;
+  root            "";
+  case            "";
+  instance        "";
+  local           "";
+  class           dictionary;
+  object          couplingProperties;
+}
+
+/* ---------------------------- sub-models & settings ---------------------------- */
+
+modelType B; // A or B
+
+couplingInterval 100;
+
+expandedCellScale 3;
+
+allowUseSubCFDTimeStep false;
+
+globalForce mixGlobalForce;
+
+useGuoBBOEquation false;
+
+forceModels
+(
+  Archimedes
+  mixDragForce
+  // virtualMassForce
+  // BassetForce
+  // viscForce
+  // gradPForce
+);
+
+momCoupleModels
+(
+  implicitCouple
+);
+
+voidFractionModel mix; // divided, centre, mix
+
+locateModel engineMix; // engine, engineIB, engineMix
+
+meshMotionModel noMeshMotion;
+
+dataExchangeModel twoWayMPI;
+
+averagingModel dense; // dense dilute
+
+turbulenceModelType turbulenceProperties;
+
+/* ---------------------------- sub-model properties ------------------------- */
+
+implicitCoupleProps
+{
+  velFieldName "U";
+  granVelFieldName "Us";
+  voidFractionFieldName "voidFraction";
+}
+
+"(globalForceProps|mixGlobalForceProps)"
+{
+  verbose true;
+  GaussCoreEff 3;
+  velFieldName "U";
+  voidFractionFieldName "voidFraction";
+  gravityFieldName "g";
+}
+
+ArchimedesProps
+{
+  treatForceExplicitInMomEquation false;
+  treatForceBothCFDAndDEM true;
+  treatDEMForceImplicit false;
+  verbose true;
+  interpolation false;
+}
+
+mixDragForceProps
+{
+  dragModelName "Yang";
+  treatForceExplicitInMomEquation false;
+  treatForceBothCFDAndDEM true;
+  treatDEMForceImplicit false;
+  verbose true;
+  interpolation false;
+  // scalarViscosity true;
+  // nu [0 2 -1 0 0 0 0] 1e-04;
+}
+
+viscForceProps
+{
+  velFieldName "U";
+  treatForceExplicitInMomEquation true;
+  treatForceBothCFDAndDEM false;
+  treatDEMForceImplicit false;
+  verbose true;
+  interpolation false;
+}
+
+gradPForceProps
+{
+  pressureFieldName "p";
+  treatForceExplicitInMomEquation true;
+  treatForceBothCFDAndDEM false;
+  treatDEMForceImplicit false;
+  verbose true;
+  interpolation false;
+}
+
+twoWayMPIProps
+{
+  liggghtsPath "../DEM/in.liggghts_run";
+}
+
+dividedProps
+{
+  alphaMin 0.3;
+  scaleUpVol 1.0;
+}
+
+mixProps
+{
+  verbose true;
+  alphaMin 0.3;
+  scaleUpVol 1.0;
+}
+
+centreProps
+{
+  alphaMin 0.30;
+}
+
+bigParticleProps
+{
+  maxCellsPerParticle 1000;
+  alphaMin 0.30;
+  scaleUpVol 1.0;
+}
+
+engineProps
+{
+  treeSearch false;
+}
+
+engineMixProps
+{
+  verbose true;
+  treeSearch true;
+  zSplit 8;
+  xySplit 16;
+}
