@@ -75,6 +75,7 @@ globalForce::globalForce(cfdemCloud& cloud)
     : cloud_(cloud),
       subPropsDict_(cloud.couplingPropertiesDict().subDict(typeName_ + "Props")),
       verbose_(subPropsDict_.lookupOrDefault<bool>("verbose", false)),
+      GaussCoreEff_(subPropsDict_.lookupOrDefault<double>("GaussCoreEff", 3.0)),
       ddtU_(IOobject("ddtU", cloud.mesh().time().timeName(), cloud.mesh(), IOobject::READ_IF_PRESENT,
                      IOobject::AUTO_WRITE),
             cloud.mesh(),

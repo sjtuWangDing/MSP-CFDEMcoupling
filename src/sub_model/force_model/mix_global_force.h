@@ -195,7 +195,7 @@ DType mixGlobalForce::getBackgroundFieldValue(int index, const FieldType& field)
           cellPos = cloud_.mesh().C()[cellID];
           cellV = cloud_.mesh().V()[cellID];
           // 计算高斯核
-          gcore = GaussCore(particlePos, cellPos, radius, cloud_.expandedCellScale());
+          gcore = GaussCore(particlePos, cellPos, radius);
           // 计算累计数据
           fieldRefine<DType, TensorType>::template op<fieldIsNotVF>(data, field[cellID], cellV, gcore,
                                                                     voidFraction_[cellID]);

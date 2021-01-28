@@ -42,8 +42,13 @@ Archimedes::Archimedes(cfdemCloud& cloud)
       subPropsDict_(cloud.couplingPropertiesDict().subDict(typeName_ + "Props")),
       g_(cloud.globalF().g()) {
   createForceSubModels(subPropsDict_, kUnResolved);
-  CHECK(false == forceSubModel_->treatForceBothCFDAndDEM())
-      << ": Archimedes model request treatForceBothCFDAndDEM == false";
+  if (cloud_.modelType() == "A" || cloud_.modelType() == "Bfull") {
+    CHECK(!forceSubModel_->treatForceBothCFDAndDEM())
+        << ": model type A and Bfull request Archimedes model treatForceBothCFDAndDEM == false";
+  } else if (cloud_.modelType() == "B") {
+    CHECK(forceSubModel_->treatForceBothCFDAndDEM())
+        << ": model type B request Archimedes model treatForceBothCFDAndDEM == true";
+  }
 }
 
 Archimedes::~Archimedes() {}
@@ -60,10 +65,6 @@ void Archimedes::setForce() {
     if (findCellID >= 0) {
       double pV = 4.0 * M_PI * raidus * raidus * raidus / 3.0;
       buoyancy += -g_.value() * forceSubModel_->rhoField()[findCellID] * pV;
-      // 如果使用 Junke Guo BBO Equation，则需要增加 2 倍的浮力
-      if (cloud_.useGuoBBOEquation()) {
-        buoyancy *= 3.0;
-      }
     }
     // write particle data to global array
     // index - particle index

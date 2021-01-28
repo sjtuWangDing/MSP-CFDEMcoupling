@@ -24,7 +24,7 @@ modelType B; // A or B
 
 couplingInterval 50;
 
-expandedCellScale 3;
+expandedCellScale 6;
 
 allowUseSubCFDTimeStep false;
 
@@ -70,6 +70,7 @@ implicitCoupleProps
 
 "(globalForceProps|mixGlobalForceProps)"
 {
+  GaussCoreEff 3;
   velFieldName "U";
   voidFractionFieldName "voidFraction";
   gravityFieldName "g";
@@ -77,12 +78,18 @@ implicitCoupleProps
 
 ArchimedesProps
 {
+  treatForceExplicitInMomEquation false;
+  treatForceBothCFDAndDEM true;
+  treatDEMForceImplicit false;
   verbose true;
+  interpolation false;
+  scalarViscosity false;
+  useGaussCoreFunctionRefined true;
 }
 
 mixDragForceProps
 {
-  dragModelName "Abraham";
+  dragModelName "Yang";
   treatForceExplicitInMomEquation false;
   treatForceBothCFDAndDEM true;
   treatDEMForceImplicit false;

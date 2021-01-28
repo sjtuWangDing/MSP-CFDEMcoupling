@@ -227,7 +227,7 @@ void mixVirtualMassForce::setMiddleParticleForceKernel(Foam::vector& mixVirtualM
         cellPos = cloud_.mesh().C()[cellID];
         cellV = cloud_.mesh().V()[cellID];
         // 计算高斯核
-        core = globalForce::GaussCore(particlePos, cellPos, radius, 6);
+        core = cloud_.globalF().GaussCore(particlePos, cellPos, radius);
         // 计算累计速度
         UFluid += voidFraction_[cellID] * U_[cellID] * core * cellV;
         // 计算累计加速度

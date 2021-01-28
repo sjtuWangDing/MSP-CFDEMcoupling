@@ -52,10 +52,9 @@ class globalForce {
   cfdemDefineNewFunctionAdder(globalForce, globalForce);
 
   //! \brief 高斯核函数
-  static double GaussCore(const Foam::vector& particlePos, const Foam::vector& cellPos, const double radius,
-                          const double gaussEff) {
+  double GaussCore(const Foam::vector& particlePos, const Foam::vector& cellPos, const double radius) const {
     double dist = mag(particlePos - cellPos);
-    return exp(-1.0 * dist * dist / (2 * pow(2 * radius * gaussEff, 2)));
+    return exp(-1.0 * dist * dist / (2 * pow(2 * radius * GaussCoreEff_, 2)));
   }
 
   globalForce(cfdemCloud& cloud);
@@ -144,6 +143,8 @@ class globalForce {
   dictionary subPropsDict_;
 
   bool verbose_;
+
+  double GaussCoreEff_;
 
   //! \brief 上一个时间步中的颗粒的速度
   //! \note map: 颗粒索引 --> 颗粒速度
