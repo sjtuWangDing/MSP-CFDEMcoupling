@@ -22,25 +22,21 @@ FoamFile
 
 modelType B; // A or B
 
-couplingInterval 50;
+couplingInterval 100;
 
-expandedCellScale 6;
-
-useGuoBBOEquation true;
+expandedCellScale 4;
 
 allowUseSubCFDTimeStep false;
 
 globalForce mixGlobalForce;
 
+useGuoBBOEquation false;
+
 forceModels
 (
   Archimedes
   mixDragForce
-  mixMeiLiftForce
-  // mixVirtualMassForce
-  // mixBassetForce
-  // viscForce
-  // gradPForce
+  mixVirtualMassForce
 );
 
 momCoupleModels
@@ -71,8 +67,8 @@ implicitCoupleProps
 
 "(globalForceProps|mixGlobalForceProps)"
 {
-  GaussCoreEff 3;
   verbose true;
+  GaussCoreEff 3;
   velFieldName "U";
   voidFractionFieldName "voidFraction";
   gravityFieldName "g";
@@ -85,13 +81,11 @@ ArchimedesProps
   treatDEMForceImplicit false;
   verbose true;
   interpolation false;
-  scalarViscosity false;
-  useGaussCoreFunctionRefined false;
 }
 
 mixDragForceProps
 {
-  dragModelName "Dallavalle";
+  dragModelName "SymlalObrien";
   treatForceExplicitInMomEquation false;
   treatForceBothCFDAndDEM true;
   treatDEMForceImplicit false;
@@ -99,70 +93,21 @@ mixDragForceProps
   interpolation false;
   scalarViscosity false;
   useGaussCoreFunctionRefined true;
-  // nu [0 2 -1 0 0 0 0] 1e-04;
 }
 
 mixMeiLiftForceProps
 {
+  useSecondOrderTerms false;
   treatForceBothCFDAndDEM true;
   verbose true;
-  useSecondOrderTerms false;
   useGaussCoreFunctionRefined true;
 }
 
 mixVirtualMassForceProps
 {
-  treatForceExplicitInMomEquation false;
   treatForceBothCFDAndDEM true;
-  treatDEMForceImplicit false;
   verbose true;
-  interpolation false;
-  scalarViscosity false;
   useGaussCoreFunctionRefined true;
-}
-
-mixBassetForceProps
-{
-  treatForceExplicitInMomEquation false;
-  treatForceBothCFDAndDEM true;
-  treatDEMForceImplicit false;
-  verbose true;
-  interpolation false;
-  scalarViscosity false;
-  useGaussCoreFunctionRefined true;
-}
-
-viscForceProps
-{
-  velFieldName "U";
-  treatForceExplicitInMomEquation true;
-  treatForceBothCFDAndDEM false;
-  treatDEMForceImplicit false;
-  verbose true;
-  interpolation false;
-}
-
-gradPForceProps
-{
-  pressureFieldName "p";
-  treatForceExplicitInMomEquation true;
-  treatForceBothCFDAndDEM false;
-  treatDEMForceImplicit false;
-  verbose true;
-  interpolation false;
-}
-
-DiFeliceDragProps
-{
-  velFieldName "U";
-  voidFractionFieldName "voidFraction";
-  treatForceExplicitInMomEquation false;
-  treatForceBothCFDAndDEM true;
-  treatDEMForceImplicit false;
-  verbose true;
-  interpolation false;
-  // scalarViscosity true;
-  // nu [0 2 -1 0 0 0 0] 1e-04;
 }
 
 twoWayMPIProps
@@ -178,6 +123,7 @@ dividedProps
 
 mixProps
 {
+  verbose true;
   alphaMin 0.3;
   scaleUpVol 1.0;
 }
@@ -201,6 +147,7 @@ engineProps
 
 engineMixProps
 {
+  verbose true;
   treeSearch true;
   zSplit 8;
   xySplit 16;
