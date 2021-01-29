@@ -25,36 +25,36 @@ License
   Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 \*---------------------------------------------------------------------------*/
 
-#ifndef __VIRTUAL_MASS_FORCE_H__
-#define __VIRTUAL_MASS_FORCE_H__
+#ifndef __MEI_LIFT_FORCE_H__
+#define __MEI_LIFT_FORCE_H__
 
 #include "./force_model.h"
 
 namespace Foam {
 
-class virtualMassForce : public forceModel {
+class MeiLiftForce : public forceModel {
  public:
   //! \brief Runtime type information
-  cfdemTypeName("virtualMassForce");
+  cfdemTypeName("MeiLiftForce");
 
-  cfdemDefineNewFunctionAdder(forceModel, virtualMassForce);
+  cfdemDefineNewFunctionAdder(forceModel, MeiLiftForce);
 
   //! \brief Constructor
-  virtualMassForce(cfdemCloud& cloud);
+  MeiLiftForce(cfdemCloud& cloud);
 
   //! \brief Destructor
-  ~virtualMassForce();
+  ~MeiLiftForce();
 
   void setForce();
 
  protected:
-  void setForceKernel(const int index, Foam::vector& virtualMassForce);
-
-  //! \brief 计算颗粒 index 处的背景流体的ddtu
-  Foam::vector getBackgroundDDtU(const int index, const int findCellID) const;
+  void setForceKernel(const int index, Foam::vector& liftForce);
 
   //! \brief 计算颗粒 index 处的背景流体速度
   Foam::vector getBackgroundUfluid(const int index, const int findCellID) const;
+
+  //! \brief 计算颗粒 index 处的背景流体涡量
+  Foam::vector getBackgroundVorticity(const int index, const int findCellID) const;
 
   //! \brief 计算颗粒 index 处的背景流体空隙率
   double getBackgroundVoidFraction(const int index, const int findCellID) const;
@@ -63,13 +63,16 @@ class virtualMassForce : public forceModel {
   //! \note subPropsDict_ should be declared in front of other members
   dictionary subPropsDict_;
 
+  //! \brief 是否使用二阶精度
+  const bool useSecondOrderTerms_;
+
   const volVectorField& U_;
 
   const volScalarField& voidFraction_;
 
-  const surfaceScalarField& phi_;
+  const volVectorField& vorticityField_;
 };
 
 }  // namespace Foam
 
-#endif  // __VIRTUAL_MASS_FORCE_H__
+#endif  // __MEI_LIFT_FORCE_H__

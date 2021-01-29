@@ -26,6 +26,7 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "./Basset_force.h"
+#include "./Mei_lift_force.h"
 #include "./global_force.h"
 #include "./virtual_mass_force.h"
 #include "cfdem_tools/cfdem_tools.h"
@@ -80,6 +81,10 @@ globalForce::globalForce(cfdemCloud& cloud)
                      IOobject::AUTO_WRITE),
             cloud.mesh(),
             dimensionedVector("zero", dimensionSet(0, 1, -2, 0, 0), vector(0, 0, 0))),  // [ddtU] == [m / s^2])
+      vorticityField_(IOobject("vorticity", cloud.mesh().time().timeName(), cloud.mesh(), IOobject::READ_IF_PRESENT,
+                               IOobject::AUTO_WRITE),
+                      cloud.mesh(), dimensionedVector("zero", dimensionSet(0, 0, -1, 0, 0),
+                                                      vector(0, 0, 0))),  // [vorticity] == [1 / s])
       impParticleForce_(IOobject("impParticleForce", cloud.mesh().time().timeName(), cloud.mesh(),
                                  IOobject::READ_IF_PRESENT, IOobject::AUTO_WRITE),
                         cloud.mesh(), dimensionedVector("zero", dimensionSet(1, 1, -2, 0, 0),
@@ -126,6 +131,11 @@ void globalForce::initBeforeSetForce() {
   if (isUsedVirtualMassForce || isUsedBassetForce) {
     // 计算 ddtU field
     ddtU_ = fvc::ddt(U_) + fvc::div(phi_, U_);
+  }
+  // 如果使用了升力，则需要计算 vorticityField
+  bool isUsedMeiLiftForce = cfdemTools::isUsedForceModel(cloud_, MeiLiftForce::cTypeName());
+  if (isUsedMeiLiftForce) {
+    vorticityField_ = fvc::curl(U_);
   }
   base::MPI_Info("globalForce: initBeforeSetForce - done", verbose_);
 }

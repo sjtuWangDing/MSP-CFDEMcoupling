@@ -133,7 +133,7 @@ Foam::vector virtualMassForce::getBackgroundDDtU(const int index, const int find
   Foam::vector ddtU = Foam::vector::zero;
   if (findCellID >= 0) {
     if (forceSubModel_->interpolation()) {
-      // 获取颗粒中心的坐标, 将颗粒中心所在网格的空隙率和流体速度插值到颗粒中心处
+      // 获取颗粒中心的坐标, 将颗粒中心所在网格的 ddtU 插值到颗粒中心处
       Foam::vector pos = cloud_.getPosition(index);
       ddtU = DDtUInterpolator_().interpolate(pos, findCellID);
     } else {
@@ -150,7 +150,7 @@ Foam::vector virtualMassForce::getBackgroundUfluid(const int index, const int fi
   Foam::vector Ufluid = Foam::vector::zero;
   if (findCellID >= 0) {
     if (forceSubModel_->interpolation()) {
-      // 获取颗粒中心的坐标, 将颗粒中心所在网格的空隙率和流体速度插值到颗粒中心处
+      // 获取颗粒中心的坐标, 将颗粒中心所在网格的流体速度插值到颗粒中心处
       Foam::vector pos = cloud_.getPosition(index);
       Ufluid = UInterpolator_().interpolate(pos, findCellID);
     } else {
@@ -166,7 +166,7 @@ double virtualMassForce::getBackgroundVoidFraction(const int index, const int fi
   double vf = 1.0;
   if (findCellID >= 0) {
     if (forceSubModel_->interpolation()) {
-      // 获取颗粒中心的坐标, 将颗粒中心所在网格的空隙率和流体速度插值到颗粒中心处
+      // 获取颗粒中心的坐标, 将颗粒中心所在网格的空隙率插值到颗粒中心处
       Foam::vector pos = cloud_.getPosition(index);
       vf = voidFractionInterpolator_().interpolate(pos, findCellID);
       // 确保插值后颗粒中心的空隙率有意义

@@ -26,6 +26,7 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "./mix_Basset_force.h"
+#include "./mix_Mei_lift_force.h"
 #include "./mix_global_force.h"
 #include "./mix_virtual_mass_force.h"
 #include "cfdem_tools/cfdem_tools.h"
@@ -57,6 +58,12 @@ void mixGlobalForce::initBeforeSetForce() {
     // 计算 ddtU field
     ddtU_ = fvc::ddt(U_) + fvc::div(phi_, U_);
   }
+  // 如果使用了升力，则需要计算 vorticityField
+  bool isUsedMixMeiLiftForce = cfdemTools::isUsedForceModel(cloud_, mixMeiLiftForce::cTypeName());
+  if (isUsedMixMeiLiftForce) {
+    // 计算 vorticityField
+    vorticityField_ = fvc::curl(U_);
+  }
   // reset data
   for (int index = 0; index < cloud_.numberOfParticles(); ++index) {
     if (cloud_.checkMiddleParticle(index)) {
@@ -74,9 +81,13 @@ void mixGlobalForce::initBeforeSetForce() {
       // 计算背景流体空隙率
       backgroundVoidFractionMap_.insert(
           std::make_pair(index, getBackgroundFieldValue<false, 1, volScalarField, scalar>(index, voidFraction_)));
+      // 计算背景流体的 ddtU
       if (isUsedVirtualMassForce || isUsedBassetForce) {
-        // 计算背景流体的 ddtU
         backgroundDDtUMap_.insert(std::make_pair(index, getBackgroundFieldValue(index, ddtU_)));
+      }
+      // 计算背景流体的涡量
+      if (isUsedMixMeiLiftForce) {
+        backgroundVorticityMap_.insert(std::make_pair(index, getBackgroundFieldValue(index, vorticityField_)));
       }
     }
   }
@@ -121,6 +132,16 @@ Foam::vector mixGlobalForce::getBackgroundDDtU(const int index) const {
   CHECK(cloud_.checkMiddleParticle(index)) << __func__ << ": particle " << index << " is not middle type";
   auto iter = backgroundDDtUMap_.find(index);
   if (backgroundDDtUMap_.end() != iter) {
+    return iter->second;
+  }
+  return Foam::vector::zero;
+}
+
+//! \brief 获取颗粒处背景流体的涡量
+Foam::vector mixGlobalForce::getBackgroundVorticity(const int index) const {
+  CHECK(cloud_.checkMiddleParticle(index)) << __func__ << ": particle " << index << " is not middle type";
+  auto iter = backgroundVorticityMap_.find(index);
+  if (backgroundVorticityMap_.end() != iter) {
     return iter->second;
   }
   return Foam::vector::zero;

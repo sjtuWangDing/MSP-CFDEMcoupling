@@ -36,6 +36,7 @@ forceModels
 (
   Archimedes
   mixDragForce
+  mixMeiLiftForce
   // mixVirtualMassForce
   // mixBassetForce
   // viscForce
@@ -98,6 +99,13 @@ mixDragForceProps
   scalarViscosity false;
   useGaussCoreFunctionRefined true;
   // nu [0 2 -1 0 0 0 0] 1e-04;
+}
+
+mixMeiLiftForceProps
+{
+  treatForceBothCFDAndDEM true;
+  verbose true;
+  useSecondOrderTerms false;
 }
 
 mixVirtualMassForceProps

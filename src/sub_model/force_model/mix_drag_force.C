@@ -201,6 +201,7 @@ void mixDragForce::setForceKernel(const int index, Foam::vector& drag, Foam::vec
       Pout << "drag (total) = " << drag << endl;
     }
   }
+  base::MPI_Barrier();
 }
 
 //! \brief 计算颗粒 index 处的背景流体速度

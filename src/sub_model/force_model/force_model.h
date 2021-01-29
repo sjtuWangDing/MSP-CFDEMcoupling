@@ -94,6 +94,8 @@ class forceModel {
   autoPtr<interpolation<Foam::vector>> gradPInterpolator_;
 
   autoPtr<interpolation<Foam::vector>> DDtUInterpolator_;
+
+  autoPtr<interpolation<Foam::vector>> vorticityInterpolator_;
 };
 
 }  // namespace Foam

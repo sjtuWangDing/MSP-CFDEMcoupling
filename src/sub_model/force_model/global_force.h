@@ -100,6 +100,13 @@ class globalForce {
     return Foam::vector::zero;
   }
 
+  //! \brief 获取颗粒处背景流体的涡量
+  virtual Foam::vector getBackgroundVorticity(const int index) const {
+    FatalError << __func__ << " not implement in Foam::globalForce, please use Foam::mixGlobalForce"
+               << abort(FatalError);
+    return Foam::vector::zero;
+  }
+
   inline void resetImpParticleForce() {
     impParticleForce_ == dimensionedVector("zero", impParticleForce_.dimensions(), vector::zero);
   }
@@ -113,6 +120,8 @@ class globalForce {
   inline volVectorField& expParticleForce() { return expParticleForce_; }
 
   inline const volVectorField& ddtU() const { return ddtU_; }
+
+  inline const volVectorField& vorticityField() const { return vorticityField_; }
 
   inline const volVectorField& impParticleForce() const { return impParticleForce_; }
 
@@ -155,6 +164,9 @@ class globalForce {
   std::unordered_map<int, std::vector<Foam::vector>> ddtUrHistoryMap_;
 
   volVectorField ddtU_;
+
+  //! \brief 涡量场，vorticityField_ = fvc::curl(U_)
+  volVectorField vorticityField_;
 
   //! \brief 颗粒隐式力的总和 [N]
   volVectorField impParticleForce_;

@@ -133,6 +133,9 @@ class mixGlobalForce : public globalForce {
   //! \brief 获取颗粒处背景流体的 ddtU
   Foam::vector getBackgroundDDtU(const int index) const;
 
+  //! \brief 获取颗粒处背景流体的涡量
+  Foam::vector getBackgroundVorticity(const int index) const;
+
  private:
   /*!
    * \brief 计算颗粒 index 处的背景物理场量
@@ -162,6 +165,10 @@ class mixGlobalForce : public globalForce {
   //! \brief 背景流体的 ddtU
   //! \note map: 颗粒索引 --> 背景流体的ddtU
   std::unordered_map<int, Foam::vector> backgroundDDtUMap_;
+
+  //! \brief 背景流体的涡量
+  //! \note map: 颗粒索引 --> 背景流体的涡量
+  std::unordered_map<int, Foam::vector> backgroundVorticityMap_;
 };
 
 /*!
