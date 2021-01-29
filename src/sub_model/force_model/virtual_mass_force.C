@@ -115,7 +115,7 @@ void virtualMassForce::setForceKernel(const int index, Foam::vector& virtualMass
     if ("B" == cloud_.modelType()) {
       virtualMassForce /= vf;
     }
-    if (forceSubModel_->verbose()) {
+    if (forceSubModel_->verbose() && 0 == index) {
       Pout << "vf = " << vf << endl;
       Pout << "Ufluid = " << Ufluid << endl;
       Pout << "ddtU = " << ddtU << endl;

@@ -120,7 +120,7 @@ void mixVirtualMassForce::setForceKernel(const int index, Foam::vector& mixVirtu
     if ("B" == cloud_.modelType()) {
       mixVirtualMassForce /= vf;
     }
-    if (forceSubModel_->verbose()) {
+    if (forceSubModel_->verbose() && 0 == index) {
       Pout << "vf = " << vf << endl;
       Pout << "Ufluid = " << Ufluid << endl;
       Pout << "ddtU = " << ddtU << endl;
@@ -255,7 +255,7 @@ void mixVirtualMassForce::setMiddleParticleForceKernel(Foam::vector& mixVirtualM
     if ("B" == cloud_.modelType()) {
       mixVirtualMassForce /= vf;
     }
-    if (forceSubModel_->verbose()) {
+    if (forceSubModel_->verbose() && 0 == index) {
       Pout << "vf = " << vf << endl;
       Pout << "ddtU = " << ddtU << endl;
       Pout << "ddtUp = " << ddtUp << endl;
