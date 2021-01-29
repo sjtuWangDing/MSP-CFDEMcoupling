@@ -86,7 +86,7 @@ ArchimedesProps
 
 mixDragForceProps
 {
-  dragModelName "SchillerNaumann";
+  dragModelName "Schiller-Naumann";
   treatForceExplicitInMomEquation false;
   treatForceBothCFDAndDEM true;
   treatDEMForceImplicit false;

@@ -8,7 +8,7 @@ communicate     single vel yes
 
 boundary        f f f
 newton          off
-processors      1 1 2
+processors      2 2 1
 
 units           si
 
@@ -54,7 +54,7 @@ fix             m5 all property/global coefficientRollingFriction peratomtypepai
 
 # mesh
 fix             cad1 all mesh/surface/stress file &
-                /home/dw/CFDEM/MSP-CFDEMcoupling-5.x/test/liquid_solid_fluidized_bed_mix/Yang/DEM/meshes/cyclinder.stl &
+                /home/dw/CFDEM/MSP-CFDEMcoupling-5.x/test/liquid_solid_fluidized_bed_mix/force_buoyancy+drag+vm+lift/Yang/DEM/meshes/cyclinder.stl &
                 type 2 scale 0.001
 fix             cyclinderWall all wall/gran model hertz tangential history mesh n_meshes 1 meshes cad1
 fix             zwalls1 all wall/gran model hertz tangential history primitive type 2 zplane 0.0
