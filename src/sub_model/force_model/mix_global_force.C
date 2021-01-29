@@ -46,11 +46,14 @@ mixGlobalForce::~mixGlobalForce() {}
 
 //! \brief 每一次耦合中，在 set force 前执行
 void mixGlobalForce::initBeforeSetForce() {
-  // init data
+  // init data - Important !!!
+  // nerver forget !!!
   expandedCellMap_.clear();
   backgroundUfluidMap_.clear();
   backgroundVoidFractionMap_.clear();
   backgroundDDtUMap_.clear();
+  backgroundVorticityMap_.clear();
+
   bool isUsedVirtualMassForce = cfdemTools::isUsedForceModel(cloud_, mixVirtualMassForce::cTypeName());
   bool isUsedBassetForce = cfdemTools::isUsedForceModel(cloud_, mixBassetForce::cTypeName());
   // 如果使用了 BassetForce or virtualMassForce，则需要计算 ddtU
