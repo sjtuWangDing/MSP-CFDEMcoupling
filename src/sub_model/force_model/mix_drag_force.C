@@ -102,6 +102,7 @@ void mixDragForce::setForceKernel(const int index, Foam::vector& drag, Foam::vec
     double nuf = forceSubModel_->nuField()[findCellID];    // 流体动力粘度
     double rho = cloud_.globalF().rhoField()[findCellID];  // 流体密度
     double pRe = 0.0;                                      // 颗粒雷诺数
+    double fRe = 0.0;                                      // 流体雷诺数
     double Xi = 0.0;                                       // 模型阻力系数
     double Cd = 0.0;                                       // 流体阻力系数
     Foam::vector Up = cloud_.getVelocity(index);           // 颗粒速度
@@ -124,9 +125,9 @@ void mixDragForce::setForceKernel(const int index, Foam::vector& drag, Foam::vec
         dragCoefficient = 0.125 * Cd * rho * M_PI * diameter * diameter * pow(vf, (2 - Xi)) * magUr;
       } else if (dragForce::AbrahamHashValue_ == dragModelHashValue) {
         // Abraham drag model
-        pRe = diameter * magUr / (nuf + Foam::SMALL);
-        Cd = 24 * pow(9.06 / sqrt(pRe) + 1, 2) / (9.06 * 9.06);
-        Xi = 3.7 - 0.65 * exp(-sqr(1.5 - log10(pRe)) / 2.0);
+        fRe = diameter * magUr / (nuf + Foam::SMALL);
+        Cd = 24 * pow(9.06 / sqrt(fRe) + 1, 2) / (9.06 * 9.06);
+        Xi = 3.7 - 0.65 * exp(-sqr(1.5 - log10(fRe)) / 2.0);
         dragCoefficient = 0.125 * Cd * rho * M_PI * diameter * diameter * pow(vf, (2 - Xi)) * magUr;
       } else if (dragForce::SchillerNaumannHashValue_ == dragModelHashValue) {
         // Schiller-Naumann drag model
@@ -145,19 +146,19 @@ void mixDragForce::setForceKernel(const int index, Foam::vector& drag, Foam::vec
         dragCoefficient *= cloud_.voidFractionM().pV(radius);
       } else if (dragForce::SyamlalObrienHashValue_ == dragModelHashValue) {
         // Syamlal-Obrien drag model
-        pRe = diameter * vf * magUr / (nuf + Foam::SMALL);
+        fRe = diameter * magUr / (nuf + Foam::SMALL);
         double Vrs = 0.0;
         double A = 0.0;
         double B = 0.0;
         if (vf <= 0.85) {
           A = pow(vf, 4.14);
-          B = 0.8 * pow(vf, 4.14);
+          B = 0.8 * pow(vf, 1.28);
         } else {
           A = pow(vf, 4.14);
           B = pow(vf, 2.65);
         }
-        Vrs = 0.5 * (A - 0.06 * pRe + sqrt(sqr(0.06 * pRe) + 0.12 * pRe * (2 * B - A) + A * A));
-        Cd = sqr(0.63 + 4.8 / sqrt(pRe / Vrs));
+        Vrs = 0.5 * (A - 0.06 * fRe + sqrt(sqr(0.06 * fRe) + 0.12 * fRe * (2 * B - A) + A * A));
+        Cd = sqr(0.63 + 4.8 * sqrt(Vrs / fRe));
         dragCoefficient = 0.75 * vf * rho * Cd * magUr / (sqr(Vrs) * diameter);
         dragCoefficient *= cloud_.voidFractionM().pV(radius);
       } else if (dragForce::YangHashValue_ == dragModelHashValue) {
@@ -172,7 +173,7 @@ void mixDragForce::setForceKernel(const int index, Foam::vector& drag, Foam::vec
           } else {
             Wd = 0.0038 / (4 * sqr(vf - 0.7789) + 0.004) - 0.0101;
           }
-          Cd = pRe >= 1000 ? 0.44 : (24.0 * (1 + 0.15 * pow(pRe, 0.687)) / pRe);
+          Cd = pRe >= 1000 ? 0.44 : 24.0 * (1 + 0.15 * pow(pRe, 0.687)) / pRe;
           dragCoefficient = 0.75 * rho * vf * Cd * magUr * Wd / diameter;
         } else {
           dragCoefficient = 150 * (1 - vf) * nuf * rho / (vf * diameter * diameter) + 1.75 * magUr * rho / diameter;

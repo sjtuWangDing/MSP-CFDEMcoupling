@@ -86,7 +86,7 @@ ArchimedesProps
 
 mixDragForceProps
 {
-  dragModelName "Symlal-Obrien";
+  dragModelName "Syamlal-Obrien";
   treatForceExplicitInMomEquation false;
   treatForceBothCFDAndDEM true;
   treatDEMForceImplicit false;
