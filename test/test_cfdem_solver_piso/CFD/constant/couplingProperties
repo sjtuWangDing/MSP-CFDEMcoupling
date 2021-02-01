@@ -24,13 +24,18 @@ modelType B; // A or B
 
 couplingInterval 100;
 
-// 如果耦合时间间隔 > CFD 时间步，那么允许在一个耦合时间步中存在多个 CFD 时间步
-allowUseSubCFDTimeStep true;
+expandedCellScale 6;
+
+allowUseSubCFDTimeStep false;
+
+globalForce globalForce;
+
+useGuoBBOEquation false;
 
 forceModels
 (
   Archimedes
-  DiFeliceDrag
+  // dragForce
 );
 
 momCoupleModels
@@ -38,7 +43,7 @@ momCoupleModels
   implicitCouple
 );
 
-voidFractionModel divided; // divided centre
+voidFractionModel divided;
 
 locateModel engine;
 
@@ -46,7 +51,7 @@ meshMotionModel noMeshMotion;
 
 dataExchangeModel twoWayMPI;
 
-averagingModel dilute; // dense dilute
+averagingModel dense;
 
 turbulenceModelType turbulenceProperties;
 
@@ -59,24 +64,40 @@ implicitCoupleProps
   voidFractionFieldName "voidFraction";
 }
 
-DiFeliceDragProps
+"(globalForceProps|mixGlobalForceProps)"
 {
   velFieldName "U";
-  granVelFieldName "Us";
   voidFractionFieldName "voidFraction";
+  gravityFieldName "g";
+}
+
+ArchimedesProps
+{
   treatForceExplicitInMomEquation false;
   treatForceBothCFDAndDEM true;
   treatDEMForceImplicit false;
   verbose true;
   interpolation false;
-  // scalarViscosity true;
-  // nu [0 2 -1 0 0 0 0] 1e-04;
 }
 
-ArchimedesProps
+dragForceProps
 {
-  densityFieldName "rho";
-  gravityFieldName "g";
+  dragModelName "DiFelice";
+  treatForceExplicitInMomEquation false;
+  treatForceBothCFDAndDEM true;
+  treatDEMForceImplicit false;
+  verbose true;
+  interpolation false;
+}
+
+virtualMassForceProps
+{
+  treatForceExplicitInMomEquation false;
+  treatForceBothCFDAndDEM true;
+  treatDEMForceImplicit false;
+  verbose true;
+  interpolation false;
+  scalarViscosity false;
 }
 
 twoWayMPIProps
@@ -90,19 +111,8 @@ dividedProps
   scaleUpVol 1.0;
 }
 
-centreProps
-{
-  alphaMin 0.30;
-}
-
-bigParticleProps
-{
-  maxCellsPerParticle 1000;
-  alphaMin 0.30;
-  scaleUpVol 1.0;
-}
-
 engineProps
 {
-  treeSearch false;
+  verbose true;
+  treeSearch true;
 }

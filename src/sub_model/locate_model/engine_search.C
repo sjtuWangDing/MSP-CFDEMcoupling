@@ -79,40 +79,48 @@ void engineSearch::findCell(const base::CITensor1& findCellIDs) const {
     // arg3: whether use octree search
     findCellIDs[index] = searchEngine_.findCell(cloud_.getPosition(index), -1, treeSearch_);
   }
+  base::MPI_Info("engine search - done", verbose_);
   uniqueFindCell(findCellIDs);
   // 检查颗粒中心所在的处理器上，findCellID 是否 >= 0
   for (int index = 0; index < cloud_.numberOfParticles(); ++index) {
     int rootProc = cloud_.particleRootProcIDs()[index];
     if (rootProc == base::procId()) {
-      CHECK_GE(findCellIDs[index], 0) << ": findCellIDs[" << index << "] not GE -1";
+      CHECK_GE(findCellIDs[index], 0) << "Proc[" << base::procId() << "]: findCellIDs[" << index
+                                      << "] = " << findCellIDs[index] << ", not >= 0";
     } else {
-      CHECK_EQ(findCellIDs[index], -1) << ": findCellIDs[" << index << "] not EQ -1";
+      if (findCellIDs[index] >= 0) {
+        Warning << "Proc[" << base::procId() << "]: findCellIDs[" << index << "] = " << findCellIDs[index]
+                << " >= 0, force set to -1" << endl;
+        findCellIDs[index] = -1;
+      }
     }
-    base::MPI_Barrier();
   }
+  base::MPI_Info("unique find cell - done", verbose_);
 }
 
-//! \brief 每个颗粒中心只可能位于一个网格中，但是如果颗粒位于处理器边界上，则颗粒会被边界两边的处理器都捕获到
-//!   所以该函数会确保所有颗粒只被一个处理器捕获到
+// ! \brief 每个颗粒中心只可能位于一个网格中，但是如果颗粒位于处理器边界上，则颗粒会被边界两边的处理器都捕获到
+// !   所以该函数会确保所有颗粒只被一个处理器捕获到
 void engineSearch::uniqueFindCell(const base::CITensor1& findCellIDs) const {
   base::MPI_Barrier();
   // 主节点汇总其他节点的 findCellIDs
   int number = cloud_.numberOfParticles();
   int procId = base::procId();
   int numProc = base::numProc();
+  // 只有一个节点直接跳过
+  if (1 == numProc) {
+    return;
+  }
   int tag1 = 100;
   int tag2 = 101;
   if (0 != procId) {
-    MPI_Request request1, request2, request3;
+    MPI_Request request1, request2;
     MPI_Status status1, status2;
     // 发送 findCellIDs 给主节点(非阻塞)
     base::MPI_Isend(findCellIDs, 0, tag1, &request1);
-    // 从主节点接收 findCellIDs
-    base::MPI_Irecv(findCellIDs, 0, tag1, &request2);
+    MPI_Wait(&request1, &status1);
     // 从主节点接收 particleRootProcIDs
-    base::MPI_Irecv(cloud_.particleRootProcIDs(), 0, tag2, &request3);
-    MPI_Wait(&request2, &status1);
-    MPI_Wait(&request3, &status2);
+    base::MPI_Irecv(cloud_.particleRootProcIDs(), 0, tag2, &request2);
+    MPI_Wait(&request2, &status2);
   }
   if (0 == procId) {
     std::vector<MPI_Request> rVec(numProc);
@@ -123,7 +131,7 @@ void engineSearch::uniqueFindCell(const base::CITensor1& findCellIDs) const {
     base::copyTensor(findCellIDs, findCellIDsVec[0]);
     // 接收其他节点的 findCellIDs 信息
     for (int inode = 1; inode < numProc; ++inode) {
-      findCellIDsVec.emplace_back(base::makeShape1(number), 0);
+      findCellIDsVec.emplace_back(base::makeShape1(number), -1);
       base::MPI_Irecv(findCellIDsVec[inode], inode, tag1, rVec.data() + inode);
     }
     // 主节点等待 Irecv 执行完成
@@ -136,18 +144,15 @@ void engineSearch::uniqueFindCell(const base::CITensor1& findCellIDs) const {
         } else if (findCellIDsVec[inode][index] >= 0) {
           // index 颗粒中心位于编号为 inode 的处理器上
           cloud_.particleRootProcIDs()[index] = inode;
-          for (int j = inode + 1; j < numProc; ++j) {
-            findCellIDsVec[j][index] = -1;
-          }
           break;
         }
       }
     }
-    // 由主节点将 findCellIDsVec 传递给子节点
     for (int inode = 1; inode < numProc; ++inode) {
-      base::MPI_Isend(findCellIDsVec[inode], inode, tag1, rVec.data() + inode);
       base::MPI_Isend(cloud_.particleRootProcIDs(), inode, tag2, rVec.data() + inode);
     }
+    // 主节点等待 Isend 执行完成
+    MPI_Waitall(numProc - 1, rVec.data() + 1, sVec.data() + 1);
   }
   base::MPI_Barrier();
 }

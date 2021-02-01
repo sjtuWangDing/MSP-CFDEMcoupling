@@ -167,7 +167,8 @@ bigParticleProps
 
 engineProps
 {
-  treeSearch false;
+  verbose true;
+  treeSearch true;
 }
 
 engineMixProps

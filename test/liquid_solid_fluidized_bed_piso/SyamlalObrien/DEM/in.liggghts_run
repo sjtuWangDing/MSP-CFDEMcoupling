@@ -54,7 +54,7 @@ fix             m5 all property/global coefficientRollingFriction peratomtypepai
 
 # mesh
 fix             cad1 all mesh/surface/stress file &
-                /home/dw/CFDEM/MSP-CFDEMcoupling-5.x/test/liquid_solid_fluidized_bed_piso/SymlalObrien/DEM/meshes/cyclinder.stl &
+                /home/dw/CFDEM/MSP-CFDEMcoupling-5.x/test/liquid_solid_fluidized_bed_piso/SyamlalObrien/DEM/meshes/cyclinder.stl &
                 type 1 scale 0.001
 fix             cyclinderWall all wall/gran model hertz tangential history mesh n_meshes 1 meshes cad1
 fix             zwalls1 all wall/gran model hertz tangential history primitive type 1 zplane 0.0
@@ -101,4 +101,4 @@ compute_modify  thermo_temp dynamic yes
 # insert the first particles so that dump is not empty
 dump            dmp all custom 2000 ../DEM/post/dump.liggghts_run id type x y z ix iy iz vx vy vz fx fy fz omegax omegay omegaz radius
 
-run             5
+run             1000

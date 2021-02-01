@@ -20,7 +20,7 @@ method          simple;
 
 simpleCoeffs
 {
-  n               ( 1 2 1 );
+  n               ( 1 1 2 );
   delta           0.001;
 }
 

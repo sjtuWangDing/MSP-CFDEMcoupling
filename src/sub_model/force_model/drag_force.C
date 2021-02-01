@@ -223,6 +223,7 @@ void dragForce::setForce() {
         Pout << "nuf = " << nuf << endl;
         Pout << "voidFraction = " << vf << endl;
         Pout << "pRe = " << pRe << endl;
+        Pout << "fRe = " << fRe << endl;
         Pout << "Cd = " << Cd << endl;
         Pout << "dragCoefficient = " << dragCoefficient << endl;
         Pout << "drag (total) = " << drag << endl;
