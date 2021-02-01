@@ -186,8 +186,10 @@ class mixGlobalForce : public globalForce {
  * \tparam DType 场元素类型
  * \tparam BDType 场元素基本数据类型
  */
-template <bool fieldIsNotVF = true, int NDim = Foam::vector::dim, typename FieldType = Foam::volVectorField,
-          typename DType = Foam::vector, typename BDType = Foam::scalar>
+template <bool fieldIsNotVF /*= true */, int NDim /* = Foam::vector::dim*/,
+          typename FieldType /* = Foam::volVectorField */, typename DType /* = Foam::vector */,
+          typename BDType /* = Foam::scalar*/
+          >
 void mixGlobalForce::setBackgroundFieldValue(const FieldType& field,
                                              std::unordered_map<int, DType>& fieldValueMap) const {
   // clear map before set
