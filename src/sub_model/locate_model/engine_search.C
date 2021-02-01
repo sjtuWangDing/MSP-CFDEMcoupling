@@ -98,8 +98,8 @@ void engineSearch::findCell(const base::CITensor1& findCellIDs) const {
   base::MPI_Info("unique find cell - done", verbose_);
 }
 
-// ! \brief 每个颗粒中心只可能位于一个网格中，但是如果颗粒位于处理器边界上，则颗粒会被边界两边的处理器都捕获到
-// !   所以该函数会确保所有颗粒只被一个处理器捕获到
+//! \brief 每个颗粒中心只可能位于一个网格中，但是如果颗粒位于处理器边界上，则颗粒会被边界两边的处理器都捕获到
+//!   所以该函数会确保所有颗粒只被一个处理器捕获到
 void engineSearch::uniqueFindCell(const base::CITensor1& findCellIDs) const {
   base::MPI_Barrier();
   // 主节点汇总其他节点的 findCellIDs

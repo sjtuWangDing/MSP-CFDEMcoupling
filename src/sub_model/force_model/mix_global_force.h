@@ -41,6 +41,7 @@ struct fieldRefine {
   static DType subProcOp();
   //! \brief 主处理器节点算子
   static DType rootProcOp(const std::vector<TensorType> dataVec);
+  static DType rootProcOp(const TensorType& dataT);
 };
 
 template <>
@@ -70,6 +71,7 @@ struct fieldRefine<Foam::vector, base::CDTensor1> {
     }
     return res / sumCore;
   }
+  static Foam::vector rootProcOp(const base::CDTensor1& dataT) { return Foam::vector(dataT[0], dataT[1], dataT[2]); }
 };
 
 template <>
@@ -104,6 +106,7 @@ struct fieldRefine<Foam::scalar, base::CDTensor1> {
     }
     return res / sumCore;
   }
+  static Foam::scalar rootProcOp(const base::CDTensor1& dataT) { return dataT[0]; }
 };
 
 class mixGlobalForce : public globalForce {
@@ -149,6 +152,10 @@ class mixGlobalForce : public globalForce {
             typename DType = Foam::vector, typename BDType = Foam::scalar>
   DType getBackgroundFieldValue(int index, const FieldType& field) const;
 
+  template <bool fieldIsNotVF = true, int NDim = Foam::vector::dim, typename FieldType = Foam::volVectorField,
+            typename DType = Foam::vector, typename BDType = Foam::scalar>
+  void setBackgroundFieldValue(const FieldType& field, std::unordered_map<int, DType>& fieldValueMap) const;
+
  private:
   //! \brief 颗粒覆盖的扩展网格的索引
   //! \brief map: 颗粒索引 --> 扩展网格索引
@@ -170,6 +177,110 @@ class mixGlobalForce : public globalForce {
   //! \note map: 颗粒索引 --> 背景流体的涡量
   std::unordered_map<int, Foam::vector> backgroundVorticityMap_;
 };
+
+/*!
+ * \brief 计算颗粒 index 处的背景物理场量
+ * \tparam fieldIsNotVF 背景物理场量是否是空隙率场，空隙率场的计算与其他场的方法不同
+ * \tparam NDim 基本数据的个数，Eg: for Foam::vector, NDim = 3
+ * \tparam FieldType 场类型
+ * \tparam DType 场元素类型
+ * \tparam BDType 场元素基本数据类型
+ */
+template <bool fieldIsNotVF = true, int NDim = Foam::vector::dim, typename FieldType = Foam::volVectorField,
+          typename DType = Foam::vector, typename BDType = Foam::scalar>
+void mixGlobalForce::setBackgroundFieldValue(const FieldType& field,
+                                             std::unordered_map<int, DType>& fieldValueMap) const {
+  // clear map before set
+  fieldValueMap.clear();
+  int number = cloud_.numberOfParticles();
+  // define data buffer
+  typedef base::Tensor<2, BDType> bufferTType;
+  typedef base::Tensor<1, BDType> dataTType;
+  bufferTType bufferTensor(base::makeShape2(number, NDim + 1), 0.0);
+  // calculate data
+  Foam::vector particlePos = Foam::vector::zero;  // 颗粒中心坐标
+  Foam::vector cellPos = Foam::vector::zero;      // 网格中心坐标
+  double radius = 0.0;                            // 颗粒半径
+  double gCore = 0.0;                             // 高斯核
+  double cellV = 0.0;                             // 网格体积
+  for (int index = 0; index < number; ++index) {
+    int findExpandedCellID = cloud_.findExpandedCellIDs()[index];
+    if (findExpandedCellID >= 0) {
+      particlePos = cloud_.getPosition(index);
+      radius = cloud_.getRadius(index);
+      auto iter = expandedCellMap_.find(index);
+      if (expandedCellMap_.end() != iter) {
+        // 获取颗粒扩展网格的集合
+        const std::unordered_set<int>& cellIDSet = iter->second;
+        for (const int& cellID : cellIDSet) {
+          cellPos = cloud_.mesh().C()[cellID];
+          cellV = cloud_.mesh().V()[cellID];
+          // 计算高斯核
+          gCore = GaussCore(particlePos, cellPos, radius);
+          // 计算累计数据
+          fieldRefine<DType, dataTType>::template op<fieldIsNotVF>(bufferTensor[index], field[cellID], cellV, gCore,
+                                                                   voidFraction_[cellID]);
+        }
+      }
+    }
+  }
+  base::MPI_Barrier();
+  const int masterId = 0;               // 主节点编号
+  const int procId = base::procId();    // 处理器编号
+  const int numProc = base::numProc();  // 处理器数量
+  int tag = 100;
+  // 子节点发送 bufferTensor 给主节点(非阻塞)
+  if (masterId != procId) {
+    MPI_Request request;
+    MPI_Status status;
+    base::MPI_Isend(bufferTensor, masterId, tag, &request);
+    MPI_Wait(&request, &status);
+  }
+  // 主节点接收其他节点的 bufferTensor，并计算数据
+  if (masterId == procId) {
+    std::vector<MPI_Request> rVec(numProc);
+    std::vector<MPI_Status> sVec(numProc);
+    std::vector<bufferTType> bufferTensorVec;
+    for (int inode = 0; inode < numProc; ++inode) {
+      bufferTensorVec.emplace_back(base::makeShape2(number, NDim + 1), 0.0);
+      if (masterId == inode) {
+        base::copyTensor(bufferTensor, bufferTensorVec[inode]);
+      } else {
+        base::MPI_Irecv(bufferTensorVec[inode], inode, tag, rVec.data() + inode);
+      }
+    }
+    // 主节点等待 Irecv 执行完成
+    MPI_Waitall(numProc - 1, rVec.data() + 1, sVec.data() + 1);
+    // 主节点重置 bufferTensor
+    std::fill_n(bufferTensor.ptr(), bufferTensor.mSize(), 0.0);
+    // 主节点计算背景流场数据
+    for (int index = 0; index < number; ++index) {
+      for (int inode = 0; inode < numProc; ++inode) {
+#pragma unroll
+        for (int i = 0; i < NDim + 1; ++i) {
+          bufferTensor[index][i] += bufferTensorVec[inode][index][i];
+        }
+      }
+#pragma unroll
+      for (int i = 0; i < NDim; ++i) {
+        bufferTensor[index][i] /= bufferTensor[index][NDim];
+      }
+    }
+  }
+  // 主节点主节点广播 bufferTensor
+  base::MPI_Bcast(bufferTensor, masterId);
+  base::MPI_Barrier();
+  // 计算背景流场数据
+  for (int index = 0; index < number; ++index) {
+    const int rootProcId = cloud_.particleRootProcIDs()[index];  // 颗粒所在的处理器编号
+    if (rootProcId == procId) {
+      fieldValueMap.insert(std::make_pair(index, fieldRefine<DType, dataTType>::rootProcOp(bufferTensor[index])));
+    } else {
+      fieldValueMap.insert(std::make_pair(index, fieldRefine<DType, dataTType>::subProcOp()));
+    }
+  }
+  base::MPI_Barrier();
+}
 
 /*!
  * \brief 计算颗粒 index 处的背景物理场量
@@ -217,9 +328,11 @@ DType mixGlobalForce::getBackgroundFieldValue(int index, const FieldType& field)
   int tag = 100;
   // 非主节点
   if (rootProc != procId) {
-    // 发送 data 给主节点(非阻塞)
     MPI_Request request;
+    MPI_Status status;
+    // 发送 data 给主节点(非阻塞)
     base::MPI_Isend(data, rootProc, tag, &request);
+    MPI_Wait(&request, &status);
     res = fieldRefine<DType, TensorType>::subProcOp();
   }
   // 主节点

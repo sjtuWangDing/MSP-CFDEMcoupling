@@ -28,12 +28,21 @@ void MPI_Isend(const base::Tensor<nDim, DType, Device, Alloc>& tensor, const int
 }
 
 template <int nDim, typename DType, typename Device, typename Alloc>
-void MPI_Irecv(const base::Tensor<nDim, DType, Device, Alloc>& tensor, const int srcPrco, int tag,
+void MPI_Irecv(const base::Tensor<nDim, DType, Device, Alloc>& tensor, const int srcProc, int tag,
                MPI_Request* request) {
   if (std::is_same<double, DType>::value) {
-    ::MPI_Irecv(tensor.ptr(), tensor.mSize(), MPI_DOUBLE, srcPrco, tag, MPI_COMM_WORLD, request);
+    ::MPI_Irecv(tensor.ptr(), tensor.mSize(), MPI_DOUBLE, srcProc, tag, MPI_COMM_WORLD, request);
   } else if (std::is_same<int32_t, DType>::value) {
-    ::MPI_Irecv(tensor.ptr(), tensor.mSize(), MPI_INT, srcPrco, tag, MPI_COMM_WORLD, request);
+    ::MPI_Irecv(tensor.ptr(), tensor.mSize(), MPI_INT, srcProc, tag, MPI_COMM_WORLD, request);
+  }
+}
+
+template <int nDim, typename DType, typename Device, typename Alloc>
+void MPI_Bcast(const base::Tensor<nDim, DType, Device, Alloc>& tensor, const int masterProc) {
+  if (std::is_same<double, DType>::value) {
+    ::MPI_Bcast(tensor.ptr(), tensor.mSize(), MPI_DOUBLE, masterProc, MPI_COMM_WORLD);
+  } else if (std::is_same<int32_t, DType>::value) {
+    ::MPI_Bcast(tensor.ptr(), tensor.mSize(), MPI_INT, masterProc, MPI_COMM_WORLD);
   }
 }
 
