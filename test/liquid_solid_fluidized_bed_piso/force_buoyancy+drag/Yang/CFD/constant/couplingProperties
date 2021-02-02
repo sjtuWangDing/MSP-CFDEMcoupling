@@ -36,10 +36,6 @@ forceModels
 (
   Archimedes
   dragForce
-  // virtualMassForce
-  // BassetForce
-  // viscForce
-  // gradPForce
 );
 
 momCoupleModels
@@ -47,15 +43,15 @@ momCoupleModels
   implicitCouple
 );
 
-voidFractionModel divided; // divided, centre, mix
+voidFractionModel divided;
 
-locateModel engine; // engine, engineIB, engineMix
+locateModel engine;
 
 meshMotionModel noMeshMotion;
 
 dataExchangeModel twoWayMPI;
 
-averagingModel dense; // dense dilute
+averagingModel dense;
 
 turbulenceModelType turbulenceProperties;
 
@@ -70,6 +66,7 @@ implicitCoupleProps
 
 "(globalForceProps|mixGlobalForceProps)"
 {
+  verbose true;
   velFieldName "U";
   voidFractionFieldName "voidFraction";
   gravityFieldName "g";
@@ -92,8 +89,7 @@ dragForceProps
   treatDEMForceImplicit false;
   verbose true;
   interpolation false;
-  // scalarViscosity true;
-  // nu [0 2 -1 0 0 0 0] 1e-04;
+  scalarViscosity false;
 }
 
 virtualMassForceProps
@@ -104,36 +100,6 @@ virtualMassForceProps
   verbose true;
   interpolation false;
   scalarViscosity false;
-}
-
-BassetForceProps
-{
-  treatForceExplicitInMomEquation false;
-  treatForceBothCFDAndDEM true;
-  treatDEMForceImplicit false;
-  verbose true;
-  interpolation false;
-  scalarViscosity false;
-}
-
-viscForceProps
-{
-  velFieldName "U";
-  treatForceExplicitInMomEquation true;
-  treatForceBothCFDAndDEM false;
-  treatDEMForceImplicit false;
-  verbose true;
-  interpolation false;
-}
-
-gradPForceProps
-{
-  pressureFieldName "p";
-  treatForceExplicitInMomEquation true;
-  treatForceBothCFDAndDEM false;
-  treatDEMForceImplicit false;
-  verbose true;
-  interpolation false;
 }
 
 twoWayMPIProps
@@ -147,32 +113,8 @@ dividedProps
   scaleUpVol 1.0;
 }
 
-mixProps
-{
-  alphaMin 0.3;
-  scaleUpVol 1.0;
-}
-
-centreProps
-{
-  alphaMin 0.30;
-}
-
-bigParticleProps
-{
-  maxCellsPerParticle 1000;
-  alphaMin 0.30;
-  scaleUpVol 1.0;
-}
-
 engineProps
 {
-  treeSearch false;
-}
-
-engineMixProps
-{
+  verbose true;
   treeSearch true;
-  zSplit 8;
-  xySplit 16;
 }
