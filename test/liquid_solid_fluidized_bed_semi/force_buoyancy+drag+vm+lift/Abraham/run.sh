@@ -15,8 +15,8 @@ source $MSP_CFDEM_TOOLS_DIR/msp_cfdem_parallel_run.sh
 # define variables for mpirun
 casePath="$(dirname "$(readlink -f ${BASH_SOURCE[0]})")"
 solverDir="$MSP_CFDEM_BIN_DIR"
-solverName="mspCfdemSolverPiso"
-numberOfProcs="2"
+solverName="mspCfdemSolverSemi"
+numberOfProcs="4"
 machineFileName="none" # yourMachinefileName
 logPath=$casePath
 logFileName="log_mpirun_$numberOfProcs_$solverName"
@@ -35,7 +35,7 @@ blockMesh
 
 # add post dir to DEM
 if [ ! -d "$casePath/DEM/post" ]; then
-	mkdir "$casePath/DEM/post"
+  mkdir "$casePath/DEM/post"
 fi
 
 # call function to run a parallel CFD-DEM case
@@ -43,7 +43,7 @@ mspCfdemParallelRun $casePath "$solverDir/$solverName" $numberOfProcs $machineFi
 
 # define variables for post-process
 runOctave="false"
-postProc="false"
+postProc="true"
 liggghtsDumpFileName="dump.liggghts_run"
 
 if [ $runOctave = "true" ]; then
@@ -56,10 +56,11 @@ if [ $postProc = "true" ]; then
   # get VTK data from liggghts dump file
   echo
   cd $casePath/DEM/post
+  rm *.vtk
   python2 $LPP_DIR/src/lpp.py $liggghtsDumpFileName
 fi
 
 #- keep terminal open (if started in new terminal)
 echo
-echo "press Ctr+C kill process"
+echo "press Ctrl+C kill process"
 read

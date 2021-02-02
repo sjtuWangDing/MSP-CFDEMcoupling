@@ -1,0 +1,3 @@
+msp_cfdem_solver_semi.C
+
+EXE=$(MSP_CFDEM_BIN_DIR)/mspCfdemSolverSemi

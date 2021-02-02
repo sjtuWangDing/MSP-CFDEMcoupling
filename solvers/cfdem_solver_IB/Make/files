@@ -1,3 +1,0 @@
-cfdem_solver_IB.C
-
-EXE=$(MSP_CFDEM_BIN_DIR)/cfdemSolverIB-1.0

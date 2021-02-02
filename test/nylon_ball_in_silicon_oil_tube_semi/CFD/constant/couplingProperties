@@ -1,0 +1,148 @@
+/*---------------------------------------------------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  1.4                                   |
+|   \\  /    A nd           | Web:      http://www.openfoam.org               |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+
+FoamFile
+{
+  version         2.0;
+  format          ascii;
+  root            "";
+  case            "";
+  instance        "";
+  local           "";
+  class           dictionary;
+  object          couplingProperties;
+}
+
+/* ---------------------------- sub-models & settings ---------------------------- */
+
+modelType B; // A or B
+
+couplingInterval 50;
+
+expandedCellScale 6;
+
+useGuoBBOEquation true;
+
+allowUseSubCFDTimeStep false;
+
+globalForce mixGlobalForce;
+
+forceModels
+(
+  Archimedes
+  mixDragForce
+  mixMeiLiftForce
+  // mixVirtualMassForce
+  // mixBassetForce
+);
+
+momCoupleModels
+(
+  implicitCouple
+);
+
+voidFractionModel mix;
+
+locateModel engineMix;
+
+meshMotionModel noMeshMotion;
+
+dataExchangeModel twoWayMPI;
+
+averagingModel dense;
+
+turbulenceModelType turbulenceProperties;
+
+/* ---------------------------- sub-model properties ------------------------- */
+
+implicitCoupleProps
+{
+  velFieldName "U";
+  granVelFieldName "Us";
+  voidFractionFieldName "voidFraction";
+}
+
+"(globalForceProps|mixGlobalForceProps)"
+{
+  GaussCoreEff 3;
+  verbose true;
+  velFieldName "U";
+  voidFractionFieldName "voidFraction";
+  gravityFieldName "g";
+}
+
+ArchimedesProps
+{
+  treatForceExplicitInMomEquation false;
+  treatForceBothCFDAndDEM true;
+  treatDEMForceImplicit false;
+  verbose true;
+  interpolation false;
+  scalarViscosity false;
+}
+
+mixDragForceProps
+{
+  dragModelName "Dallavalle";
+  treatForceExplicitInMomEquation false;
+  treatForceBothCFDAndDEM true;
+  treatDEMForceImplicit false;
+  verbose true;
+  interpolation false;
+  scalarViscosity false;
+  useGaussCoreFunctionRefined true;
+}
+
+mixMeiLiftForceProps
+{
+  treatForceBothCFDAndDEM true;
+  verbose true;
+  useSecondOrderTerms false;
+  useGaussCoreFunctionRefined true;
+}
+
+mixVirtualMassForceProps
+{
+  treatForceExplicitInMomEquation false;
+  treatForceBothCFDAndDEM true;
+  treatDEMForceImplicit false;
+  verbose true;
+  interpolation false;
+  scalarViscosity false;
+  useGaussCoreFunctionRefined true;
+}
+
+mixBassetForceProps
+{
+  treatForceExplicitInMomEquation false;
+  treatForceBothCFDAndDEM true;
+  treatDEMForceImplicit false;
+  verbose true;
+  interpolation false;
+  scalarViscosity false;
+  useGaussCoreFunctionRefined true;
+}
+
+twoWayMPIProps
+{
+  liggghtsPath "../DEM/in.liggghts_run";
+}
+
+mixProps
+{
+  alphaMin 0.3;
+  scaleUpVol 1.0;
+}
+
+engineMixProps
+{
+  verbose true;
+  treeSearch true;
+  zSplit 8;
+  xySplit 16;
+}

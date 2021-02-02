@@ -1,3 +1,0 @@
-cfdem_solver_mix.C
-
-EXE=$(MSP_CFDEM_BIN_DIR)/cfdemSolverMix-1.0
