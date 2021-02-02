@@ -105,7 +105,7 @@ void virtualMassForce::setForceKernel(const int index, Foam::vector& virtualMass
     ddtUr = ddtU - ddtUp;
     // 计算 Ac 系数
     Ac = sqr(mag(Ur)) / (diameter * mag(ddtUr));
-#if 0
+#if 1
     Cvm = 2.1 - 0.132 / (0.12 + Ac * Ac);
 #else
     Cvm = 1.0;
