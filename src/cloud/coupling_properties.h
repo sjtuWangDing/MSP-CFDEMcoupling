@@ -71,9 +71,9 @@ class CouplingProperties {
 
   inline bool checkPeriodicCells() const { return checkPeriodicCells_; }
 
-  inline const Foam::vector& periodicCheckRange() const { return periodicCheckRange_; }
+  inline bool useDDtVoidFraction() const { return useDDtVoidFraction_; }
 
-  inline const std::string& ddtVoidFractionType() const { return ddtVoidFractionType_; }
+  inline const Foam::vector& periodicCheckRange() const { return periodicCheckRange_; }
 
   /* --------------------------------- interface used for cfdemCloudIB ------------------------------------ */
 
@@ -114,6 +114,9 @@ class CouplingProperties {
   //! \brief 使用 Junke Guo 提出的 BBO 方程
   //! \note 使用该方程，则不能使用 virtual mass foce 以及 basset force
   bool useGuoBBOEquation_;
+
+  //! \brief 是否返回 fvc::ddt(voidFraction)
+  bool useDDtVoidFraction_;
 
   //! \brief dict 中指定的所有 force model 的名称
   std::vector<std::string> forceModelList_;
@@ -159,9 +162,6 @@ class CouplingProperties {
    * \note 如果设置为 100, 即重构网格会保留 100 个时间步，默认值为 0
    */
   int refineMeshKeepInterval_;
-
-  //! \brief ddtVoidFraction的类型，可以是"a" "b" or "off"，默认是"off"
-  std::string ddtVoidFractionType_;
 
 #if CFDEM_MIX_CLOUD
 

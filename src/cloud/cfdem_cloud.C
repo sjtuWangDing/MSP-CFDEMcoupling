@@ -261,6 +261,8 @@ void cfdemCloud::evolve(volVectorField& U, volScalarField& voidF, volVectorField
     // 计算颗粒空隙率
     voidFractionM().setVoidFraction();
     voidF = voidFractionM().voidFractionInterp();
+    // 计算 ddtVoidFraction
+    calcDDtVoidFraction(voidF);
     // 计算局部平局颗粒速度场
     averagingM().setVectorFieldAverage(averagingM().UsNext(), averagingM().UsWeightField(), velocities(),
                                        particleWeights());
@@ -314,12 +316,17 @@ bool cfdemCloud::checkSimulationFullyPeriodic() {
 }
 
 tmp<volScalarField> cfdemCloud::ddtVoidFraction() const {
-  if ("off" == ddtVoidFractionType()) {
-    return tmp<volScalarField>(ddtVoidFraction_ * 0.);
+  if (useDDtVoidFraction()) {
+    return tmp<volScalarField>(ddtVoidFraction_ * 1.);
   }
-  return tmp<volScalarField>(ddtVoidFraction_ * 1.);
+  return tmp<volScalarField>(ddtVoidFraction_ * 0.);
 }
 
+void cfdemCloud::calcDDtVoidFraction(volScalarField& voidFraction) {
+  ddtVoidFraction_ = fvc::ddt(voidFraction);
+}
+
+//! \brief 计算 空隙率 * 等效粘性系数 = 空隙率 * (nut + nu)
 tmp<volScalarField> cfdemCloud::voidFractionNuEff(volScalarField& voidFraction) const {
   if (modelType() == "B" || modelType() == "Bfull" || modelType() == "none") {
 #ifdef compre
@@ -340,6 +347,10 @@ tmp<volScalarField> cfdemCloud::voidFractionNuEff(volScalarField& voidFraction) 
   }
 }
 
+//! \brief 计算动量方程中的流体应力项, 包括 粘性应力 + 雷诺应力
+//! \note fvc::grad(U)().T() 返回 grad(U) 的转置
+//! \note dev2(fvc::grad(U)().T()) 返回 grad(U) 转置的非对称分量:
+//!   fvc::grad(U)().T() - 2 / 3 * tr(fvc::grad(U)().T()) * I(单位二阶张量)
 tmp<fvVectorMatrix> cfdemCloud::divVoidFractionTau(volVectorField& U, volScalarField& voidFraction) const {
   return -fvm::laplacian(voidFractionNuEff(voidFraction), U) -
          fvc::div(voidFractionNuEff(voidFraction) * dev2(fvc::grad(U)().T()));

@@ -169,6 +169,8 @@ class cfdemCloud {
    */
   virtual void evolve(volVectorField& U, volScalarField& voidF, volVectorField& Us, volScalarField& Ksl);
 
+  void calcDDtVoidFraction(volScalarField& voidFraction);
+
   tmp<volScalarField> ddtVoidFraction() const;
 
   tmp<volScalarField> voidFractionNuEff(volScalarField& voidFraction) const;
@@ -271,9 +273,9 @@ class cfdemCloud {
 
   inline const Foam::vector& periodicCheckRange() const { return cProps_.periodicCheckRange(); }
 
-  inline const std::string& ddtVoidFractionType() const { return cProps_.ddtVoidFractionType(); }
-
   inline bool useGuoBBOEquation() const { return cProps_.useGuoBBOEquation(); }
+
+  inline bool useDDtVoidFraction() const { return cProps_.useDDtVoidFraction(); }
 
   /* ------------------------- interface of particleCloud ------------------------------- */
 

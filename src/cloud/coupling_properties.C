@@ -47,7 +47,8 @@ CouplingProperties::CouplingProperties(const fvMesh& mesh, const IOdictionary& c
       fineParticleRatio_(0.0),
       coarseParticleRatio_(0.0),
       expandedCellScale_(0.0),
-      useGuoBBOEquation_(false),
+      useGuoBBOEquation_(couplingPropertiesDict.lookupOrDefault<bool>("useGuoBBOEquation", false)),
+      useDDtVoidFraction_(couplingPropertiesDict.lookupOrDefault<bool>("useDDtVoidFraction", false)),
       verbose_(couplingPropertiesDict.lookupOrDefault<bool>("verbose", false)),
       solveFlow_(couplingPropertiesDict.lookupOrDefault<bool>("solveFlow", true)),
       modelType_(couplingPropertiesDict.lookupOrDefault<Foam::word>("modelType", "none").c_str()),
@@ -57,8 +58,7 @@ CouplingProperties::CouplingProperties(const fvMesh& mesh, const IOdictionary& c
       checkPeriodicCells_(couplingPropertiesDict.lookupOrDefault<bool>("checkPeriodicCells", false)),
       periodicCheckRange_(Foam::vector(1, 1, 1)),
       refineMeshSkin_(couplingPropertiesDict.lookupOrDefault<double>("refineMeshSkin", 1.8)),
-      refineMeshKeepInterval_(couplingPropertiesDict.lookupOrDefault<int>("refineMeshKeepInterval", 0)),
-      ddtVoidFractionType_(couplingPropertiesDict.lookupOrDefault<Foam::word>("ddtVoidFractionType", "off").c_str()) {
+      refineMeshKeepInterval_(couplingPropertiesDict.lookupOrDefault<int>("refineMeshKeepInterval", 0)) {
   Info << "CFDEM coupling version: " << CFDEM_VERSION << endl;
   Info << "LIGGGHTS version: " << LIGGGHTS_VERSION << endl;
 
@@ -91,18 +91,11 @@ CouplingProperties::CouplingProperties(const fvMesh& mesh, const IOdictionary& c
     FatalError << "refineMeshKeepInterval should be >= 0 but get " << refineMeshKeepInterval_ << abort(FatalError);
   }
 
-  if ("a" != ddtVoidFractionType_ && "b" != ddtVoidFractionType_ && "off" != ddtVoidFractionType_) {
-    FatalError << "Model " << ddtVoidFractionType_
-               << " is not a valid choice for ddt(voidfraction). Choose a or b or off." << abort(FatalError);
-  }
-
   fineParticleRatio_ = couplingPropertiesDict.lookupOrDefault<double>("fineParticleRatio", 3.0);
 
   coarseParticleRatio_ = couplingPropertiesDict.lookupOrDefault<double>("coarseParticleRatio", 0.33);
 
   expandedCellScale_ = couplingPropertiesDict.lookupOrDefault<double>("expandedCellScale", 3.0);
-
-  useGuoBBOEquation_ = couplingPropertiesDict.lookupOrDefault<bool>("useGuoBBOEquation", false);
 
 #if CFDEM_MIX_CLOUD
   fineParticleRatio_ = couplingPropertiesDict.lookupOrDefault<double>("fineParticleRatio", 3.0);

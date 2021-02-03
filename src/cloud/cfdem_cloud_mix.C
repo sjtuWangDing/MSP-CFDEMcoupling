@@ -133,6 +133,8 @@ void cfdemCloudMix::evolve(volVectorField& U, volScalarField& voidF, volVectorFi
     // 计算颗粒空隙率
     voidFractionM().setVoidFraction();
     voidF = voidFractionM().voidFractionInterp();
+    // 计算 ddtVoidFraction_
+    calcDDtVoidFraction(voidF);
     // 计算局部平局颗粒速度场
     averagingM().setVectorFieldAverage(averagingM().UsNext(), averagingM().UsWeightField(), velocities(),
                                        particleWeights());

@@ -24,18 +24,16 @@ modelType B; // A or B
 
 couplingInterval 100;
 
-expandedCellScale 6;
-
 allowUseSubCFDTimeStep false;
 
 globalForce globalForce;
 
-useGuoBBOEquation false;
+useDDtVoidFraction true;
 
 forceModels
 (
   Archimedes
-  // dragForce
+  dragForce
 );
 
 momCoupleModels
@@ -88,16 +86,6 @@ dragForceProps
   treatDEMForceImplicit false;
   verbose true;
   interpolation false;
-}
-
-virtualMassForceProps
-{
-  treatForceExplicitInMomEquation false;
-  treatForceBothCFDAndDEM true;
-  treatDEMForceImplicit false;
-  verbose true;
-  interpolation false;
-  scalarViscosity false;
 }
 
 twoWayMPIProps
