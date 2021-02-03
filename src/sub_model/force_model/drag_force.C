@@ -74,6 +74,7 @@ dragForce::~dragForce() {}
 
 void dragForce::setForce() {
   Info << "Setting " << dragModelName_ << " drag force..." << endl;
+  base::MPI_Barrier();
   const volScalarField& nuField = forceSubModel_->nuField();
   const volScalarField& rhoField = forceSubModel_->rhoField();
   int findCellID = -1;           // 颗粒中心所在网格的索引
@@ -233,6 +234,7 @@ void dragForce::setForce() {
     forceSubModel_->partToArray(index, drag, Foam::vector::zero, Ufluid, dragCoefficient);
   }
   Info << "Setting " << dragModelName_ << " drag force - done" << endl;
+  base::MPI_Barrier();
 }
 
 }  // namespace Foam

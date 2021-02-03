@@ -226,7 +226,6 @@ void mixGlobalForce::setBackgroundFieldValue(const FieldType& field,
       }
     }
   }
-  base::MPI_Barrier();
   const int masterId = 0;               // 主节点编号
   const int procId = base::procId();    // 处理器编号
   const int numProc = base::numProc();  // 处理器数量

@@ -50,8 +50,7 @@ MeiLiftForce::MeiLiftForce(cfdemCloud& cloud)
 MeiLiftForce::~MeiLiftForce() {}
 
 void MeiLiftForce::setForce() {
-  Info << "Setting Mei lift force..." << endl;
-  base::MPI_Barrier();
+  base::MPI_Info("Setting Mei lift force...", true);
   UInterpolator_.reset(
       interpolation<Foam::vector>::New(subPropsDict_.lookupOrDefault("UInterpolationType", word("cellPointFace")), U_)
           .ptr());
@@ -69,8 +68,7 @@ void MeiLiftForce::setForce() {
     setForceKernel(index, liftForce);
     forceSubModel_->partToArray(index, liftForce, Foam::vector::zero, Foam::vector::zero, 0);
   }
-  Info << "Setting Mei lift force - done" << endl;
-  base::MPI_Barrier();
+  base::MPI_Info("Setting Mei lift force - done", true);
 }
 
 void MeiLiftForce::setForceKernel(const int index, Foam::vector& liftForce) {

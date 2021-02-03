@@ -51,8 +51,7 @@ BassetForce::BassetForce(cfdemCloud& cloud)
 BassetForce::~BassetForce() {}
 
 void BassetForce::setForce() {
-  Info << "Setting Basset force..." << endl;
-  base::MPI_Barrier();
+  base::MPI_Info("Setting Basset force...", true);
   if (cloud_.numberOfParticlesChanged()) {
     FatalError << "Currently BassetForce model not allow number of particle changed\n" << abort(FatalError);
   }
@@ -73,8 +72,7 @@ void BassetForce::setForce() {
     setForceKernel(index, BstForce);
     forceSubModel_->partToArray(index, BstForce, Foam::vector::zero, Foam::vector::zero, 0.0);
   }
-  Info << "Setting Basset force - done" << endl;
-  base::MPI_Barrier();
+  base::MPI_Info("Setting Basset force - done", true);
 }
 
 void BassetForce::setForceKernel(const int index, Foam::vector& BstForce) {

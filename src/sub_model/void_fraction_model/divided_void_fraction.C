@@ -153,7 +153,7 @@ void dividedVoidFraction::printVoidFractionInfo() const {
         Pout << endl;
       }
     }
-    base::MPI_Barrier(0.2);
+    base::MPI_Barrier();
   }  // End of procs loop
 }
 

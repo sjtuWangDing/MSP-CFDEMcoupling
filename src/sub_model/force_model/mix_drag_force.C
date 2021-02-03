@@ -86,6 +86,7 @@ void mixDragForce::setForce() {
     forceSubModel_->partToArray(index, drag, Foam::vector::zero, Ufluid, dragCoefficient);
   }
   Info << "Setting " << dragModelName_ << " mix drag force - done" << endl;
+  base::MPI_Barrier();
 }
 
 void mixDragForce::setForceKernel(const int index, Foam::vector& drag, Foam::vector& Ufluid, double& dragCoefficient) {
@@ -202,7 +203,6 @@ void mixDragForce::setForceKernel(const int index, Foam::vector& drag, Foam::vec
       Pout << "drag (total) = " << drag << endl;
     }
   }
-  base::MPI_Barrier();
 }
 
 //! \brief 计算颗粒 index 处的背景流体速度

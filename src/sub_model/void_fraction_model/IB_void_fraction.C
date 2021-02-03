@@ -61,7 +61,7 @@ void IBVoidFraction::printVoidFractionInfo() const {
         Pout << "  particleOverMeshNumber[" << index << "]: " << cloud_.particleOverMeshNumber()[index] << endl;
       }
     }
-    base::MPI_Barrier(0.2);
+    base::MPI_Barrier();
   }  // End of procs loop
 }
 

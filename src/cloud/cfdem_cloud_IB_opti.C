@@ -113,7 +113,7 @@ void cfdemCloudIBOpti::printParticleInfo() const {
  * 或者其他类型，则不更新
  */
 void cfdemCloudIBOpti::updateMesh(volScalarField& interface) {
-  Info << "update mesh..." << endl;
+  base::MPI_Info("update mesh...", true);
   fvMesh& mesh = const_cast<fvMesh&>(mesh_);
   try {
     // 采用动态网格
@@ -130,8 +130,7 @@ void cfdemCloudIBOpti::updateMesh(volScalarField& interface) {
   } catch (const std::bad_cast& ex) {
     Info << "Not use dynamicRefineFvMesh, no need to update mesh" << endl;
   }
-  Info << "update mesh - done" << endl;
-  base::MPI_Barrier();
+  base::MPI_Info("update mesh - done", true);
   return;
 }
 

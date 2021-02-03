@@ -51,8 +51,7 @@ mixBassetForce::mixBassetForce(cfdemCloud& cloud)
 mixBassetForce::~mixBassetForce() {}
 
 void mixBassetForce::setForce() {
-  Info << "Setting mix Basset force..." << endl;
-  base::MPI_Barrier();
+  base::MPI_Info("Setting mix Basset force...", true);
   if (cloud_.numberOfParticlesChanged()) {
     FatalError << "Currently mixBassetForce model not allow number of particle changed\n" << abort(FatalError);
   }
@@ -66,8 +65,7 @@ void mixBassetForce::setForce() {
     setForceKernel(index, BstForce);
     forceSubModel_->partToArray(index, BstForce, Foam::vector::zero, Foam::vector::zero, 0.0);
   }
-  Info << "Setting mix Basset force - done" << endl;
-  base::MPI_Barrier();
+  base::MPI_Info("Setting mix Basset force - done", true);
 }
 
 void mixBassetForce::setForceKernel(const int index, Foam::vector& BstForce) {

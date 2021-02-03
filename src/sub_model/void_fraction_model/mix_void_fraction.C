@@ -53,10 +53,10 @@ mixVoidFraction::~mixVoidFraction() {}
 
 //! \brief 输出空隙率相关信息
 void mixVoidFraction::printVoidFractionInfo() const {
-  base::MPI_Barrier();
   int nProcs = 0, id = 0;
   MPI_Comm_size(MPI_COMM_WORLD, &nProcs);
   MPI_Comm_rank(MPI_COMM_WORLD, &id);
+  base::MPI_Barrier();
   for (int i = 0; i < nProcs; ++i) {
     if (id == i) {
       Pout << typeName().c_str() << ":" << endl;
@@ -85,7 +85,7 @@ void mixVoidFraction::printVoidFractionInfo() const {
         Pout << endl;
       }
     }
-    base::MPI_Barrier(0.2);
+    base::MPI_Barrier();
   }  // End of procs loop
 }
 

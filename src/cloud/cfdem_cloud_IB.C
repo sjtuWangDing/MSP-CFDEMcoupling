@@ -104,7 +104,7 @@ void cfdemCloudIB::printParticleInfo() const {
          << DEMForces()[index][2] << endl;
   }
   base::MPI_Barrier();
-  voidFractionM().printVoidFractionInfo();
+  // voidFractionM().printVoidFractionInfo();
 }
 
 //! \brief 确定颗粒周围 refined 网格的区域

@@ -52,8 +52,7 @@ mixVirtualMassForce::mixVirtualMassForce(cfdemCloud& cloud)
 mixVirtualMassForce::~mixVirtualMassForce() {}
 
 void mixVirtualMassForce::setForce() {
-  Info << "Setting mix virtual mass force..." << endl;
-  base::MPI_Barrier();
+  base::MPI_Info("Setting mix virtual mass force...", true);
   if (cloud_.numberOfParticlesChanged()) {
     FatalError << "Currently mixVirtualMassForce model not allow number of particle changed\n" << abort(FatalError);
   }
@@ -78,8 +77,7 @@ void mixVirtualMassForce::setForce() {
     setForceKernel(index, mixVirtualMassForce);
     forceSubModel_->partToArray(index, mixVirtualMassForce, Foam::vector::zero, Foam::vector::zero, 0);
   }
-  Info << "Setting mix virtual mass force - done" << endl;
-  base::MPI_Barrier();
+  base::MPI_Info("Setting mix virtual mass force - done", true);
 }
 
 void mixVirtualMassForce::setForceKernel(const int index, Foam::vector& mixVirtualMassForce) {

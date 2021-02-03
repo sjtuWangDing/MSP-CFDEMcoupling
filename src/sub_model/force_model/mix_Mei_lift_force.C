@@ -50,8 +50,7 @@ mixMeiLiftForce::mixMeiLiftForce(cfdemCloud& cloud)
 mixMeiLiftForce::~mixMeiLiftForce() {}
 
 void mixMeiLiftForce::setForce() {
-  Info << "Setting mix Mei lift force..." << endl;
-  base::MPI_Barrier();
+  base::MPI_Info("Setting mix Mei lift force...", true);
   UInterpolator_.reset(
       interpolation<Foam::vector>::New(subPropsDict_.lookupOrDefault("UInterpolationType", word("cellPointFace")), U_)
           .ptr());
@@ -73,8 +72,7 @@ void mixMeiLiftForce::setForce() {
     setForceKernel(index, mixLiftForce);
     forceSubModel_->partToArray(index, mixLiftForce, Foam::vector::zero, Foam::vector::zero, 0);
   }
-  Info << "Setting mix Mei lift force - done" << endl;
-  base::MPI_Barrier();
+  base::MPI_Info("Setting mix Mei lift force - done", true);
 }
 
 void mixMeiLiftForce::setForceKernel(const int index, Foam::vector& mixLiftForce) {
@@ -145,7 +143,6 @@ void mixMeiLiftForce::setForceKernel(const int index, Foam::vector& mixLiftForce
       }
     }
   }
-  base::MPI_Barrier();
 }
 
 //! \brief 计算颗粒 index 处的背景流体速度

@@ -136,7 +136,6 @@ void engineSearchIB::findCell(const base::CITensor1& findCellIDs) const {
       Pout << __func__ << ": Find no mesh covered by particle " << index
            << ", this could means the particle is not in the CFD domian." << endl;
     }
-    base::MPI_Barrier();
   }  // end loop of particle
   base::MPI_Info("engineSearchIB: findCell - done", verbose_);
 }

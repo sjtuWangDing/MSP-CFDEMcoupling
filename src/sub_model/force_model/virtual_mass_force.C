@@ -51,8 +51,7 @@ virtualMassForce::virtualMassForce(cfdemCloud& cloud)
 virtualMassForce::~virtualMassForce() {}
 
 void virtualMassForce::setForce() {
-  Info << "Setting virtual mass force..." << endl;
-  base::MPI_Barrier();
+  base::MPI_Info("Setting virtual mass force...", true);
   if (cloud_.numberOfParticlesChanged()) {
     FatalError << "Currently virtualMassForce model not allow number of particle changed\n" << abort(FatalError);
   }
@@ -73,8 +72,7 @@ void virtualMassForce::setForce() {
     setForceKernel(index, virtualMassForce);
     forceSubModel_->partToArray(index, virtualMassForce, Foam::vector::zero, Foam::vector::zero, 0);
   }
-  Info << "Setting virtual mass force - done" << endl;
-  base::MPI_Barrier();
+  base::MPI_Info("Setting virtual mass force - done", true);
 }
 
 void virtualMassForce::setForceKernel(const int index, Foam::vector& virtualMassForce) {
