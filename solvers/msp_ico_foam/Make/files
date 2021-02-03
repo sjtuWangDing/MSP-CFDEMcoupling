@@ -1,0 +1,3 @@
+msp_ico_foam.C
+
+EXE=$(MSP_CFDEM_BIN_DIR)/mspIcoFoam

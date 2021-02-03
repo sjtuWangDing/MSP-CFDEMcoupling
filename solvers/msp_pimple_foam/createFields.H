@@ -26,23 +26,11 @@ volVectorField U
   mesh
 );
 
-Info << "Reading/calculating face flux field phi\n" << endl;
-surfaceScalarField phi
-(
-  IOobject
-  (
-    "phi",
-    runTime.timeName(),
-    mesh,
-    IOobject::READ_IF_PRESENT,
-    IOobject::AUTO_WRITE
-  ),
-  fvc::flux(U)
-);
+#include "createPhi.H"
 
 label pRefCell = 0;
 scalar pRefValue = 0.0;
-setRefCell(p, piso.dict(), pRefCell, pRefValue);
+setRefCell(p, pimple.dict(), pRefCell, pRefValue);
 mesh.setFluxRequired(p.name());
 
 singlePhaseTransportModel laminarTransport(U, phi);

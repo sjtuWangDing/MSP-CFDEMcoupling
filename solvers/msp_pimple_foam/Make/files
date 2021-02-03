@@ -1,0 +1,3 @@
+msp_pimple_foam.C
+
+EXE=$(MSP_CFDEM_BIN_DIR)/mspPimpleFoam
