@@ -14,7 +14,7 @@ FoamFile
     object      controlDict;
 }
 
-application     interDyMFoam;
+application     mspCfdemSolverIBOpti;
 
 startFrom       startTime;
 

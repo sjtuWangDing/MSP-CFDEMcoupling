@@ -14,7 +14,7 @@ FoamFile
   object      controlDict;
 }
 
-application     cfdemSolverPiso;
+application     mspCfdemSolverPiso;
 
 startFrom       startTime;
 
