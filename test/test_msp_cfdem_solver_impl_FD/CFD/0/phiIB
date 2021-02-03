@@ -7,37 +7,37 @@
 \*---------------------------------------------------------------------------*/
 FoamFile
 {
-  version     2.0;
-  format      ascii;
-  class       volScalarField;
-  object      p;
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    object      phiIB;
 }
 
-dimensions      [0 2 -2 0 0 0 0];
+dimensions      [0 2 -1 0 0 0 0];
 
 internalField   uniform 0;
 
 boundaryField
 {
-  inlet
-  {
-    type            zeroGradient;
-  }
+    inlet
+    {
+        type            fixedValue;
+        value           uniform 0; 
+    }
 
-  wall
-  {
-    type            zeroGradient;
-  }
+    wall
+    {
+        type            zeroGradient;
+    }
 
-  outlet
-  {
-    type            zeroGradient;
-    // type            fixedValue;
-    // value           uniform 100000;
-  }
+    outlet
+    {
+        type            fixedValue;
+        value           uniform 0;
+    }
 
-  frontAndBack
-  {
-    type            empty;
-  }
+    frontAndBack
+    {
+        type            empty;
+    }
 }

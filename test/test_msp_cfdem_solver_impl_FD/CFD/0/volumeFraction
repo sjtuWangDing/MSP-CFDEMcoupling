@@ -10,16 +10,21 @@ FoamFile
   version     2.0;
   format      ascii;
   class       volScalarField;
-  object      p;
+  object      volumeFraction;
 }
 
-dimensions      [0 2 -2 0 0 0 0];
+dimensions      [0 0 0 0 0 0 0];
 
-internalField   uniform 0;
+internalField   uniform 1;
 
 boundaryField
 {
   inlet
+  {
+    type            zeroGradient;
+  }
+
+  outlet
   {
     type            zeroGradient;
   }
@@ -29,15 +34,8 @@ boundaryField
     type            zeroGradient;
   }
 
-  outlet
-  {
-    type            zeroGradient;
-    // type            fixedValue;
-    // value           uniform 100000;
-  }
-
   frontAndBack
   {
-    type            empty;
+    type            zeroGradient;
   }
 }
