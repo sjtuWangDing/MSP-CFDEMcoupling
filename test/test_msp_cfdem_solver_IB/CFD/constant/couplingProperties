@@ -77,7 +77,7 @@ IBProps
 
 engineIBProps
 {
-    treeSearch false;
+    treeSearch true;
     zSplit 8;
     xySplit 16;
 }

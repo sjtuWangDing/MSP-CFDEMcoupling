@@ -42,8 +42,10 @@ engineSearchMix::~engineSearchMix() {}
  * \param findCellIDs 颗粒覆盖网格的编号
  */
 void engineSearchMix::findCell(const base::CITensor1& findCellIDs) const {
+  // 如果在当前耦合时间步中网格更新或者模型允许耦合时间步长 > 流体时间步长，那么就可能在非耦合的流体时间步中更新网格
+  // 所以如果 allowUseSubCFDTimeStep 为 true，那么保险起见，在每个耦合时间步中都修正 searchEngine
   // 只需要在三个搜索函数中调用一次 searchEngine_.correct() 即可
-  if (cloud_.meshHasUpdated()) {
+  if (cloud_.meshHasUpdated() || cloud_.allowUseSubCFDTimeStep()) {
     dynamic_cast<engineSearchIB*>(const_cast<engineSearchMix*>(this))->searchEngine().correct();
   }
   engineSearch::findCell(findCellIDs);

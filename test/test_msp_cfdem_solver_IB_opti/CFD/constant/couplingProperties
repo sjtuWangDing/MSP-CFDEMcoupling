@@ -23,8 +23,9 @@ modelType none;
 
 couplingInterval 10;
 
-// 如果耦合时间间隔 > CFD 时间步，那么允许在一个耦合时间步中存在多个 CFD 时间步
-allowUseSubCFDTimeStep true;
+allowUseSubCFDTimeStep false;
+
+globalForce globalForce;
 
 forceModels
 (
@@ -42,23 +43,26 @@ turbulenceModelType turbulenceProperties;
 
 /* ---------------------------- sub-model properties ------------------------- */
 
+"(globalForceProps|mixGlobalForceProps)"
+{
+  velFieldName "U";
+  volumeFractionFieldName "volumeFraction";
+  gravityFieldName "g";
+}
+
 ShirgaonkarIBProps
 {
     verbose true;
-    velFieldName "U";
-    pressureFieldName "p";
 }
 
 ArchimedesIBProps
 {
     verbose true;
-    gravityFieldName "g";
-    volumeFractionFieldName "volumeFractionNext";
 }
 
 ArchimedesIBTestProps
 {
-    gravityFieldName "g";
+    verbose true;
 }
 
 twoWayMPIProps
@@ -68,11 +72,12 @@ twoWayMPIProps
 
 IBProps
 {
+    maxCellsNumPerCoarseParticle 10000000;
 }
 
 engineIBProps
 {
-    treeSearch false;
+    treeSearch true;
     zSplit 8;
     xySplit 16;
 }
