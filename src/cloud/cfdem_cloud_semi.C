@@ -25,7 +25,7 @@ License
   Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 \*---------------------------------------------------------------------------*/
 
-#include "cloud/cfdem_cloud_mix.h"
+#include "cloud/cfdem_cloud_semi.h"
 #include "sub_model/averaging_model/averaging_model.h"
 #include "sub_model/force_model/force_model.h"
 #include "sub_model/locate_model/locate_model.h"
@@ -35,16 +35,16 @@ License
 
 namespace Foam {
 
-cfdemDefineTypeName(cfdemCloudMix);
+cfdemDefineTypeName(cfdemCloudSemi);
 
 //! \brief Constructed from mesh
-cfdemCloudMix::cfdemCloudMix(const fvMesh& mesh) : cfdemCloud(mesh) {}
+cfdemCloudSemi::cfdemCloudSemi(const fvMesh& mesh) : cfdemCloud(mesh) {}
 
 //! \brief Destructor
-cfdemCloudMix::~cfdemCloudMix() {}
+cfdemCloudSemi::~cfdemCloudSemi() {}
 
 //! \brief 重新分配内存
-void cfdemCloudMix::reallocate() {
+void cfdemCloudSemi::reallocate() {
   int number = numberOfParticles();
   // allocate memory of data exchanged with liggghts
   dataExchangeM().realloc(parCloud_.radii(), base::makeShape1(number), parCloud_.radiiPtr(), 0.0);
@@ -64,7 +64,7 @@ void cfdemCloudMix::reallocate() {
   parCloud_.findExpandedCellIDs() = std::move(base::CITensor1(base::makeShape1(number), -1));
 }
 
-void cfdemCloudMix::printParticleInfo() const {
+void cfdemCloudSemi::printParticleInfo() const {
   int nProcs = 0, id = 0;
   MPI_Comm_size(MPI_COMM_WORLD, &nProcs);
   MPI_Comm_rank(MPI_COMM_WORLD, &id);
@@ -106,7 +106,7 @@ void cfdemCloudMix::printParticleInfo() const {
  * \param Us     <[in, out] 局部平均小颗粒速度场
  * \param Ksl    <[in, out] 动量交换场
  */
-void cfdemCloudMix::evolve(volVectorField& U, volScalarField& voidF, volVectorField& Us, volScalarField& Ksl) {
+void cfdemCloudSemi::evolve(volVectorField& U, volScalarField& voidF, volVectorField& Us, volScalarField& Ksl) {
   Info << "/ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * /" << endl;
   // 检查当前流体时间步是否同时也是耦合时间步
   validCouplingStep_ = dataExchangeM().checkValidCouplingStep();

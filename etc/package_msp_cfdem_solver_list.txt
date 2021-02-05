@@ -1,3 +1,4 @@
+solver_dir:msp_cfdem_solver_mix
 solver_dir:msp_cfdem_solver_semi
 solver_dir:msp_cfdem_solver_piso
 solver_dir:msp_cfdem_solver_IB

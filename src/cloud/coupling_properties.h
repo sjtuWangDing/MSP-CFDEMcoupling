@@ -81,7 +81,7 @@ class CouplingProperties {
 
   inline int refineMeshKeepInterval() const { return refineMeshKeepInterval_; }
 
-  /* --------------------------------- interface used for cfdemCloudMix ----------------------------------- */
+  /* --------------------------------- interface used for cfdemCloudSemi ----------------------------------- */
 
   inline double expandedCellScale() const { return expandedCellScale_; }
 
@@ -153,7 +153,7 @@ class CouplingProperties {
 
   /*!
    * \brief 重构网格的颗粒直径因数，在颗粒 refineMeshSkin_ * diameter 中的网格设置 interface 用于 refine meshs
-   * \note used for cfdemCloudIB or cfdemCloudMix
+   * \note used for cfdemCloudIB or cfdemCloudSemi
    */
   double refineMeshSkin_;
 
