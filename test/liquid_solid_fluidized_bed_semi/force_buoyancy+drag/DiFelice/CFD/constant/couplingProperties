@@ -32,6 +32,8 @@ globalForce mixGlobalForce;
 
 useGuoBBOEquation false;
 
+useDDtVoidFraction true;
+
 forceModels
 (
   Archimedes

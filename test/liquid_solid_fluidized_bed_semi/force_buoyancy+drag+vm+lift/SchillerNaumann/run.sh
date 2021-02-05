@@ -61,6 +61,6 @@ if [ $postProc = "true" ]; then
 fi
 
 #- keep terminal open (if started in new terminal)
-echo
-echo "press Ctrl+C kill process"
-read
+# echo
+# echo "press Ctrl+C kill process"
+# read
