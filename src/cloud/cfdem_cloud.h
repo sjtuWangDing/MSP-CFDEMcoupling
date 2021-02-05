@@ -146,26 +146,11 @@ class cfdemCloud {
     return 0.0;
   }
 
-  virtual bool checkFineParticle(int index) const {
-    FatalError << __func__
-               << " not implement in Foam::cfdemCloud, please use Foam::cfdemCloudSemi or Foam::cfdemCloudMix"
-               << abort(FatalError);
-    return false;
-  }
+  virtual bool checkFineParticle(int index) const { return true; }
 
-  virtual bool checkMiddleParticle(int index) const {
-    FatalError << __func__
-               << " not implement in Foam::cfdemCloud, please use Foam::cfdemCloudSemi or Foam::cfdemCloudMix"
-               << abort(FatalError);
-    return false;
-  }
+  virtual bool checkMiddleParticle(int index) const { return true; }
 
-  virtual bool checkCoarseParticle(int index) const {
-    FatalError << __func__
-               << " not implement in Foam::cfdemCloud, please use Foam::cfdemCloudSemi or Foam::cfdemCloudMix"
-               << abort(FatalError);
-    return false;
-  }
+  virtual bool checkCoarseParticle(int index) const { return true; }
 
   /*!
    * \brief 更新函数

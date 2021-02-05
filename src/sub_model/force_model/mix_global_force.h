@@ -252,21 +252,24 @@ void mixGlobalForce::setBackgroundFieldValue(const FieldType& field,
     }
     // 主节点等待 Irecv 执行完成
     MPI_Waitall(numProc - 1, rVec.data() + 1, sVec.data() + 1);
-    // 主节点重置 bufferTensor
+    // 主节点重置 bufferTensor，在计算前必须重置！
     std::fill_n(bufferTensor.ptr(), bufferTensor.mSize(), 0.0);
     // 主节点计算背景流场数据
     for (int index = 0; index < number; ++index) {
-      for (int inode = 0; inode < numProc; ++inode) {
+      // 如果是 middle 颗粒，则计算相应的背景物理量场
+      if (cloud_.checkMiddleParticle(index)) {
+        for (int inode = 0; inode < numProc; ++inode) {
 #pragma unroll
-        for (int i = 0; i < NDim + 1; ++i) {
-          bufferTensor[index][i] += bufferTensorVec[inode][index][i];
+          for (int i = 0; i < NDim + 1; ++i) {
+            bufferTensor[index][i] += bufferTensorVec[inode][index][i];
+          }
         }
-      }
 #pragma unroll
-      for (int i = 0; i < NDim; ++i) {
-        bufferTensor[index][i] /= bufferTensor[index][NDim];
-      }
-    }
+        for (int i = 0; i < NDim; ++i) {
+          bufferTensor[index][i] /= bufferTensor[index][NDim];
+        }
+      }  // check middle particle
+    }  // particle loop
   }
   // 主节点主节点广播 bufferTensor
   base::MPI_Bcast(bufferTensor, masterId);

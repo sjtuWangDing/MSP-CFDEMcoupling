@@ -107,15 +107,15 @@ void cfdemCloudMix::printParticleInfo() const {
 
 /*!
  * \brief 更新函数
- * \param U               <[in] 流体速度场
- * \param voidFraction    <[in, out] 小颗粒空隙率场
- * \param volumeFraction  <[in, out] 大颗粒空隙率场
- * \param Us              <[in, out] 局部平均速度场
- * \param Ksl             <[in, out] 动量交换场
- * \param interface       <[in, out] 界面场
+ * \param U          <[in] 流体速度场
+ * \param voidF      <[in, out] 小颗粒空隙率场
+ * \param volumeF    <[in, out] 大颗粒空隙率场
+ * \param Us         <[in, out] 局部平均速度场
+ * \param Ksl        <[in, out] 动量交换场
+ * \param interface  <[in, out] 界面场
  */
-void cfdemCloudMix::evolve(volVectorField& U, volScalarField& voidFraction, volScalarField& volumeFraction,
-                           volVectorField& Us, volScalarField& Ksl, volScalarField& interface) {
+void cfdemCloudMix::evolve(volVectorField& U, volScalarField& voidF, volScalarField& volumeF, volVectorField& Us,
+                           volScalarField& Ksl, volScalarField& interface) {
   Info << "/ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * /" << endl;
   // 检查当前流体时间步是否同时也是耦合时间步
   validCouplingStep_ = dataExchangeM().checkValidCouplingStep();
@@ -133,14 +133,43 @@ void cfdemCloudMix::evolve(volVectorField& U, volScalarField& voidFraction, volS
     // 获取颗粒中心所在的网格索引
     locateM().findCell(parCloud_.findCellIDs());
     // 获取颗粒覆盖当前处理器上的某一个网格索引，如果索引为 -1，则表示颗粒不覆盖当前处理器
+    // findMpiCellIDs() 作用于所有颗粒，因为其用于计算颗粒尺度
     locateM().findMpiCell(parCloud_.findMpiCellIDs());
     // 计算颗粒尺度
     voidFractionM().getDimensionRatiosForMix(parCloud_.dimensionRatios());
     // 计算扩展颗粒覆盖当前处理器上的某一个网格索引
     // 必须位于计算颗粒尺度之后，因为需要判断颗粒是否为 middle
+    // findExpandedCell() 只会作用于 middle 颗粒
     locateM().findExpandedCell(parCloud_.findExpandedCellIDs(), expandedCellScale());
     // 计算颗粒空隙率
+    voidFractionM().setVoidFraction();
+    voidF = voidFractionM().voidFractionNext();
+    volumeF = voidFractionM().volumeFractionNext();
+    // 计算 ddtVoidFraction_
+    calcDDtVoidFraction(voidF);
+    // 计算局部平局颗粒速度场
+    averagingM().setVectorFieldAverage(averagingM().UsNext(), averagingM().UsWeightField(), velocities(),
+                                       particleWeights());
+    Us = averagingM().UsNext();
+    // global force init
+    globalF().initBeforeSetForce();
+    // 计算流体对颗粒的作用力
+    for (const auto& ptr : forceModels_) {
+      ptr->setForce();
+    }
+    // global force end
+    globalF().endAfterSetForce();
+    // 计算局部累加的流体作用力场
+    averagingM().setVectorFieldSum(globalF().impParticleForce(), impForces(), particleWeights());
+    // write DEM data
+    giveDEMData();
+    // get shared ptr of implicitCouple model and update Ksl field
+    std::shared_ptr<momCoupleModel> sPtr = momCoupleModels_[implicitCouple::cTypeName()];
+    Ksl = sPtr->impMomSource();
+    Ksl.correctBoundaryConditions();
+    printParticleInfo();
   }
+  Info << __func__ << " - done\n" << endl;
 }
 
 }  // namespace Foam

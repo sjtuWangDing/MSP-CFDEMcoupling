@@ -79,12 +79,6 @@ voidFractionModel::voidFractionModel(cfdemCloud& cloud)
 //! \brief Destructor
 voidFractionModel::~voidFractionModel() {}
 
-tmp<volScalarField> voidFractionModel::voidFractionInterp() const {
-  double tsf = cloud_.dataExchangeM().timeStepFraction();
-  return tmp<volScalarField>(
-      new volScalarField("voidFractionInterp", tsf * voidFractionPrev_ + (1.0 - tsf) * voidFractionNext_));
-}
-
 //! \brief 计算颗粒尺寸与其周围网格平均尺寸的比值
 void voidFractionModel::getDimensionRatios(const base::CDTensor1& dimensionRatios,
                                            const double scale /* = 1.0 */) const {

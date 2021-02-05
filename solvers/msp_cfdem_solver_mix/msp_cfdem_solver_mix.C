@@ -32,7 +32,7 @@ License
 #include "turbulentTransportModel.H"
 
 #include "cfdem_tools/cfdem_tools.h"
-#include "cloud/cfdem_cloud_semi.h"
+#include "cloud/cfdem_cloud_mix.h"
 
 int main(int argc, char* argv[]) {
   #include "setRootCase.H"
@@ -52,7 +52,7 @@ int main(int argc, char* argv[]) {
   turbulence->validate();
 
   // create cfdemCloud
-  Foam::cfdemCloudSemi particleCloud(mesh);
+  Foam::cfdemCloudMix particleCloud(mesh);
   Foam::cfdemTools::checkModelType(particleCloud);
   std::string modelType = particleCloud.modelType();
 
@@ -64,7 +64,7 @@ int main(int argc, char* argv[]) {
 
     #include "CourantNo.H"
 
-    particleCloud.evolve(U, voidFraction, Us, Ksl);
+    particleCloud.evolve(U, voidFraction, volumeFraction, Us, Ksl, interface);
 
     // 这里不需要计算 U 的通量，因为 phiByVoidFraction 在上个时间步的压力迭代中被修正，满足连续性方程
     // phiByVoidFraction = fvc::interpolate(U) & mesh.Sf();

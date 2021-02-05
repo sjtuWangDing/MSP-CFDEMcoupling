@@ -84,6 +84,33 @@ class IBVoidFraction : public voidFractionModel {
   //! \brief 输出空隙率相关信息
   void printVoidFractionInfo() const;
 
+  /*!
+   * \brief 计算距离系数，对任意一个网格, 如果网格中心 c 在颗粒内部, 但是它的某个角点 p
+   *   不在颗粒内部, 则计算 c 与 p 的连线与颗粒表面的交点 i 到网格中心 c 的距离, 即
+   *   求解 x 的二元一次方程
+   *   (x * (vector_p - vector_c) - vector_particle) &
+   *   (x * (vector_p - vector_c) - vector_particle) == radius * radius
+   *   等价于函数体中定义的: a*(x^2) - b*x + c = 0
+   * \param radius         <[in] 颗粒半径
+   * \param particleCentre <[in] 颗粒中心
+   * \param pointInside    <[in] 网格中心
+   * \param pointOutside   <[in] 网格角点
+   */
+  static double segmentParticleIntersection(double radius, const Foam::vector& particleCentre,
+                                            const Foam::vector& pointInside, const Foam::vector& pointOutside);
+
+  /*!
+   * \brief 获取 Corona Point
+   * \note Corona Point 是在以网格中心为中心, 半径为 corona 的球面上, 距离颗粒中心最远的点
+   *       其中, 半径 corona = 0.5 * sqrt(3) * 网格等效半径
+   *       网格等效半径 = pow(cellVolume, 1.0 / 3.0)
+   * \param particleCentre  <[in] 指定颗粒中心
+   * \param cellCentre      <[in] 指定网格中心
+   * \param corona          <[in] 指定网格的等效半径
+   */
+  static Foam::vector getCoronaPointPosition(const Foam::vector& particleCentre, const Foam::vector& cellCentre,
+                                             const scalar corona);
+
  protected:
   /*!
    * \brief 设置单个颗粒的体积分数场
@@ -102,33 +129,6 @@ class IBVoidFraction : public voidFractionModel {
    */
   void buildLabelHashSetForVolumeFraction(const label cellID, const Foam::vector& particleCentre, const double radius,
                                           const std::unique_ptr<labelHashSet>& hashSetPtr);
-
-  /*!
-   * \brief 计算距离系数，对任意一个网格, 如果网格中心 c 在颗粒内部, 但是它的某个角点 p
-   *   不在颗粒内部, 则计算 c 与 p 的连线与颗粒表面的交点 i 到网格中心 c 的距离, 即
-   *   求解 x 的二元一次方程
-   *   (x * (vector_p - vector_c) - vector_particle) &
-   *   (x * (vector_p - vector_c) - vector_particle) == radius * radius
-   *   等价于函数体中定义的: a*(x^2) - b*x + c = 0
-   * \param radius         <[in] 颗粒半径
-   * \param particleCentre <[in] 颗粒中心
-   * \param pointInside    <[in] 网格中心
-   * \param pointOutside   <[in] 网格角点
-   */
-  double segmentParticleIntersection(double radius, const Foam::vector& particleCentre, const Foam::vector& pointInside,
-                                     const Foam::vector& pointOutside) const;
-
-  /*!
-   * \brief 获取 Corona Point
-   * \note Corona Point 是在以网格中心为中心, 半径为 corona 的球面上, 距离颗粒中心最远的点
-   *       其中, 半径 corona = 0.5 * sqrt(3) * 网格等效半径
-   *       网格等效半径 = pow(cellVolume, 1.0 / 3.0)
-   * \param particleCentre  <[in] 指定颗粒中心
-   * \param cellCentre      <[in] 指定网格中心
-   * \param corona          <[in] 指定网格的等效半径
-   */
-  Foam::vector getCoronaPointPosition(const Foam::vector& particleCentre, const Foam::vector& cellCentre,
-                                      const scalar corona) const;
 
  private:
   dictionary subPropsDict_;

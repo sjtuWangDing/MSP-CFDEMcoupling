@@ -18,12 +18,14 @@ void averagingModel::setVectorFieldSum(volVectorField& valueField,
   CHECK(2 == nDim) << __func__ << ": error tensor dimension";
   CHECK_EQ(value.size(1), 3) << __func__ << ": vector field's dimension must equal to 3";
   for (int index = 0; index < cloud_.numberOfParticles(); index++) {
-    for (int subCell = 0; subCell < cloud_.particleOverMeshNumber()[index]; subCell++) {
-      int cellID = cloud_.cellIDs()[index][subCell];
-      if (cellID >= 0) {
-        // get value vector
-        Foam::vector valueVec(value[index][0], value[index][1], value[index][2]);
-        valueField[cellID] += valueVec * weight[index][subCell];
+    if (cloud_.checkFineParticle(index) || cloud_.checkMiddleParticle(index)) {
+      for (int subCell = 0; subCell < cloud_.particleOverMeshNumber()[index]; subCell++) {
+        int cellID = cloud_.cellIDs()[index][subCell];
+        if (cellID >= 0) {
+          // get value vector
+          Foam::vector valueVec(value[index][0], value[index][1], value[index][2]);
+          valueField[cellID] += valueVec * weight[index][subCell];
+        }
       }
     }
   }

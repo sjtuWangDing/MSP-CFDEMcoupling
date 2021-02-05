@@ -23,16 +23,6 @@ License
 
   You should have received a copy of the GNU General Public License
   along with CFDEMcoupling.  If not, see <http://www.gnu.org/licenses/>.
-
-Description
-  cfdemSolverPiso is a coupled CFD-DEM solver using CFDEMcoupling,
-  an open source parallel coupled CFD-DEM framework. Based on pisoFoam,
-  a finite volume based solver for turbulent Navier-Stokes equations applying
-  the PISO algorithm, cfdemSolverPiso has additional functionality for
-  a coupling to the DEM code LIGGGHTS. The volume averaged Navier-Stokes
-  Equations are solved accounting for momentum exchange and volume
-  displacement of discrete particles whose trajectories are calculated
-  in the DEM code LIGGGHTS.
 \*---------------------------------------------------------------------------*/
 
 #include "fvCFD.H"
