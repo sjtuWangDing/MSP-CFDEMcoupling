@@ -25,10 +25,10 @@ License
   Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
-  cfdemCloudMix derived from cfdemCloud
+  cfdemCloudSemi derived from cfdemCloud
 
 Class
-  Foam::cfdemCloudMix
+  Foam::cfdemCloudSemi
 \*---------------------------------------------------------------------------*/
 
 #ifndef __CFDEM_CLOUD_MIX_H__
@@ -38,16 +38,16 @@ Class
 
 namespace Foam {
 
-class cfdemCloudMix : public cfdemCloud {
+class cfdemCloudSemi : public cfdemCloud {
  public:
   //! \brief Constructed from mesh
-  cfdemCloudMix(const fvMesh& mesh);
+  cfdemCloudSemi(const fvMesh& mesh);
 
   //! \brief Destructor
-  ~cfdemCloudMix();
+  ~cfdemCloudSemi();
 
   //! \brief Runtime type information
-  cfdemTypeName("cfdemCloudMix");
+  cfdemTypeName("cfdemCloudSemi");
 
   //! \brief 重新分配内存
   void reallocate();

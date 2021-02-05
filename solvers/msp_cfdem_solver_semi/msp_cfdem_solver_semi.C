@@ -39,7 +39,7 @@ Description
 #include "singlePhaseTransportModel.H"
 
 #include "cloud/of_version.h"
-#include "cloud/cfdem_cloud_mix.h"
+#include "cloud/cfdem_cloud_semi.h"
 #include "cfdem_tools/cfdem_tools.h"
 
 #if defined(version30)
@@ -68,7 +68,7 @@ int main(int argc, char *argv[]) {
   #include "initContinuityErrs.H"
   #include "readGravitationalAcceleration.H"
   // create cfdemCloud
-  Foam::cfdemCloudMix particleCloud(mesh);
+  Foam::cfdemCloudSemi particleCloud(mesh);
   cfdemTools::checkModelType(particleCloud);
   std::string modelType = particleCloud.modelType();
 

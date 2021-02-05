@@ -32,7 +32,7 @@ License
 #include "turbulentTransportModel.H"
 
 #include "cfdem_tools/cfdem_tools.h"
-#include "cloud/cfdem_cloud_mix.h"
+#include "cloud/cfdem_cloud_semi.h"
 
 int main(int argc, char* argv[]) {
   #include "setRootCase.H"
@@ -54,7 +54,7 @@ int main(int argc, char* argv[]) {
   turbulence->validate();
 
   // create cfdemCloud
-  Foam::cfdemCloudMix particleCloud(mesh);
+  Foam::cfdemCloudSemi particleCloud(mesh);
   Foam::cfdemTools::checkModelType(particleCloud);
   std::string modelType = particleCloud.modelType();
 
