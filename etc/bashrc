@@ -76,6 +76,9 @@ set_var_ MSP_CFDEM_TOOLS_DIR $MSP_CFDEM_PROJECT_DIR/tools
 set_var_ LIGGGHTS_MAKEFILE_NAME "auto"
 set_var_ LIGGGHTS_MAKEFILE_POSTFIX ""
 
+set_var_ MSP_CFDEM_MPI SYSTEMOPENMPI
+set_var_ MSP_CFDEM_MPI_DIR `mpicc --showme:link | sed -e 's/.*-L\([^ ]*\).*/\1/'`
+
 #- MSP-CFDEM lib name
 export MSP_CFDEM_LIB_DIR=$MSP_CFDEM_PROJECT_DIR/platforms/$WM_OPTIONS/lib
 export MSP_CFDEM_BIN_DIR=$MSP_CFDEM_PROJECT_DIR/platforms/$WM_OPTIONS/bin

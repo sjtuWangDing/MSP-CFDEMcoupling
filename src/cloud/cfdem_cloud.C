@@ -260,7 +260,7 @@ void cfdemCloud::evolve(volVectorField& U, volScalarField& voidF, volVectorField
     voidFractionM().getDimensionRatios(parCloud_.dimensionRatios());
     // 计算颗粒空隙率
     voidFractionM().setVoidFraction();
-    voidF = voidFractionM().voidFractionInterp();
+    voidF = voidFractionM().voidFractionNext();
     // 计算 ddtVoidFraction
     calcDDtVoidFraction(voidF);
     // 计算局部平局颗粒速度场

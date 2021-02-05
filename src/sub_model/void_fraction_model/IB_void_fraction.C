@@ -169,7 +169,7 @@ void IBVoidFraction::setVolumeFractionForSingleParticle(const int index,
 
 /*!
  * \brief 构建颗粒覆盖的所有网格的哈希集合
- * \note 设置为递归函数,  通过哈希器将网格编号转换为哈希值,  并存入 set 中以便于搜索
+ * \note 设置为递归函数,  通过哈希器将网格编号转换为哈希值, 并存入 set 中以便于搜索
  * \param cellID         <[in] 递归循环中要检索网格编号
  * \param particleCentre <[in] 颗粒中心位置
  * \param radius         <[in] 颗粒半径
@@ -261,7 +261,7 @@ void IBVoidFraction::buildLabelHashSetForVolumeFraction(const label cellID, cons
  * \param corona          <[in] 指定网格的等效半径
  */
 Foam::vector IBVoidFraction::getCoronaPointPosition(const Foam::vector& particleCentre, const Foam::vector& cellCentre,
-                                                    const scalar corona) const {
+                                                    const scalar corona) {
   // 计算网格中心到颗粒中心的距离
   scalar centreDist = mag(cellCentre - particleCentre);
   vector coronaPoint = cellCentre;
@@ -286,7 +286,7 @@ Foam::vector IBVoidFraction::getCoronaPointPosition(const Foam::vector& particle
  */
 double IBVoidFraction::segmentParticleIntersection(double radius, const Foam::vector& particleCentre,
                                                    const Foam::vector& pointInside,
-                                                   const Foam::vector& pointOutside) const {
+                                                   const Foam::vector& pointOutside) {
   // 计算方程系数 a*(x^2) - b*x + c = 0
   double a = (pointOutside - pointInside) & (pointOutside - pointInside);
   double b = 2.0 * (pointOutside - pointInside) & (pointInside - particleCentre);

@@ -67,14 +67,14 @@ class cfdemCloudMix : public cfdemCloud {
 
   /*!
    * \brief 更新函数
-   * \param U               <[in] 流体速度场
-   * \param voidFraction    <[in, out] 小颗粒空隙率场
-   * \param volumeFraction  <[in, out] 大颗粒空隙率场
-   * \param Us              <[in, out] 局部平均速度场
-   * \param Ksl             <[in, out] 动量交换场
-   * \param interface       <[in, out] 界面场
+   * \param U          <[in] 流体速度场
+   * \param voidF      <[in, out] 小颗粒空隙率场
+   * \param volumeF    <[in, out] 大颗粒空隙率场
+   * \param Us         <[in, out] 局部平均速度场
+   * \param Ksl        <[in, out] 动量交换场
+   * \param interface  <[in, out] 界面场
    */
-  void evolve(volVectorField& U, volScalarField& voidFraction, volScalarField& volumeFraction, volVectorField& Us,
+  void evolve(volVectorField& U, volScalarField& voidF, volScalarField& volumeF, volVectorField& Us,
               volScalarField& Ksl, volScalarField& interface);
 };
 

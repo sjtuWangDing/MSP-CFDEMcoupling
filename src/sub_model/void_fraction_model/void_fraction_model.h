@@ -75,8 +75,6 @@ class voidFractionModel {
   //! \brief 输出空隙率相关信息
   virtual void printVoidFractionInfo() const = 0;
 
-  tmp<volScalarField> voidFractionInterp() const;
-
   //! \brief 重置空隙率
   inline void resetVoidFraction() {
     voidFractionPrev_ == voidFractionNext_;

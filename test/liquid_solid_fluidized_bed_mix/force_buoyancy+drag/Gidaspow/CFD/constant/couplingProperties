@@ -24,11 +24,11 @@ modelType B; // A or B
 
 couplingInterval 100;
 
-expandedCellScale 6;
+expandedCellScale 4;
 
 allowUseSubCFDTimeStep false;
 
-globalForce globalForce;
+globalForce mixGlobalForce;
 
 useGuoBBOEquation false;
 
@@ -37,7 +37,11 @@ useDDtVoidFraction true;
 forceModels
 (
   Archimedes
-  dragForce
+  mixDragForce
+  // virtualMassForce
+  // BassetForce
+  // viscForce
+  // gradPForce
 );
 
 momCoupleModels
@@ -45,15 +49,15 @@ momCoupleModels
   implicitCouple
 );
 
-voidFractionModel divided;
+voidFractionModel mix; // divided, centre, mix
 
-locateModel engine;
+locateModel engineMix; // engine, engineIB, engineMix
 
 meshMotionModel noMeshMotion;
 
 dataExchangeModel twoWayMPI;
 
-averagingModel dense;
+averagingModel dense; // dense dilute
 
 turbulenceModelType turbulenceProperties;
 
@@ -69,6 +73,7 @@ implicitCoupleProps
 "(globalForceProps|mixGlobalForceProps)"
 {
   verbose true;
+  GaussCoreEff 3;
   velFieldName "U";
   voidFractionFieldName "voidFraction";
   gravityFieldName "g";
@@ -83,7 +88,7 @@ ArchimedesProps
   interpolation false;
 }
 
-dragForceProps
+mixDragForceProps
 {
   dragModelName "Gidaspow";
   treatForceExplicitInMomEquation false;
@@ -92,16 +97,27 @@ dragForceProps
   verbose true;
   interpolation false;
   scalarViscosity false;
+  useGaussCoreFunctionRefined true;
 }
 
-virtualMassForceProps
+viscForceProps
 {
-  treatForceExplicitInMomEquation false;
-  treatForceBothCFDAndDEM true;
+  velFieldName "U";
+  treatForceExplicitInMomEquation true;
+  treatForceBothCFDAndDEM false;
   treatDEMForceImplicit false;
   verbose true;
   interpolation false;
-  scalarViscosity false;
+}
+
+gradPForceProps
+{
+  pressureFieldName "p";
+  treatForceExplicitInMomEquation true;
+  treatForceBothCFDAndDEM false;
+  treatDEMForceImplicit false;
+  verbose true;
+  interpolation false;
 }
 
 twoWayMPIProps
@@ -115,8 +131,34 @@ dividedProps
   scaleUpVol 1.0;
 }
 
+mixProps
+{
+  verbose true;
+  alphaMin 0.3;
+  scaleUpVol 1.0;
+}
+
+centreProps
+{
+  alphaMin 0.30;
+}
+
+bigParticleProps
+{
+  maxCellsPerParticle 1000;
+  alphaMin 0.30;
+  scaleUpVol 1.0;
+}
+
 engineProps
+{
+  treeSearch false;
+}
+
+engineMixProps
 {
   verbose true;
   treeSearch true;
+  zSplit 8;
+  xySplit 16;
 }

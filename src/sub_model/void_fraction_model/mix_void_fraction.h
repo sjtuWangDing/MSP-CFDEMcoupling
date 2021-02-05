@@ -59,6 +59,24 @@ class mixVoidFraction : public voidFractionModel {
   void setVoidFractionForSingleParticle(const int index, const int findCellID,
                                         std::unordered_map<int, Foam::vector>& parMap);
 
+  /*!
+   * \brief 设置单个颗粒的体积分数场
+   * \param index 颗粒索引
+   * \param hashSetPtr 哈希集合，用于保存颗粒覆盖的网格索引
+   */
+  void setVolumeFractionForSingleParticle(int index, const std::unique_ptr<labelHashSet>& hashSetPtr);
+
+  /*!
+   * \brief 构建颗粒覆盖的所有网格的哈希集合
+   * \note 设置为递归函数,  通过哈希器将网格编号转换为哈希值,  并存入 set 中以便于搜索
+   * \param cellID         <[in] 递归循环中要检索网格编号
+   * \param particleCentre <[in] 颗粒中心位置
+   * \param radius         <[in] 颗粒半径
+   * \param hashSetPtr     <[in, out] 需要构建的哈希集
+   */
+  void buildLabelHashSetForVolumeFraction(const label cellID, const Foam::vector& particleCentre, const double radius,
+                                          const std::unique_ptr<labelHashSet>& hashSetPtr);
+
  private:
   dictionary subPropsDict_;
 
