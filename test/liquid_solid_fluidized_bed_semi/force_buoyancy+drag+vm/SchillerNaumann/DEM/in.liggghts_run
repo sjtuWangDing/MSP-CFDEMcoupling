@@ -8,7 +8,7 @@ communicate     single vel yes
 
 boundary        f f f
 newton          off
-processors      2 2 1
+processors      2 2 2
 
 units           si
 
