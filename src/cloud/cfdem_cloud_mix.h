@@ -25,43 +25,29 @@ License
   Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
-  cfdemCloudIBOpti derived from cfdemCloud
+  cfdemCloudMix derived from cfdemCloud
 
 Class
-  Foam::cfdemCloudIBOpti
+  Foam::cfdemCloudMix
 \*---------------------------------------------------------------------------*/
 
-#ifndef __CFDEM_CLOUD_IB_OPTI_H__
-#define __CFDEM_CLOUD_IB_OPTI_H__
+#ifndef __CFDEM_CLOUD_MIX_H__
+#define __CFDEM_CLOUD_MIX_H__
 
 #include "cloud/cfdem_cloud.h"
 
 namespace Foam {
 
-class cfdemCloudIBOpti : public cfdemCloud {
+class cfdemCloudMix : public cfdemCloud {
  public:
   //! \brief Constructed from mesh
-  cfdemCloudIBOpti(const fvMesh& mesh);
+  cfdemCloudMix(const fvMesh& mesh);
 
   //! \brief Destructor
-  ~cfdemCloudIBOpti();
+  ~cfdemCloudMix();
 
-  /*!
-   * \brief 更新函数
-   * \note used for cfdemSolverIB
-   * \param volumeFraction  <[in, out] 大颗粒体积分数
-   * \param interface       <[in, out] 界面场，用于 dynamic mesh
-   */
-  void evolve(volScalarField& volumeFraction, volScalarField& interface);
-
-  void calcVelocityCorrection(volScalarField& p, volVectorField& U, volScalarField& phiIB,
-                              volScalarField& voidfraction);
-
-  /*!
-   * \brief 更新网格，如果 mesh 是 Foam::dynamicRefineFvMesh 类型，则更新网格，
-   *   如果是 Foam::staticFvMesh 或者其他类型，则不更新
-   */
-  void updateMesh(volScalarField& interface);
+  //! \brief Runtime type information
+  cfdemTypeName("cfdemCloudMix");
 
   //! \brief 重新分配内存
   void reallocate();
@@ -69,24 +55,29 @@ class cfdemCloudIBOpti : public cfdemCloud {
   //! \brief 从 DEM 获取数据
   void getDEMData();
 
-  //! \brief 传递数据到 DEM
-  void giveDEMData() const;
-
   void printParticleInfo() const;
 
-  //! \brief 确定颗粒周围 refined 网格的区域
-  void setInterface(volScalarField& interface, const double scale = cfdemCloudIBOpti::particleMeshScale_) const;
+  double expandedCellScale() const { return cProps_.expandedCellScale(); }
 
- protected:
-  static const double particleMeshScale_;
+  bool checkFineParticle(int index) const { return cProps_.checkFineParticle(getDimensionRatio(index)); }
 
-  int pRefCell_;
+  bool checkMiddleParticle(int index) const { return cProps_.checkMiddleParticle(getDimensionRatio(index)); }
 
-  double pRefValue_;
+  bool checkCoarseParticle(int index) const { return cProps_.checkCoarseParticle(getDimensionRatio(index)); }
+
+  /*!
+   * \brief 更新函数
+   * \param U               <[in] 流体速度场
+   * \param voidFraction    <[in, out] 小颗粒空隙率场
+   * \param volumeFraction  <[in, out] 大颗粒空隙率场
+   * \param Us              <[in, out] 局部平均速度场
+   * \param Ksl             <[in, out] 动量交换场
+   * \param interface       <[in, out] 界面场
+   */
+  void evolve(volVectorField& U, volScalarField& voidFraction, volScalarField& volumeFraction, volVectorField& Us,
+              volScalarField& Ksl, volScalarField& interface);
 };
-
-const double cfdemCloudIBOpti::particleMeshScale_ = 2.0;
 
 }  // namespace Foam
 
-#endif  // __CFDEM_CLOUD_IB_OPTI_H__
+#endif  // __CFDEM_CLOUD_MIX_H__

@@ -140,22 +140,30 @@ class cfdemCloud {
   virtual void printParticleInfo() const;
 
   virtual double expandedCellScale() const {
-    FatalError << __func__ << " not implement in Foam::cfdemCloud, please use Foam::cfdemCloudSemi" << abort(FatalError);
+    FatalError << __func__
+               << " not implement in Foam::cfdemCloud, please use Foam::cfdemCloudSemi or Foam::cfdemCloudMix"
+               << abort(FatalError);
     return 0.0;
   }
 
   virtual bool checkFineParticle(int index) const {
-    FatalError << __func__ << " not implement in Foam::cfdemCloud, please use Foam::cfdemCloudSemi" << abort(FatalError);
+    FatalError << __func__
+               << " not implement in Foam::cfdemCloud, please use Foam::cfdemCloudSemi or Foam::cfdemCloudMix"
+               << abort(FatalError);
     return false;
   }
 
   virtual bool checkMiddleParticle(int index) const {
-    FatalError << __func__ << " not implement in Foam::cfdemCloud, please use Foam::cfdemCloudSemi" << abort(FatalError);
+    FatalError << __func__
+               << " not implement in Foam::cfdemCloud, please use Foam::cfdemCloudSemi or Foam::cfdemCloudMix"
+               << abort(FatalError);
     return false;
   }
 
   virtual bool checkCoarseParticle(int index) const {
-    FatalError << __func__ << " not implement in Foam::cfdemCloud, please use Foam::cfdemCloudSemi" << abort(FatalError);
+    FatalError << __func__
+               << " not implement in Foam::cfdemCloud, please use Foam::cfdemCloudSemi or Foam::cfdemCloudMix"
+               << abort(FatalError);
     return false;
   }
 

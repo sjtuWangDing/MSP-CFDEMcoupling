@@ -31,8 +31,8 @@ Class
   Foam::cfdemCloudSemi
 \*---------------------------------------------------------------------------*/
 
-#ifndef __CFDEM_CLOUD_MIX_H__
-#define __CFDEM_CLOUD_MIX_H__
+#ifndef __CFDEM_CLOUD_SEMI_H__
+#define __CFDEM_CLOUD_SEMI_H__
 
 #include "cloud/cfdem_cloud.h"
 
@@ -75,4 +75,4 @@ class cfdemCloudSemi : public cfdemCloud {
 
 }  // namespace Foam
 
-#endif  // __CFDEM_CLOUD_MIX_H__
+#endif  // __CFDEM_CLOUD_SEMI_H__
