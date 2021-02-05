@@ -57,7 +57,6 @@ class cfdemCloudIB : public cfdemCloud {
   void calcVelocityCorrection(volScalarField& p, volVectorField& U, volScalarField& phiIB,
                               volScalarField& voidfraction);
 
- protected:
   //! \brief 重新分配内存
   void reallocate();
 

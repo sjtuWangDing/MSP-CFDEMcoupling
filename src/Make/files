@@ -8,6 +8,7 @@ $(cloud)/cfdem_cloud.C
 $(cloud)/cfdem_cloud_IB.C
 $(cloud)/cfdem_cloud_IB_opti.C
 $(cloud)/cfdem_cloud_semi.C
+$(cloud)/cfdem_cloud_mix.C
 $(cloud)/coupling_properties.C
 
 $(cfdem_tools)/check_model_type.C
