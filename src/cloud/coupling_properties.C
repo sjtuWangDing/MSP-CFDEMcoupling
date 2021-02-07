@@ -44,9 +44,9 @@ CouplingProperties::CouplingProperties(const fvMesh& mesh, const IOdictionary& c
     : mesh_(mesh),
       couplingPropertiesDict_(couplingPropertiesDict),
       liggghtsCommandsDict_(liggghtsCommandsDict),
-      fineParticleRatio_(0.0),
-      coarseParticleRatio_(0.0),
-      expandedCellScale_(0.0),
+      fineParticleRatio_(couplingPropertiesDict.lookupOrDefault<double>("fineParticleRatio", 3.0)),
+      coarseParticleRatio_(couplingPropertiesDict.lookupOrDefault<double>("coarseParticleRatio", 0.33)),
+      expandedCellScale_(couplingPropertiesDict.lookupOrDefault<double>("expandedCellScale", 3.0)),
       useGuoBBOEquation_(couplingPropertiesDict.lookupOrDefault<bool>("useGuoBBOEquation", false)),
       useDDtVoidFraction_(couplingPropertiesDict.lookupOrDefault<bool>("useDDtVoidFraction", false)),
       verbose_(couplingPropertiesDict.lookupOrDefault<bool>("verbose", false)),
@@ -57,7 +57,8 @@ CouplingProperties::CouplingProperties(const fvMesh& mesh, const IOdictionary& c
       couplingInterval_(couplingPropertiesDict.lookupOrDefault<int>("couplingInterval", 0)),
       checkPeriodicCells_(couplingPropertiesDict.lookupOrDefault<bool>("checkPeriodicCells", false)),
       periodicCheckRange_(Foam::vector(1, 1, 1)),
-      refineMeshSkin_(couplingPropertiesDict.lookupOrDefault<double>("refineMeshSkin", 1.8)),
+      refineMeshSkin_(couplingPropertiesDict.lookupOrDefault<double>("refineMeshSkin", 2.0)),
+      minCoarseParticleRadius_(couplingPropertiesDict.lookupOrDefault<double>("minCoarseParticleRadius", Foam::GREAT)),
       refineMeshKeepInterval_(couplingPropertiesDict.lookupOrDefault<int>("refineMeshKeepInterval", 0)) {
   Info << "CFDEM coupling version: " << CFDEM_VERSION << endl;
   Info << "LIGGGHTS version: " << LIGGGHTS_VERSION << endl;
@@ -83,19 +84,29 @@ CouplingProperties::CouplingProperties(const fvMesh& mesh, const IOdictionary& c
     }
   }
 
-  if (refineMeshSkin_ < 1.0) {
+  if (refineMeshSkin_ < 1.0 - Foam::SMALL) {
     FatalError << "refineMeshSkin should be >= 1.0 but get " << refineMeshSkin_ << abort(FatalError);
+  }
+
+  if (minCoarseParticleRadius_ < Foam::SMALL) {
+    FatalError << "minCoarseParticleRadius should be > 0.0 but get " << minCoarseParticleRadius_ << abort(FatalError);
   }
 
   if (refineMeshKeepInterval_ < 0) {
     FatalError << "refineMeshKeepInterval should be >= 0 but get " << refineMeshKeepInterval_ << abort(FatalError);
   }
 
-  fineParticleRatio_ = couplingPropertiesDict.lookupOrDefault<double>("fineParticleRatio", 3.0);
+  if (fineParticleRatio_ < Foam::SMALL) {
+    FatalError << "fineParticleRatio should be > 0 but get " << fineParticleRatio_ << abort(FatalError);
+  }
 
-  coarseParticleRatio_ = couplingPropertiesDict.lookupOrDefault<double>("coarseParticleRatio", 0.33);
+  if (coarseParticleRatio_ < Foam::SMALL) {
+    FatalError << "coarseParticleRatio should be > 0 but get " << coarseParticleRatio_ << abort(FatalError);
+  }
 
-  expandedCellScale_ = couplingPropertiesDict.lookupOrDefault<double>("expandedCellScale", 3.0);
+  if (expandedCellScale_ < 1.0 - Foam::SMALL) {
+    FatalError << "expandedCellScale should be >= 1.0 but get " << expandedCellScale_ << abort(FatalError);
+  }
 
 #if CFDEM_MIX_CLOUD
   fineParticleRatio_ = couplingPropertiesDict.lookupOrDefault<double>("fineParticleRatio", 3.0);

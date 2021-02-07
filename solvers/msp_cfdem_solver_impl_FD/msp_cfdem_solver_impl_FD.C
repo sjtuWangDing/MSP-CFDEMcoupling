@@ -98,7 +98,7 @@ int main(int argc, char* argv[]) {
         adjustPhi(phiHbyA, U, p);
 
         // Update the pressure BCs to ensure flux consistency
-        constrainPressure(p, U, phiHbyA, rAU);
+        constrainPressure(p, HbyA, phiHbyA, rAU);
 
         // Non-orthogonal pressure corrector loop
         while (piso.correctNonOrthogonal()) {
@@ -127,7 +127,7 @@ int main(int argc, char* argv[]) {
 
     // 针对非牛顿流体的修正
     laminarTransport.correct();
-    // 如果指定了湍流模型，则解额外的湍流方程
+    // 如果指定了湍流模型，则求解额外的湍流方程
     turbulence->correct();
 
     // 通过颗粒速度以及phiIB修正速度与压力

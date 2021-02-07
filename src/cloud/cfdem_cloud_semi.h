@@ -49,19 +49,6 @@ class cfdemCloudSemi : public cfdemCloud {
   //! \brief Runtime type information
   cfdemTypeName("cfdemCloudSemi");
 
-  //! \brief 重新分配内存
-  void reallocate();
-
-  void printParticleInfo() const;
-
-  double expandedCellScale() const { return cProps_.expandedCellScale(); }
-
-  bool checkFineParticle(int index) const { return cProps_.checkFineParticle(getDimensionRatio(index)); }
-
-  bool checkMiddleParticle(int index) const { return cProps_.checkMiddleParticle(getDimensionRatio(index)); }
-
-  bool checkCoarseParticle(int index) const { return cProps_.checkCoarseParticle(getDimensionRatio(index)); }
-
   /*!
    * \brief 更新函数
    * \note used for cfdemSolverPiso
@@ -71,6 +58,20 @@ class cfdemCloudSemi : public cfdemCloud {
    * \param Ksl    <[in, out] 动量交换场
    */
   void evolve(volVectorField& U, volScalarField& voidF, volVectorField& Us, volScalarField& Ksl);
+
+  double expandedCellScale() const { return cProps_.expandedCellScale(); }
+
+  bool checkFineParticle(int index) const { return cProps_.checkFineParticle(getDimensionRatio(index)); }
+
+  bool checkMiddleParticle(int index) const { return cProps_.checkMiddleParticle(getDimensionRatio(index)); }
+
+  bool checkCoarseParticle(int index) const { return cProps_.checkCoarseParticle(getDimensionRatio(index)); }
+
+ protected:
+  //! \brief 重新分配内存
+  void reallocate();
+
+  void printParticleInfo() const;
 };
 
 }  // namespace Foam

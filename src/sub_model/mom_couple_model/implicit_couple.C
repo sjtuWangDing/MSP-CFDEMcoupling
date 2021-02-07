@@ -79,9 +79,10 @@ tmp<volScalarField> implicitCouple::impMomSource() {
   // update KslNext in first sub-time step
   if (cloud_.dataExchangeM().checkValidCouplingStep()) {
     forAll(KslNext_, cellI) {
-      double Ur = mag(U_[cellI] - Us_[cellI]);
-      if (Ur > Foam::SMALL && alpha_[cellI] < maxAlpha_) {
-        KslNext_[cellI] = mag(cloud_.globalF().impParticleForce()[cellI]) / Ur / cloud_.mesh().V()[cellI];
+      double magUr = mag(U_[cellI] - Us_[cellI]);
+      double magImplForce = mag(cloud_.globalF().impParticleForce()[cellI]);
+      if (magUr > Foam::SMALL && magImplForce > Foam::SMALL && alpha_[cellI] < maxAlpha_) {
+        KslNext_[cellI] = magImplForce / magUr / cloud_.mesh().V()[cellI];
       } else {
         KslNext_[cellI] = 0;
       }

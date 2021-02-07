@@ -55,11 +55,6 @@ ArchimedesIBProps
     volumeFractionFieldName "volumeFractionNext";
 }
 
-ArchimedesIBTestProps
-{
-    gravityFieldName "g";
-}
-
 twoWayMPIProps
 {
     liggghtsPath "../DEM/in.liggghts_run";

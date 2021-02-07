@@ -62,31 +62,32 @@ void ShirgaonkarIB::setForce() {
   Foam::vector cellPos = Foam::vector::zero;
   Foam::vector drag = Foam::vector::zero;
   Foam::vector torque = Foam::vector::zero;
-
   for (int index = 0; index < cloud_.numberOfParticles(); ++index) {
-    // init
-    drag = Foam::vector::zero;
-    torque = Foam::vector::zero;
-    // get index's particle center position
-    particleCenterPos = cloud_.getPosition(index);
-    // loop all mesh of current particle
-    for (int subCell = 0; subCell < cloud_.particleOverMeshNumber()[index]; ++subCell) {
-      int cellID = cloud_.cellIDs()[index][subCell];
-      if (cellID >= 0) {  // cell Found
-        cellPos = cloud_.mesh().C()[cellID];
-        drag += IBDrag[cellID] * IBDrag.mesh().V()[cellID];
-        torque += (cellPos - particleCenterPos) ^ IBDrag[cellID] * IBDrag.mesh().V()[cellID];
+    if (cloud_.checkCoarseParticle(index)) {
+      // init
+      drag = Foam::vector::zero;
+      torque = Foam::vector::zero;
+      // get index's particle center position
+      particleCenterPos = cloud_.getPosition(index);
+      // loop all mesh of current particle
+      for (int subCell = 0; subCell < cloud_.particleOverMeshNumber()[index]; ++subCell) {
+        int cellID = cloud_.cellIDs()[index][subCell];
+        if (cellID >= 0) {  // cell Found
+          cellPos = cloud_.mesh().C()[cellID];
+          drag += IBDrag[cellID] * IBDrag.mesh().V()[cellID];
+          torque += (cellPos - particleCenterPos) ^ IBDrag[cellID] * IBDrag.mesh().V()[cellID];
+        }
       }
-    }
-    // write particle data to global array
-    forceSubModel_->partToArray(index, drag, Foam::vector::zero, Foam::vector::zero, 0);
+      // write particle data to global array
+      forceSubModel_->partToArray(index, drag, Foam::vector::zero, Foam::vector::zero, 0);
 
-    if (forceSubModel_->verbose()) {
-      Info << "drag on particle " << index << ": [" << drag[0] << ", " << drag[1] << ", " << drag[2] << "]" << endl;
-    }
+      if (forceSubModel_->verbose()) {
+        Pout << "drag on particle " << index << ": [" << drag[0] << ", " << drag[1] << ", " << drag[2] << "]" << endl;
+      }
 
-    if (useTorque_) {
-      forceSubModel_->addTorque(index, torque);
+      if (useTorque_) {
+        forceSubModel_->addTorque(index, torque);
+      }
     }
   }
   Info << "Setting ShirgaonkarIB - done" << endl;

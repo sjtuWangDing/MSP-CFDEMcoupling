@@ -57,12 +57,7 @@ class cfdemCloudIBOpti : public cfdemCloud {
   void calcVelocityCorrection(volScalarField& p, volVectorField& U, volScalarField& phiIB,
                               volScalarField& voidfraction);
 
-  /*!
-   * \brief 更新网格，如果 mesh 是 Foam::dynamicRefineFvMesh 类型，则更新网格，
-   *   如果是 Foam::staticFvMesh 或者其他类型，则不更新
-   */
-  void updateMesh(volScalarField& interface);
-
+ protected:
   //! \brief 重新分配内存
   void reallocate();
 
@@ -73,6 +68,12 @@ class cfdemCloudIBOpti : public cfdemCloud {
   void giveDEMData() const;
 
   void printParticleInfo() const;
+
+  /*!
+   * \brief 更新网格，如果 mesh 是 Foam::dynamicRefineFvMesh 类型，则更新网格，
+   *   如果是 Foam::staticFvMesh 或者其他类型，则不更新
+   */
+  void updateMesh(volScalarField& interface);
 
   //! \brief 确定颗粒周围 refined 网格的区域
   void setInterface(volScalarField& interface, const double scale = cfdemCloudIBOpti::particleMeshScale_) const;

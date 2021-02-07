@@ -25,6 +25,7 @@ License
   along with CFDEMcoupling.  If not, see <http://www.gnu.org/licenses/>.
 \*---------------------------------------------------------------------------*/
 
+#include "dynamicFvMesh.H"
 #include "fvCFD.H"
 #include "fvOptions.H"
 #include "pisoControl.H"
@@ -39,7 +40,7 @@ int main(int argc, char* argv[]) {
 
   #include "createTime.H"
 
-  #include "createMesh.H"
+  #include "createDynamicFvMesh.H"
 
   #include "createControl.H"
 
@@ -59,7 +60,6 @@ int main(int argc, char* argv[]) {
   Info << "\nStarting time loop\n" << endl;
 
   while (runTime.loop()) {
-
     Info << "\nTime = " << runTime.timeName() << nl << endl;
 
     #include "CourantNo.H"
@@ -72,8 +72,14 @@ int main(int argc, char* argv[]) {
     // 需要重新计算 phi，因为 voidFraction 被更新了
     phi = voidFractionFace * phiByVoidFraction;
 
-    if (particleCloud.solveFlow()) {
+    Info << "Solver level total Eulerian momentum exchange:" << endl;
+    volVectorField fImp(Ksl * (Us - U));
+    particleCloud.scaleWithVcell(fImp);
+    dimensionedVector fImpTotal = gSum(fImp);
+    Info << "  TotalForceImp:  " << fImpTotal.value() << endl;
+    Info << "  Warning, these values are based on latest Ksl and Us but prev. iteration U!\n" << endl;
 
+    if (particleCloud.solveFlow()) {
       // U equation
       fvVectorMatrix UEqn
       (
@@ -95,6 +101,11 @@ int main(int argc, char* argv[]) {
         } else if ("A" == modelType) {
           // modelType 为 "A" 时, 压力项中需要乘以空隙率
           solve(UEqn == -voidFraction * fvc::grad(p) + Ksl / rho * Us);
+        } else if ("none" == modelType) {
+          // modelType 为 "none" 时，直接求解压力项
+          solve(UEqn == -fvc::grad(p));
+        } else {
+          FatalError << __func__ << ": Not implement for modelType = " << modelType << abort(FatalError);
         }
         fvOptions.correct(U);
       }
@@ -160,10 +171,10 @@ int main(int argc, char* argv[]) {
         // - 定义 Ksl / rho * Us 的通量
         surfaceScalarField phiUs("phiUs", fvc::interpolate(Us) & mesh.Sf());
 
-         // - 将 Us 通量与 HbyA 通量相加，计算压力修正方程中的总通量
+        // - 将 Us 通量与 HbyA 通量相加，计算压力修正方程中的总通量
         phiHbyA += fvc::interpolate(rAU) * (fvc::interpolate(Ksl / rho) * phiUs);
 
-        // - 在求解压力泊松方程的时候, 如果压力全部是 Neumann 边界条件(即第二类边界条件), 需要满足相容性条件，这里修正的是通量 phiHbyA
+        // - 在求解压力泊松方程的时候, 如果压力全部是 Neumann 边界条件(即第二类边界条件)，需要满足相容性条件，这里修正的是通量 phiHbyA
         // 在 adjustPhi 函数中，第二个参数必须使用 U，而不能使用 HbyA，因为在 adjustPhi 函数中，需要通过 U 获取 boundaryField
         // Ref: https://cfd-china.com/topic/501/%E5%85%B3%E4%BA%8Ecorrectphi-h%E8%BF%99%E4%B8%AA%E5%87%BD%E6%95%B0/9
         adjustPhi(phiHbyA, U, p);
@@ -178,12 +189,13 @@ int main(int argc, char* argv[]) {
 
         volScalarField rAUVoidFraction("voidFraction/AU", rAU * voidFraction);
         if (modelType == "A") {
-          rAUVoidFraction = volScalarField("voidFraction/AU",rAU * voidFraction * voidFraction);
+          rAUVoidFraction = volScalarField("voidFraction/AU", rAU * voidFraction * voidFraction);
         }
 
         // Non-orthogonal pressure corrector loop
         // 通过迭代求解压力泊松方程, 并对方程中的拉普拉斯项进行非正交修正
-        // 注意: 由于压力泊松方程中存在压力的拉普拉斯项, 当网格非正交的时候会出现显式源项, 显式源项会在正交修正迭代后进行更新
+        // 注意: 由于压力泊松方程中存在压力的拉普拉斯项, 当网格非正交的时候会出现显式源项,
+        // 显式源项会在正交修正迭代后进行更新
         while (piso.correctNonOrthogonal()) {
           // p equation
           fvScalarMatrix pEqn
@@ -213,12 +225,22 @@ int main(int argc, char* argv[]) {
           U = HbyA - rAU * fvc::grad(p) + Ksl / rho * Us * rAU;
         } else if ("A" == modelType) {
           U = HbyA - voidFraction * rAU * fvc::grad(p) + Ksl / rho * Us * rAU;
+        } else if ("none" == modelType) {
+          U = HbyA - rAU * fvc::grad(p);
         }
         U.correctBoundaryConditions();
         fvOptions.correct(U);
       }  // piso loop
       laminarTransport.correct();
       turbulence->correct();
+
+      // 通过颗粒速度以及phiIB修正速度与压力
+      if ("none" == modelType) {
+        particleCloud.calcVelocityCorrection(p, U, phiIB);
+        fvOptions.correct(U);
+        dimensionedScalar phiIBTotal = gSum(phiIB);
+        Info << "After calcVelocityCorrection, phiIBTotal = " << phiIBTotal.value() << nl << endl;
+      }
     }  // solve flow
     runTime.write();
     Info << "ExecutionTime = " << runTime.elapsedCpuTime() << " s"

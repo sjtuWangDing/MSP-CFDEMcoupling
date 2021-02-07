@@ -29,6 +29,7 @@ void averagingModel::setVectorFieldSum(volVectorField& valueField,
       }
     }
   }
+  base::MPI_Info("averagingModel: setVectorFieldSum - done", true);
 }
 
 }  // namespace Foam

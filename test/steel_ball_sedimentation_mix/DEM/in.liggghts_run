@@ -1,0 +1,82 @@
+echo            both
+log             ../DEM/log.liggghts
+thermo_log      ../DEM/post/thermo.txt
+
+atom_style      granular
+atom_modify     map array sort 0 0
+communicate     single vel yes
+
+boundary        f f f
+newton          off
+
+units           si
+
+region          reg block 0. 0.115 0. 0.03 0. 0.28 units box
+create_box      1 reg
+
+neighbor        0.003 bin
+neigh_modify    delay 0 binsize 0.01
+
+
+# Material properties required for granular pair styles
+fix             m1 all property/global youngsModulus peratomtype 14.e7
+fix             m2 all property/global poissonsRatio peratomtype 0.25
+fix             m3 all property/global coefficientRestitution peratomtypepair 1 0.8
+fix             m4 all property/global coefficientFriction peratomtypepair 1 0.15
+
+# pair style
+pair_style  gran model hertz tangential history
+
+# hertz without cohesion
+pair_coeff  * *
+
+# timestep, gravity
+timestep        0.00001
+
+fix         gravi all gravity 9.81 vector 0.0 0.0 -1.0
+
+# walls
+fix     xwalls1 all wall/gran model hertz tangential history primitive type 1 xplane 0.
+fix     xwalls2 all wall/gran model hertz tangential history primitive type 1 xplane 0.115
+fix     ywalls1 all wall/gran model hertz tangential history primitive type 1 yplane 0.
+fix     ywalls2 all wall/gran model hertz tangential history primitive type 1 yplane 0.03
+fix     zwalls1 all wall/gran model hertz tangential history primitive type 1 zplane 0.
+fix     zwalls2 all wall/gran model hertz tangential history primitive type 1 zplane 0.28
+
+# cfd coupling
+fix     cfd  all couple/cfd couple_every 50 mpi
+fix     cfd2 all couple/cfd/force
+
+# create single partciles
+variable rhoF equal 1000
+variable rhoP equal 7820
+variable rho equal ${rhoP}+2*${rhoF}
+create_atoms 1 single 0.0575 0.015 0.275  units box
+set atom 1 diameter 0.00318 density ${rho} vx 0 vy 0 vz 0
+
+variable        vx1 equal vx[1]
+variable        vy1 equal vy[1]
+variable        vz1 equal vz[1]
+variable        x1 equal x[1]
+variable        y1 equal y[1]
+variable        z1 equal z[1]
+variable        time equal dt*step
+variable        vMag equal sqrt(vx[1]*vx[1]+vy[1]*vy[1]+vz[1]*vz[1])
+
+fix             extra2 all print 200 "${time} ${x1} ${y1} ${z1} ${vx1} ${vy1} ${vz1} ${vMag}" &
+                file ../DEM/post/falling_height_velocity_particle.txt title "%" screen no
+
+# apply nve integration to all particles that are inserted as single particles
+fix             integr all nve/sphere
+
+# screen output
+compute         rke all erotate/sphere
+thermo_style    custom step atoms ke c_rke vol
+thermo          1000
+thermo_modify   lost ignore norm no
+compute_modify  thermo_temp dynamic yes
+
+# insert the first particles so that dump is not empty
+dump            dmp all custom 200 ../DEM/post/dump.liggghts_run id type x y z ix iy iz vx vy vz fx fy fz omegax omegay omegaz radius
+
+run             1

@@ -148,6 +148,7 @@ void cfdemCloud::getDEMData() {
   dataExchangeM().getData("radius", "scalar-atom", parCloud_.radiiPtr());
   dataExchangeM().getData("x", "vector-atom", parCloud_.positionsPtr());
   dataExchangeM().getData("v", "vector-atom", parCloud_.velocitiesPtr());
+  base::MPI_Info("cfdemCloud: getDEMData - done", true);
 }
 
 void cfdemCloud::giveDEMData() const {
@@ -163,6 +164,7 @@ void cfdemCloud::giveDEMData() const {
     dataExchangeM().giveData("Ksl", "scalar-atom", cdsPtr());
     dataExchangeM().giveData("uf", "vector-atom", fluidVelPtr());
   }
+  base::MPI_Info("cfdemCloud: giveDEMData - done", true);
 }
 
 void cfdemCloud::printParticleInfo() const {
@@ -204,29 +206,35 @@ void cfdemCloud::printParticleInfo() const {
 void cfdemCloud::resetField() {
   // 重置局部平均颗粒速度
   averagingM().resetUs();
-  Info << "Reset Us fields - done" << endl;
+  base::MPI_Info("cfdemCloud: Reset Us fields - done", true);
 
   // 重置颗粒速度影响因数场
   averagingM().resetUsWeightField();
-  Info << "Reset Us weight fields - done" << endl;
+  base::MPI_Info("cfdemCloud: Reset Us weight fields - done", true);
 
   // 重置空隙率场
   voidFractionM().resetVoidFraction();
-  Info << "Reset voidfraction fields - done" << endl;
+  Info << "Reset voidFraction fields - done" << endl;
+  base::MPI_Info("cfdemCloud: Reset voidFraction fields - done", true);
+
+  // 重置体积分数场
+  voidFractionM().resetVolumeFraction();
+  Info << "Reset volumeFraction fields - done" << endl;
+  base::MPI_Info("cfdemCloud: Reset volumeFraction fields - done", true);
 
   // 重置隐式力场
   globalF().resetImpParticleForce();
-  Info << "Reset implicit force fields - done" << endl;
+  base::MPI_Info("cfdemCloud: Reset implicit force fields - done", true);
 
   // 重置显式力场
   globalF().resetExpParticleForcee();
-  Info << "Reset Explicit force fields - done" << endl;
+  base::MPI_Info("cfdemCloud: Reset Explicit force fields - done", true);
 
   // 重置单位体积动量交换场
   for (const auto& pair : momCoupleModels_) {
     (pair.second)->resetMomSourceField();
   }
-  Info << "Reset Ksl fields - done" << endl;
+  base::MPI_Info("cfdemCloud: Reset Ksl fields - done", true);
 }
 
 /*!
