@@ -49,22 +49,6 @@ class cfdemCloudMix : public cfdemCloud {
   //! \brief Runtime type information
   cfdemTypeName("cfdemCloudMix");
 
-  //! \brief 重新分配内存
-  void reallocate();
-
-  //! \brief 从 DEM 获取数据
-  void getDEMData();
-
-  void printParticleInfo() const;
-
-  double expandedCellScale() const { return cProps_.expandedCellScale(); }
-
-  bool checkFineParticle(int index) const { return cProps_.checkFineParticle(getDimensionRatio(index)); }
-
-  bool checkMiddleParticle(int index) const { return cProps_.checkMiddleParticle(getDimensionRatio(index)); }
-
-  bool checkCoarseParticle(int index) const { return cProps_.checkCoarseParticle(getDimensionRatio(index)); }
-
   /*!
    * \brief 更新函数
    * \param U          <[in] 流体速度场
@@ -76,6 +60,41 @@ class cfdemCloudMix : public cfdemCloud {
    */
   void evolve(volVectorField& U, volScalarField& voidF, volScalarField& volumeF, volVectorField& Us,
               volScalarField& Ksl, volScalarField& interface);
+
+  void calcVelocityCorrection(volScalarField& p, volVectorField& U, volScalarField& phiIB) const;
+
+  double expandedCellScale() const { return cProps_.expandedCellScale(); }
+
+  bool checkFineParticle(int index) const { return cProps_.checkFineParticle(getDimensionRatio(index)); }
+
+  bool checkMiddleParticle(int index) const { return cProps_.checkMiddleParticle(getDimensionRatio(index)); }
+
+  bool checkCoarseParticle(int index) const {
+    return getRadius(index) >= minCoarseParticleRadius() || cProps_.checkCoarseParticle(getDimensionRatio(index));
+  }
+
+ protected:
+  //! \brief 重新分配内存
+  void reallocate();
+
+  //! \brief 从 DEM 获取数据
+  void getDEMData();
+
+  void printParticleInfo() const;
+
+  /*!
+   * \brief 更新网格，如果 mesh 是 Foam::dynamicRefineFvMesh 类型，则更新网格，如果是 Foam::staticFvMesh
+   * 或者其他类型，则不更新
+   */
+  void updateMesh(volScalarField& interface);
+
+  //! \brief 确定颗粒周围 refined 网格的区域
+  void setInterface(volScalarField& interface, const double scale) const;
+
+ private:
+  int pRefCell_;
+
+  double pRefValue_;
 };
 
 }  // namespace Foam

@@ -3,3 +3,4 @@ solver_dir:msp_cfdem_solver_semi
 solver_dir:msp_cfdem_solver_piso
 solver_dir:msp_cfdem_solver_IB
 solver_dir:msp_cfdem_solver_IB_opti
+solver_dir:msp_cfdem_solver_impl_FD

@@ -60,11 +60,6 @@ ArchimedesIBProps
     verbose true;
 }
 
-ArchimedesIBTestProps
-{
-    verbose true;
-}
-
 twoWayMPIProps
 {
     liggghtsPath "../DEM/in.liggghts_run";

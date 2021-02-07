@@ -57,21 +57,23 @@ void Archimedes::setForce() {
   base::MPI_Info("Setting Archimedes force...", true);
   Foam::vector buoyancy = Foam::vector::zero;
   for (int index = 0; index < cloud_.numberOfParticles(); ++index) {
-    buoyancy = Foam::vector::zero;
-    double raidus = cloud_.getRadius(index);
-    // 这里使用 findCellID，不要使用 cellIDs，因为如果当前求解器不包含颗粒，则 cellIDs[index].mSize() == 0
-    int findCellID = cloud_.findCellIDs()[index];
-    if (findCellID >= 0) {
-      double pV = 4.0 * M_PI * raidus * raidus * raidus / 3.0;
-      buoyancy += -g_.value() * forceSubModel_->rhoField()[findCellID] * pV;
-    }
-    // write particle data to global array
-    // index - particle index
-    // buoyancy - total buoyancy
-    forceSubModel_->partToArray(index, buoyancy, Foam::vector::zero, Foam::vector::zero, 0);
-    if (forceSubModel_->verbose() && 0 == index) {
-      Pout << "Archimedes buoyancy on particle " << index << ": [" << buoyancy[0] << ", " << buoyancy[1] << ", "
-           << buoyancy[2] << "]" << endl;
+    if (cloud_.checkFineParticle(index) || cloud_.checkMiddleParticle(index)) {
+      buoyancy = Foam::vector::zero;
+      double raidus = cloud_.getRadius(index);
+      // 这里使用 findCellID，不要使用 cellIDs，因为如果当前求解器不包含颗粒，则 cellIDs[index].mSize() == 0
+      int findCellID = cloud_.findCellIDs()[index];
+      if (findCellID >= 0) {
+        double pV = 4.0 * M_PI * raidus * raidus * raidus / 3.0;
+        buoyancy += -g_.value() * forceSubModel_->rhoField()[findCellID] * pV;
+      }
+      // write particle data to global array
+      // index - particle index
+      // buoyancy - total buoyancy
+      forceSubModel_->partToArray(index, buoyancy, Foam::vector::zero, Foam::vector::zero, 0);
+      if (forceSubModel_->verbose() && 0 == index) {
+        Pout << "Archimedes buoyancy on particle " << index << ": [" << buoyancy[0] << ", " << buoyancy[1] << ", "
+             << buoyancy[2] << "]" << endl;
+      }
     }
   }
   base::MPI_Info("Setting Archimedes force - done", true);

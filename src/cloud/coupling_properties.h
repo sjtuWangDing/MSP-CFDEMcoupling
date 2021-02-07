@@ -79,6 +79,8 @@ class CouplingProperties {
 
   inline double refineMeshSkin() const { return refineMeshSkin_; }
 
+  inline double minCoarseParticleRadius() const { return minCoarseParticleRadius_; }
+
   inline int refineMeshKeepInterval() const { return refineMeshKeepInterval_; }
 
   /* --------------------------------- interface used for cfdemCloudSemi ----------------------------------- */
@@ -156,6 +158,9 @@ class CouplingProperties {
    * \note used for cfdemCloudIB or cfdemCloudSemi
    */
   double refineMeshSkin_;
+
+  //! \brief coarse particles 的最小半径
+  double minCoarseParticleRadius_;
 
   /*!
    * \brief 重构网格保留时间间隔(以流体时间步为单位)

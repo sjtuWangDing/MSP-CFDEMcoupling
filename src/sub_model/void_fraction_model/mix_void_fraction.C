@@ -47,6 +47,8 @@ mixVoidFraction::mixVoidFraction(cfdemCloud& cloud)
   porosity_ = subPropsDict_.lookupOrDefault<double>("porosity", 1.0);
   verbose_ = subPropsDict_.lookupOrDefault<bool>("verbose", false);
   alphaMin_ = subPropsDict_.lookupOrDefault<double>("alphaMin", 0.0);
+  // 单个颗粒覆盖最多网格数量
+  maxCellsNumPerCoarseParticle_ = subPropsDict_.lookupOrDefault<int>("maxCellsNumPerCoarseParticle", 1000);
 }
 
 //! \brief Destructor
@@ -64,26 +66,28 @@ void mixVoidFraction::printVoidFractionInfo() const {
       for (int index = 0; index < cloud_.numberOfParticles(); ++index) {
         Pout << "  findCellIDs[" << index << "]: " << cloud_.findCellIDs()[index] << endl;
         Pout << "  particleOverMeshNumber[" << index << "]: " << cloud_.particleOverMeshNumber()[index] << endl;
-        Pout << "  cellIDs[" << index << "]: ";
-        for (int j = 0; j < cloud_.particleOverMeshNumber()[index]; ++j) {
-          Pout << cloud_.cellIDs()[index][j] << ", ";
+        // Pout << "  cellIDs[" << index << "]: ";
+        // for (int j = 0; j < cloud_.particleOverMeshNumber()[index]; ++j) {
+        //   Pout << cloud_.cellIDs()[index][j] << ", ";
+        // }
+        // Pout << endl;
+        if (cloud_.checkFineParticle(index) || cloud_.checkMiddleParticle(index)) {
+          Pout << "  voidFractions[" << index << "]: ";
+          for (int j = 0; j < cloud_.particleOverMeshNumber()[index]; ++j) {
+            Pout << cloud_.voidFractions()[index][j] << ", ";
+          }
+          Pout << endl;
+          Pout << "  particleWeights[" << index << "]: ";
+          for (int j = 0; j < cloud_.particleOverMeshNumber()[index]; ++j) {
+            Pout << cloud_.particleWeights()[index][j] << ", ";
+          }
+          Pout << endl;
+          Pout << "  particleVolumes[" << index << "]: ";
+          for (int j = 0; j < cloud_.particleOverMeshNumber()[index]; ++j) {
+            Pout << cloud_.particleVolumes()[index][j] << ", ";
+          }
+          Pout << endl;
         }
-        Pout << endl;
-        Pout << "  voidFractions[" << index << "]: ";
-        for (int j = 0; j < cloud_.particleOverMeshNumber()[index]; ++j) {
-          Pout << cloud_.voidFractions()[index][j] << ", ";
-        }
-        Pout << endl;
-        Pout << "  particleWeights[" << index << "]: ";
-        for (int j = 0; j < cloud_.particleOverMeshNumber()[index]; ++j) {
-          Pout << cloud_.particleWeights()[index][j] << ", ";
-        }
-        Pout << endl;
-        Pout << "  particleVolumes[" << index << "]: ";
-        for (int j = 0; j < cloud_.particleOverMeshNumber()[index]; ++j) {
-          Pout << cloud_.particleVolumes()[index][j] << ", ";
-        }
-        Pout << endl;
       }
     }
     base::MPI_Barrier();

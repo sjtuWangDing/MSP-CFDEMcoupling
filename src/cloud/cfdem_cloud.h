@@ -127,18 +127,6 @@ class cfdemCloud {
   //! \brief Runtime type information
   cfdemTypeName("cfdemCloud");
 
-  //! \brief 初始化函数，用于在构造函数中执行
-  virtual void init();
-
-  //! \brief 重新分配内存
-  virtual void reallocate();
-
-  virtual void getDEMData();
-
-  virtual void giveDEMData() const;
-
-  virtual void printParticleInfo() const;
-
   virtual double expandedCellScale() const {
     FatalError << __func__
                << " not implement in Foam::cfdemCloud, please use Foam::cfdemCloudSemi or Foam::cfdemCloudMix"
@@ -174,6 +162,18 @@ class cfdemCloud {
   inline void scaleWithVcell(Field& field) const;
 
  protected:
+  //! \brief 初始化函数，用于在构造函数中执行
+  void init();
+
+  //! \brief 重新分配内存
+  void reallocate();
+
+  void getDEMData();
+
+  void giveDEMData() const;
+
+  void printParticleInfo() const;
+
   //! \brief reset field
   void resetField();
 
@@ -269,6 +269,10 @@ class cfdemCloud {
   inline bool useGuoBBOEquation() const { return cProps_.useGuoBBOEquation(); }
 
   inline bool useDDtVoidFraction() const { return cProps_.useDDtVoidFraction(); }
+
+  inline double refineMeshSkin() const { return cProps_.refineMeshSkin(); }
+
+  inline double minCoarseParticleRadius() const { return cProps_.minCoarseParticleRadius(); }
 
   /* ------------------------- interface of particleCloud ------------------------------- */
 

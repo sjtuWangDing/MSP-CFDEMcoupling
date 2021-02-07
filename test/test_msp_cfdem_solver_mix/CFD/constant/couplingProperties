@@ -1,0 +1,94 @@
+/*---------------------------------------------------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  1.4                                   |
+|   \\  /    A nd           | Web:      http://www.openfoam.org               |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version         2.0;
+    format          ascii;
+    root            "";
+    case            "";
+    instance        "";
+    local           "";
+    class           dictionary;
+    object          couplingProperties;
+}
+
+/* ---------------------------- sub-models & settings ---------------------------- */
+
+modelType none;
+
+couplingInterval 10;
+
+allowUseSubCFDTimeStep false;
+
+globalForce globalForce;
+
+minCoarseParticleRadius 0.0835;
+
+forceModels
+(
+    ArchimedesIB
+    ShirgaonkarIB
+);
+
+momCoupleModels
+(
+  implicitCouple
+);
+
+voidFractionModel mix;
+
+locateModel engineMix;
+
+dataExchangeModel twoWayMPI;
+
+turbulenceModelType turbulenceProperties;
+
+/* ---------------------------- sub-model properties ------------------------- */
+
+implicitCoupleProps
+{
+  velFieldName "U";
+  granVelFieldName "Us";
+  voidFractionFieldName "voidFraction";
+}
+
+"(globalForceProps|mixGlobalForceProps)"
+{
+  verbose true;
+  velFieldName "U";
+  volumeFractionFieldName "volumeFraction";
+  gravityFieldName "g";
+}
+
+ShirgaonkarIBProps
+{
+    verbose true;
+}
+
+ArchimedesIBProps
+{
+    verbose true;
+}
+
+twoWayMPIProps
+{
+    liggghtsPath "../DEM/in.liggghts_run";
+}
+
+mixProps
+{
+    maxCellsNumPerCoarseParticle 10000000;
+}
+
+engineMixProps
+{
+  verbose true;
+  treeSearch true;
+  zSplit 8;
+  xySplit 16;
+}
