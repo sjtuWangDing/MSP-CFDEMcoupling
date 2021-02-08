@@ -1,0 +1,132 @@
+echo            both
+log             ../DEM/log.liggghts
+thermo_log      ../DEM/post/thermo.txt
+
+atom_style      granular
+atom_modify     map array
+communicate     single vel yes
+
+# For style f, the position of the face is fixed.
+# If an atom moves outside the face it may be lost.
+boundary        f f f
+newton          off
+processors      2 2 3
+
+units           si
+
+region          reg block -0.05 0.05 -0.05 0.05 -0.02 0.22 units box
+create_box      1 reg
+
+neighbor        0.001 bin
+neigh_modify    delay 0
+
+# **********************************************************************************************
+# - define material properties required for new pair styles
+variable        YoungsPP equal 5e+6
+variable        PoissonsPP equal 0.2
+variable        CoefRestitutionPP equal 0.9
+variable        CoefFrictionPP equal 0.85
+variable        CoefRollingFrictionPP equal 0.26
+variable        CoefStiffnessFrictionPP equal 0.2
+fix             m1 all property/global youngsModulus peratomtype ${YoungsPP}
+fix             m2 all property/global poissonsRatio peratomtype ${PoissonsPP}
+fix             m3 all property/global coefficientRestitution peratomtypepair 1 ${CoefRestitutionPP}
+fix             m4 all property/global coefficientFriction peratomtypepair 1 ${CoefFrictionPP}
+fix             m5 all property/global coefficientRollingFriction peratomtypepair 1 ${CoefRollingFrictionPP}
+
+# **********************************************************************************************
+# - define mesh
+fix             cad1 all mesh/surface/stress file ../DEM/meshes/cyclinder.stl type 1 scale 0.001
+fix             cyclinderWall all wall/gran model hertz tangential history mesh n_meshes 1 meshes cad1
+fix             zwalls1 all wall/gran model hertz tangential history primitive type 1 zplane 0.0
+fix             zwalls2 all wall/gran model hertz tangential history primitive type 1 zplane 0.2
+
+# pair style
+pair_style      gran model hertz tangential history
+
+# Hertzian without cohesion
+pair_coeff      * *
+
+# **********************************************************************************************
+# - define timestep, gravity
+timestep        0.00001
+fix             gravi all gravity 9.81 vector 0.0 0.0 -1.0
+
+# apply nve integration to all particles that are inserted as single particles
+fix             integr all nve/sphere
+
+# **********************************************************************************************
+# - define screen output
+compute         rke all erotate/sphere
+thermo_style    custom step atoms ke c_rke vol
+thermo          100
+thermo_modify   lost ignore norm no
+compute_modify  thermo_temp dynamic yes
+
+# **********************************************************************************************
+# - define dump
+dump            dmp1 all custom 500 ../DEM/post/dump.liggghts_run &
+                id type x y z ix iy iz vx vy vz fx fy fz omegax omegay omegaz radius
+
+# **********************************************************************************************
+# - define variables
+variable        cpR equal 0.005
+variable        fpR equal 0.0004
+variable        pRho equal 2500
+variable        fR equal 0.04-2*${fpR}
+
+# **********************************************************************************************
+# - define region
+region          factory1 cylinder z 0.0 0.0 ${fR} 0.01 0.19 units box
+
+region          factory2 cylinder z 0.0 0.0 ${fR} 0.12 0.16 units box
+
+# **********************************************************************************************
+# - define particle templates
+fix             pts1 all particletemplate/sphere 32452843 atom_type 1 density constant ${pRho} &
+                radius constant ${cpR}
+
+fix             pts2 all particletemplate/sphere 49979693 atom_type 1 density constant ${pRho} &
+                radius constant ${fpR}
+
+# **********************************************************************************************
+# - define particle distributions
+fix             pdd1 all particledistribution/discrete/numberbased 67867967 1 pts1 1
+
+fix             pdd2 all particledistribution/discrete/numberbased 67867979 1 pts2 1
+
+# **********************************************************************************************
+# - define insert for coarse particles
+fix             ins1 all insert/rate/region seed 86028121 distributiontemplate pdd1 &
+                nparticles 392 particlerate 3920 insert_every 100 &
+                overlapcheck yes vel constant 0. 0. 0. all_in yes region factory1 ntry_mc 10000
+
+# **********************************************************************************************
+# - run for coarse particles
+run             30000
+
+# **********************************************************************************************
+# - define insert for fine particles
+#   and insert three times with total 135000 fine particles
+fix             ins2 all insert/rate/region seed 86028121 distributiontemplate pdd2 &
+                nparticles 45000 particlerate 450000 insert_every 100 &
+                overlapcheck yes vel constant 0. 0. 0. all_in yes region factory2 ntry_mc 10000
+
+run             20000
+
+fix             ins3 all insert/rate/region seed 86028121 distributiontemplate pdd2 &
+                nparticles 45000 particlerate 450000 insert_every 100 &
+                overlapcheck yes vel constant 0. 0. 0. all_in yes region factory2 ntry_mc 10000
+
+run             20000
+
+fix             ins4 all insert/rate/region seed 86028121 distributiontemplate pdd2 &
+                nparticles 45000 particlerate 450000 insert_every 100 &
+                overlapcheck yes vel constant 0. 0. 0. all_in yes region factory2 ntry_mc 10000
+
+run             50000
+
+# **********************************************************************************************
+# - define cfd coupling
+# fix           cfd1  all couple/cfd couple_every 100 mpi
+# fix           cfd2  all couple/cfd/force
