@@ -106,7 +106,7 @@ void cfdemCloudMix::printParticleInfo() const {
          << impForces()[index][2] << endl;
   }
   base::MPI_Barrier();
-  voidFractionM().printVoidFractionInfo();
+  // voidFractionM().printVoidFractionInfo();
 }
 
 /*!

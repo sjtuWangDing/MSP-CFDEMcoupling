@@ -81,7 +81,7 @@ void ShirgaonkarIB::setForce() {
       // write particle data to global array
       forceSubModel_->partToArray(index, drag, Foam::vector::zero, Foam::vector::zero, 0);
 
-      if (forceSubModel_->verbose()) {
+      if (forceSubModel_->verbose() && 0 == index) {
         Pout << "drag on particle " << index << ": [" << drag[0] << ", " << drag[1] << ", " << drag[2] << "]" << endl;
       }
 
