@@ -71,6 +71,7 @@ void mixDragForce::setForce() {
       interpolation<Foam::scalar>::New(
           subPropsDict_.lookupOrDefault("voidfractionInterpolationType", word("cellPoint")), voidFraction_)
           .ptr());
+  std::once_flag onceOp;
   for (int index = 0; index < cloud_.numberOfParticles(); ++index) {
     // 只设置 fine and middle 颗粒的阻力
     if (cloud_.checkCoarseParticle(index)) {
@@ -81,7 +82,7 @@ void mixDragForce::setForce() {
     Ufluid = Foam::vector::zero;
     drag = Foam::vector::zero;
     // calculate force or drag coefficient
-    setForceKernel(index, drag, Ufluid, dragCoefficient);
+    setForceKernel(index, drag, Ufluid, dragCoefficient, onceOp);
     // write particle data to global array
     forceSubModel_->partToArray(index, drag, Foam::vector::zero, Ufluid, dragCoefficient);
   }
@@ -89,7 +90,8 @@ void mixDragForce::setForce() {
   base::MPI_Barrier();
 }
 
-void mixDragForce::setForceKernel(const int index, Foam::vector& drag, Foam::vector& Ufluid, double& dragCoefficient) {
+void mixDragForce::setForceKernel(const int index, Foam::vector& drag, Foam::vector& Ufluid, double& dragCoefficient,
+                                  std::once_flag& onceOp) {
   // 颗粒中心所在网格的索引
   int findCellID = cloud_.findCellIDs()[index];
   // 获取背景流体速度
@@ -187,22 +189,24 @@ void mixDragForce::setForceKernel(const int index, Foam::vector& drag, Foam::vec
       // 计算总阻力
       drag = dragCoefficient * Ur;
     }  // magUr > 0
-    if (forceSubModel_->verbose() && 0 == index) {
-      Pout << "index = " << index << endl;
-      Pout << "findCellID = " << findCellID << endl;
-      Pout << "Ufluid = " << Ufluid << endl;
-      Pout << "Up = " << Up << endl;
-      Pout << "Ur = " << Ur << endl;
-      Pout << "diameter = " << diameter << endl;
-      Pout << "rho = " << rho << endl;
-      Pout << "nuf = " << nuf << endl;
-      Pout << "voidFraction = " << vf << endl;
-      Pout << "pRe = " << pRe << endl;
-      Pout << "Cd = " << Cd << endl;
-      Pout << "dragCoefficient = " << dragCoefficient << endl;
-      Pout << "drag (total) = " << drag << endl;
-    }
-  }
+    std::call_once(onceOp, [&]() {
+      if (forceSubModel_->verbose() && mag(drag) > Foam::SMALL) {
+        Pout << "index = " << index << endl;
+        Pout << "drag (total) = " << drag << endl;
+        // Pout << "findCellID = " << findCellID << endl;
+        // Pout << "Ufluid = " << Ufluid << endl;
+        // Pout << "Up = " << Up << endl;
+        // Pout << "Ur = " << Ur << endl;
+        // Pout << "diameter = " << diameter << endl;
+        // Pout << "rho = " << rho << endl;
+        // Pout << "nuf = " << nuf << endl;
+        // Pout << "voidFraction = " << vf << endl;
+        // Pout << "pRe = " << pRe << endl;
+        // Pout << "Cd = " << Cd << endl;
+        // Pout << "dragCoefficient = " << dragCoefficient << endl;
+      }
+    });
+  }  // findCellID >= 0
 }
 
 //! \brief 计算颗粒 index 处的背景流体速度

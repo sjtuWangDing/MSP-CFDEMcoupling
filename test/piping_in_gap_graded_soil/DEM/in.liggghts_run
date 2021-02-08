@@ -108,12 +108,12 @@ run             30000
 # **********************************************************************************************
 # - define insert for fine particles
 #   and insert three times with total 135000 fine particles
-# fix             ins2 all insert/rate/region seed 86028121 distributiontemplate pdd2 &
-#                 nparticles 45000 particlerate 450000 insert_every 100 &
-#                 overlapcheck yes vel constant 0. 0. 0. all_in yes region factory2 ntry_mc 10000
-# 
-# run             20000
-# 
+fix             ins2 all insert/rate/region seed 86028121 distributiontemplate pdd2 &
+                nparticles 4500 particlerate 45000 insert_every 100 &
+                overlapcheck yes vel constant 0. 0. 0. all_in yes region factory2 ntry_mc 10000
+
+run             10000
+
 # fix             ins3 all insert/rate/region seed 86028121 distributiontemplate pdd2 &
 #                 nparticles 45000 particlerate 450000 insert_every 100 &
 #                 overlapcheck yes vel constant 0. 0. 0. all_in yes region factory2 ntry_mc 10000

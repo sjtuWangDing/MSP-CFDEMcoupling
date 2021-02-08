@@ -35,6 +35,7 @@ Class
 #ifndef __FORCE_MODEL_H__
 #define __FORCE_MODEL_H__
 
+#include <mutex>
 #include "./force_sub_model.h"
 #include "./global_force.h"
 #include "base/run_time_selection_tables.h"
