@@ -428,7 +428,7 @@ class Tensor<1, DType, Device, Alloc> : public base::Exp<Tensor<1, DType, Device
   }
 
   inline DType& operator[](int idx) const {
-    CHECK(idx >= 0 && idx < static_cast<int>(mSize()));
+    CHECK(idx >= 0 && idx < static_cast<int>(mSize())) << " with idx = " << idx << " and mSize = " << mSize();
     return ptr()[idx];
   }
 };

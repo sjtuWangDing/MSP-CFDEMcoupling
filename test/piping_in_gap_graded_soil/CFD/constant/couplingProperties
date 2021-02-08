@@ -23,18 +23,26 @@ modelType none;
 
 couplingInterval 100;
 
+expandedCellScale 4;
+
 allowUseSubCFDTimeStep false;
 
-globalForce globalForce;
+globalForce mixGlobalForce;
 
 minCoarseParticleRadius 0.00495;
 
 refineMeshSkin 1.2;
 
+useGuoBBOEquation false;
+
+useDDtVoidFraction true;
+
 forceModels
 (
-    ArchimedesIB
-    ShirgaonkarIB
+  ArchimedesIB
+  ShirgaonkarIB
+  Archimedes
+  mixDragForce
 );
 
 momCoupleModels
@@ -62,29 +70,54 @@ implicitCoupleProps
 "(globalForceProps|mixGlobalForceProps)"
 {
   verbose true;
+  GaussCoreEff 3;
   velFieldName "U";
+  voidFractionFieldName "voidFraction";
   volumeFractionFieldName "volumeFraction";
   gravityFieldName "g";
 }
 
 ShirgaonkarIBProps
 {
-    verbose true;
+  verbose true;
 }
 
 ArchimedesIBProps
 {
-    verbose true;
+  verbose true;
+}
+
+ArchimedesProps
+{
+  treatForceExplicitInMomEquation false;
+  treatForceBothCFDAndDEM true;
+  treatDEMForceImplicit false;
+  verbose true;
+  interpolation false;
+}
+
+mixDragForceProps
+{
+  dragModelName "Gidaspow";
+  treatForceExplicitInMomEquation false;
+  treatForceBothCFDAndDEM true;
+  treatDEMForceImplicit false;
+  verbose true;
+  interpolation false;
+  scalarViscosity false;
+  useGaussCoreFunctionRefined true;
 }
 
 twoWayMPIProps
 {
-    liggghtsPath "../DEM/in.liggghts_run";
+  liggghtsPath "../DEM/in.liggghts_run";
 }
 
 mixProps
 {
-    maxCellsNumPerCoarseParticle 10000000;
+  alphaMin 0.3;
+  scaleUpVol 1.0;
+  maxCellsNumPerCoarseParticle 10000000;
 }
 
 engineMixProps

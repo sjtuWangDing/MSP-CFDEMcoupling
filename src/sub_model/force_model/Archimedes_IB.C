@@ -50,6 +50,7 @@ ArchimedesIB::~ArchimedesIB() {}
 void ArchimedesIB::setForce() {
   Info << "Setting ArchimedesIB force..." << endl;
   Foam::vector buoyancy = Foam::vector::zero;
+  std::once_flag onceOp;
   for (int index = 0; index < cloud_.numberOfParticles(); ++index) {
     if (cloud_.checkCoarseParticle(index)) {
       // init
@@ -66,11 +67,12 @@ void ArchimedesIB::setForce() {
       // index - particle index
       // buoyancy - total buoyancy
       forceSubModel_->partToArray(index, buoyancy, Foam::vector::zero, Foam::vector::zero, 0);
-
-      if (forceSubModel_->verbose() && 0 == index) {
-        Pout << "Archimedes buoyancy on particle " << index << ": [" << buoyancy[0] << ", " << buoyancy[1] << ", "
-             << buoyancy[2] << "]" << endl;
-      }
+      std::call_once(onceOp, [this, &buoyancy, &index]() {
+        if (forceSubModel_->verbose() && mag(buoyancy) > Foam::SMALL) {
+          Pout << "index = " << index << endl;
+          Pout << "buoyancy (part) = " << buoyancy << endl;
+        }
+      });
     }
   }
   Info << "Setting ArchimedesIB force - done" << endl;

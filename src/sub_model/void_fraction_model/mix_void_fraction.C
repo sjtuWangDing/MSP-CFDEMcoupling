@@ -125,9 +125,17 @@ void mixVoidFraction::setVoidFraction() {
         setVoidFractionForSingleParticle(index, findCellID, parMaps[index]);
       }
     }
+    // no matter what kind of particle, need to construct default tensor
+    cloud_.pCloud().cellIDs().emplace_back();
+    cloud_.pCloud().voidFractions().emplace_back();
+    cloud_.pCloud().volumeFractions().emplace_back();
+    cloud_.pCloud().particleWeights().emplace_back();
+    cloud_.pCloud().particleVolumes().emplace_back();
   }  // End loop of all particles
   voidFractionNext_.correctBoundaryConditions();
+  volumeFractionNext_.correctBoundaryConditions();
   for (int index = 0; index < cloud_.numberOfParticles(); ++index) {
+    base::MPI_Barrier(0.1);
     if (cloud_.checkCoarseParticle(index)) {
       const auto& hashSetPtr = parSets[index];
       int meshNumber = hashSetPtr->size();
@@ -140,8 +148,9 @@ void mixVoidFraction::setVoidFraction() {
       if (meshNumber > 0) {
         // 将颗粒覆盖的当前处理器的网格数保存到 particleOverMeshNumber 中
         cloud_.particleOverMeshNumber()[index] = meshNumber;
-        cloud_.pCloud().cellIDs().emplace_back(base::makeShape1(meshNumber), -1);
-        cloud_.pCloud().volumeFractions().emplace_back(base::makeShape1(meshNumber), -1.0);
+        // allocate memory for coarse particle
+        cloud_.pCloud().cellIDs()[index] = std::move(base::CITensor1(base::makeShape1(meshNumber), -1));
+        cloud_.pCloud().volumeFractions()[index] = std::move(base::CDTensor1(base::makeShape1(meshNumber), 0.0));
         for (int i = 0; i < meshNumber; ++i) {
           int cellID = hashSetPtr->toc()[i];
           // 保存颗粒覆盖的所有网格编号
@@ -149,10 +158,6 @@ void mixVoidFraction::setVoidFraction() {
           // 保存 volumeFraction
           cloud_.volumeFractions()[index][i] = volumeFractionNext_[cellID];
         }
-      } else {
-        cloud_.particleOverMeshNumber()[index] = 0;
-        cloud_.pCloud().cellIDs().emplace_back();
-        cloud_.pCloud().volumeFractions().emplace_back();
       }
     } else {
       const auto& umap = parMaps[index];
@@ -160,10 +165,10 @@ void mixVoidFraction::setVoidFraction() {
       if (meshNumber > 0) {
         // realloc memory according to meshNumber
         cloud_.particleOverMeshNumber()[index] = meshNumber;
-        cloud_.pCloud().cellIDs().emplace_back(base::makeShape1(meshNumber), -1);
-        cloud_.pCloud().voidFractions().emplace_back(base::makeShape1(meshNumber), 0.0);
-        cloud_.pCloud().particleWeights().emplace_back(base::makeShape1(meshNumber), 0.0);
-        cloud_.pCloud().particleVolumes().emplace_back(base::makeShape1(meshNumber), 0.0);
+        cloud_.pCloud().cellIDs()[index] = std::move(base::CITensor1(base::makeShape1(meshNumber), -1));
+        cloud_.pCloud().voidFractions()[index] = std::move(base::CDTensor1(base::makeShape1(meshNumber), 0.0));
+        cloud_.pCloud().particleWeights()[index] = std::move(base::CDTensor1(base::makeShape1(meshNumber), 0.0));
+        cloud_.pCloud().particleVolumes()[index] = std::move(base::CDTensor1(base::makeShape1(meshNumber), 0.0));
         // 遍历 umap
         auto iter = umap.begin();
         for (int i = 0; i < meshNumber; ++i, ++iter) {
@@ -178,15 +183,9 @@ void mixVoidFraction::setVoidFraction() {
           // 保存 particleVolumes
           cloud_.particleVolumes()[index][i] = data[1];
         }
-      } else {
-        cloud_.particleOverMeshNumber()[index] = 0;
-        cloud_.pCloud().cellIDs().emplace_back();
-        cloud_.pCloud().voidFractions().emplace_back();
-        cloud_.pCloud().particleWeights().emplace_back();
-        cloud_.pCloud().particleVolumes().emplace_back();
       }
     }
-  }
+  }  // End loop of all particles
   base::MPI_Info("mixVoidFraction: setVoidFraction - done", verbose_);
 }
 

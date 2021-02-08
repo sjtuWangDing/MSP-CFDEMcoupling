@@ -282,7 +282,7 @@ class cfdemCloud {
 
   inline const base::CITensor1& particleOverMeshNumber() const { return parCloud_.particleOverMeshNumber_; }
 
-  inline const base::CITensor1& particleRootProcIDs() { return parCloud_.particleRootProcIDs_; }
+  inline const base::CITensor1& particleRootProcIDs() const { return parCloud_.particleRootProcIDs_; }
 
   inline const base::CITensor1& findCellIDs() { return parCloud_.findCellIDs_; }
 

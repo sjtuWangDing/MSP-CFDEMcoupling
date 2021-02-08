@@ -76,34 +76,34 @@ void cfdemCloudMix::getDEMData() {
 }
 
 void cfdemCloudMix::printParticleInfo() const {
-  int nProcs = 0, id = 0;
-  MPI_Comm_size(MPI_COMM_WORLD, &nProcs);
-  MPI_Comm_rank(MPI_COMM_WORLD, &id);
   base::MPI_Barrier();
-  int number = 1;
-  if (0 == id) {
-    for (int index = 0; index < number; ++index) {
-      Pout << "  position[" << index << "]: " << positions()[index][0] << ", " << positions()[index][1] << ", "
-           << positions()[index][2] << endl;
+  auto info = [this](const int index) {
+    int rootId = particleRootProcIDs()[index];
+    Foam::vector position(positions()[index][0], positions()[index][1], positions()[index][2]);
+    Foam::vector velocity(velocities()[index][0], velocities()[index][1], velocities()[index][2]);
+    Foam::vector DEMForce(DEMForces()[index][0], DEMForces()[index][1], DEMForces()[index][2]);
+    Foam::vector impForce(impForces()[index][0], impForces()[index][1], impForces()[index][2]);
+    if (rootId == base::procId()) {
+      Pout << "  position[" << index << "]: " << position << endl;
+      Pout << "  velocity[" << index << "]: " << velocity << endl;
+      Pout << "  dimensionRatio[" << index << "]: " << dimensionRatios()[index] << endl;
+      if (mag(DEMForce) > Foam::SMALL) {
+        Pout << "  DEMForce[" << index << "]: " << DEMForce << endl;
+      }
+      if (mag(impForce) > Foam::SMALL) {
+        Pout << "  impForce[" << index << "]: " << impForce << endl;
+      }
     }
-    for (int index = 0; index < number; ++index) {
-      Pout << "  velocity[" << index << "]: " << velocities()[index][0] << ", " << velocities()[index][1] << ", "
-           << velocities()[index][2] << endl;
+  };
+  std::once_flag onceC, onceM, onceF;
+  for (int index = 0; index < numberOfParticles(); ++index) {
+    if (checkCoarseParticle(index)) {
+      std::call_once(onceC, info, index);
+    } else if (checkMiddleParticle(index)) {
+      std::call_once(onceM, info, index);
+    } else {
+      std::call_once(onceF, info, index);
     }
-  }
-  base::MPI_Barrier();
-  for (int index = 0; index < number; ++index) {
-    Pout << "  dimensionRatio[" << index << "]: " << dimensionRatios()[index] << endl;
-  }
-  base::MPI_Barrier();
-  for (int index = 0; index < number; ++index) {
-    Pout << "  DEMForce[" << index << "]: " << DEMForces()[index][0] << ", " << DEMForces()[index][1] << ", "
-         << DEMForces()[index][2] << endl;
-  }
-  base::MPI_Barrier();
-  for (int index = 0; index < number; ++index) {
-    Pout << "  impForce[" << index << "]: " << impForces()[index][0] << ", " << impForces()[index][1] << ", "
-         << impForces()[index][2] << endl;
   }
   base::MPI_Barrier();
   // voidFractionM().printVoidFractionInfo();

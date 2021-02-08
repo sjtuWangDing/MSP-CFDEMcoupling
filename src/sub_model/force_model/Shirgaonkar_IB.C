@@ -62,6 +62,7 @@ void ShirgaonkarIB::setForce() {
   Foam::vector cellPos = Foam::vector::zero;
   Foam::vector drag = Foam::vector::zero;
   Foam::vector torque = Foam::vector::zero;
+  std::once_flag onceOp;
   for (int index = 0; index < cloud_.numberOfParticles(); ++index) {
     if (cloud_.checkCoarseParticle(index)) {
       // init
@@ -81,9 +82,12 @@ void ShirgaonkarIB::setForce() {
       // write particle data to global array
       forceSubModel_->partToArray(index, drag, Foam::vector::zero, Foam::vector::zero, 0);
 
-      if (forceSubModel_->verbose() && 0 == index) {
-        Pout << "drag on particle " << index << ": [" << drag[0] << ", " << drag[1] << ", " << drag[2] << "]" << endl;
-      }
+      std::call_once(onceOp, [this, &drag, &index]() {
+        if (forceSubModel_->verbose() && mag(drag) > Foam::SMALL) {
+          Pout << "index = " << index << endl;
+          Pout << "drag (part) = " << drag << endl;
+        }
+      });
 
       if (useTorque_) {
         forceSubModel_->addTorque(index, torque);

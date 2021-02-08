@@ -49,7 +49,7 @@ class mixDragForce : public forceModel {
   void setForce();
 
  protected:
-  void setForceKernel(const int index, Foam::vector& drag, Foam::vector& Ufluid, double& Cd);
+  void setForceKernel(const int index, Foam::vector& drag, Foam::vector& Ufluid, double& Cd, std::once_flag& onceOp);
 
   //! \brief 计算颗粒 index 处的背景流体速度
   Foam::vector getBackgroundUfluid(const int index, const int findCellID) const;
