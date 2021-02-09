@@ -48,7 +48,7 @@ ArchimedesIB::ArchimedesIB(cfdemCloud& cloud)
 ArchimedesIB::~ArchimedesIB() {}
 
 void ArchimedesIB::setForce() {
-  Info << "Setting ArchimedesIB force..." << endl;
+  base::MPI_Info("Setting ArchimedesIB force...", true);
   Foam::vector buoyancy = Foam::vector::zero;
   std::once_flag onceOp;
   for (int index = 0; index < cloud_.numberOfParticles(); ++index) {
@@ -75,7 +75,7 @@ void ArchimedesIB::setForce() {
       });
     }
   }
-  Info << "Setting ArchimedesIB force - done" << endl;
+  base::MPI_Info("Setting ArchimedesIB force - done", true);
 }
 
 }  // namespace Foam
