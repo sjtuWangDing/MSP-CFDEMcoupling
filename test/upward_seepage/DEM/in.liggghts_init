@@ -129,26 +129,26 @@ fix             pts5 all particletemplate/sphere 49979687 atom_type 1 density co
 fix             pdd all particledistribution/discrete/numberbased 67867967 &
                 5 pts1 0.1 pts2 0.1 pts3 0.1 pts4 0.3 pts5 0.4
 
-fix             ins1 all insert/rate/region seed 86028121 distributiontemplate pdd &
-                nparticles 15000 particlerate 30000 insert_every 100 &
-                overlapcheck yes vel constant 0. 0. -0.2 all_in yes region factory ntry_mc 10000
-run             20000
-
-fix             ins2 all insert/rate/region seed 86028121 distributiontemplate pdd &
-                nparticles 15000 particlerate 300000 insert_every 100 &
-                overlapcheck yes vel constant 0. 0. -0.1 all_in yes region factory ntry_mc 10000
-run             20000
-
-fix             ins3 all insert/rate/region seed 86028121 distributiontemplate pdd &
-                nparticles 7461 particlerate 100000 insert_every 100 &
-                overlapcheck yes vel constant 0. 0. 0. all_in yes region factory ntry_mc 10000
-run             50000
-
-# - insert for debug
 # fix             ins1 all insert/rate/region seed 86028121 distributiontemplate pdd &
-#                 nparticles 1500 particlerate 30000 insert_every 100 &
+#                 nparticles 15000 particlerate 30000 insert_every 100 &
+#                 overlapcheck yes vel constant 0. 0. -0.2 all_in yes region factory ntry_mc 10000
+# run             20000
+# 
+# fix             ins2 all insert/rate/region seed 86028121 distributiontemplate pdd &
+#                 nparticles 15000 particlerate 300000 insert_every 100 &
+#                 overlapcheck yes vel constant 0. 0. -0.1 all_in yes region factory ntry_mc 10000
+# run             20000
+# 
+# fix             ins3 all insert/rate/region seed 86028121 distributiontemplate pdd &
+#                 nparticles 7461 particlerate 100000 insert_every 100 &
 #                 overlapcheck yes vel constant 0. 0. 0. all_in yes region factory ntry_mc 10000
 # run             50000
+
+# - insert for debug
+fix             ins1 all insert/rate/region seed 86028121 distributiontemplate pdd &
+                nparticles 1500 particlerate 30000 insert_every 100 &
+                overlapcheck yes vel constant 0. 0. 0. all_in yes region factory ntry_mc 10000
+run             50000
 
 # **********************************************************************************************
 # - write restart file
