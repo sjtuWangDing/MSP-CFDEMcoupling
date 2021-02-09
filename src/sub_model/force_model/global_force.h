@@ -51,12 +51,6 @@ class globalForce {
   //! \note base type can alse be selected.
   cfdemDefineNewFunctionAdder(globalForce, globalForce);
 
-  //! \brief 高斯核函数
-  double GaussCore(const Foam::vector& particlePos, const Foam::vector& cellPos, const double radius) const {
-    double dist = mag(particlePos - cellPos);
-    return exp(-1.0 * dist * dist / (2 * pow(2 * radius * GaussCoreEff_, 2)));
-  }
-
   globalForce(cfdemCloud& cloud);
 
   virtual ~globalForce();

@@ -36,7 +36,8 @@ namespace Foam {
 template <typename DType, typename TensorType>
 struct fieldRefine {
   template <bool fieldIsNotVF = true>
-  static void op(const TensorType& data, const DType& value, double cellV, double GaussCore, double vf);
+  static void op(const TensorType& data, const DType& value, double cellV, double GaussCore, double voidF,
+                 double volumeF);
   //! \brief 子处理器节点算子
   static DType subProcOp();
   //! \brief 主处理器节点算子
@@ -48,9 +49,10 @@ template <>
 struct fieldRefine<Foam::vector, base::CDTensor1> {
   //! \brief 计算累计数据
   template <bool>
-  static void op(const base::CDTensor1& data, const Foam::vector& value, double cellV, double GaussCore, double vf) {
+  static void op(const base::CDTensor1& data, const Foam::vector& value, double cellV, double GaussCore, double voidF,
+                 double volumeF) {
     // 计算累计物理量
-    double core = cellV * GaussCore * vf;
+    double core = cellV * GaussCore * voidF * volumeF;
     for (int i = 0; i < 3; ++i) {
       data[i] += core * value[i];
     }
@@ -78,19 +80,19 @@ template <>
 struct fieldRefine<Foam::scalar, base::CDTensor1> {
   //! \brief 计算累计数据
   template <bool fieldIsNotVF = true>
-  static void op(const base::CDTensor1& data, const Foam::scalar& value, double cellV, double GaussCore = 1.0,
-                 double vf = 1.0) {
+  static void op(const base::CDTensor1& data, const Foam::scalar& value, double cellV, double GaussCore, double voidF,
+                 double volumeF) {
     if (fieldIsNotVF) {
-      double core = cellV * GaussCore * vf;
+      double core = cellV * GaussCore * voidF * volumeF;
       // 计算累计物理量
       data[0] += value * core;
       // 计算累计因数
       data[1] += core;
     } else {
       // 计算累计物理量
-      data[0] += value * cellV;
+      data[0] += value * cellV * volumeF;
       // 计算累计因数
-      data[1] += cellV;
+      data[1] += cellV * volumeF;
     }
   }
   //! \brief 子处理器节点直接返回
@@ -138,6 +140,12 @@ class mixGlobalForce : public globalForce {
 
   //! \brief 获取颗粒处背景流体的涡量
   Foam::vector getBackgroundVorticity(const int index) const;
+
+  //! \brief 高斯核函数
+  double GaussCore(const Foam::vector& particlePos, const Foam::vector& cellPos, const double radius) const {
+    double dist = mag(particlePos - cellPos);
+    return exp(-1.0 * dist * dist / (2 * pow(2 * radius * GaussCoreEff_, 2)));
+  }
 
  private:
   /*!
@@ -221,7 +229,7 @@ void mixGlobalForce::setBackgroundFieldValue(const FieldType& field,
           gCore = GaussCore(particlePos, cellPos, radius);
           // 计算累计数据
           fieldRefine<DType, dataTType>::template op<fieldIsNotVF>(bufferTensor[index], field[cellID], cellV, gCore,
-                                                                   voidFraction_[cellID]);
+                                                                   voidFraction_[cellID], volumeFraction_[cellID]);
         }
       }
     }
@@ -269,7 +277,7 @@ void mixGlobalForce::setBackgroundFieldValue(const FieldType& field,
           bufferTensor[index][i] /= bufferTensor[index][NDim];
         }
       }  // check middle particle
-    }  // particle loop
+    }    // particle loop
   }
   // 主节点主节点广播 bufferTensor
   base::MPI_Bcast(bufferTensor, masterId);
