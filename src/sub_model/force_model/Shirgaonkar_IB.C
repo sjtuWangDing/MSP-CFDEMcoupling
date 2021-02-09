@@ -56,7 +56,7 @@ ShirgaonkarIB::ShirgaonkarIB(cfdemCloud& cloud)
 ShirgaonkarIB::~ShirgaonkarIB() {}
 
 void ShirgaonkarIB::setForce() {
-  Info << "Setting ShirgaonkarIB force..." << endl;
+  base::MPI_Info("Setting ShirgaonkarIB force...", true);
   volVectorField IBDrag = forceSubModel_->IBDrag(U_, p_);
   Foam::vector particleCenterPos = Foam::vector::zero;
   Foam::vector cellPos = Foam::vector::zero;
@@ -94,7 +94,7 @@ void ShirgaonkarIB::setForce() {
       }
     }
   }
-  Info << "Setting ShirgaonkarIB - done" << endl;
+  base::MPI_Info("Setting ShirgaonkarIB force - done", true);
 }
 
 }  // namespace Foam
