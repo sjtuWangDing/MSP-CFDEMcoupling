@@ -128,11 +128,11 @@ void cfdemCloudMix::updateMesh(volScalarField& interface) {
     base::MPI_Barrier();
     // 这里必须调用 mesh.C(), 否则在调用 mesh.C()[cellID] 获取网格中心坐标的时候报错：An error occurred in MPI_Waitall
     Pout << "Mesh number in current Proc: " << dyMesh.C().size() << endl;
+    base::MPI_Barrier();
   } catch (const std::bad_cast& ex) {
     Info << "Not use dynamicRefineFvMesh, no need to update mesh" << endl;
   }
   base::MPI_Info("update mesh - done", true);
-  return;
 }
 
 //! \brief 确定颗粒周围 refined 网格的区域
@@ -229,7 +229,7 @@ void cfdemCloudMix::evolve(volVectorField& U, volScalarField& voidF, volScalarFi
     // findMpiCellIDs() 作用于所有颗粒，因为其用于计算颗粒尺度
     locateM().findMpiCell(parCloud_.findMpiCellIDs());
     // 计算颗粒尺度
-    voidFractionM().getDimensionRatiosForMix(parCloud_.dimensionRatios());
+    voidFractionM().getDimensionRatiosForMix();
     // 计算扩展颗粒覆盖当前处理器上的某一个网格索引
     // 必须位于计算颗粒尺度之后，因为需要判断颗粒是否为 middle
     // findExpandedCell() 只会作用于 middle 颗粒

@@ -2,6 +2,7 @@
 #define __TENSOR_H__
 
 #include <initializer_list>
+#include <iostream>
 #include "base/logging.h"
 #include "base/memory/x_alloc.h"
 #include "base/tensor/expression.h"
@@ -430,6 +431,21 @@ class Tensor<1, DType, Device, Alloc> : public base::Exp<Tensor<1, DType, Device
   inline DType& operator[](int idx) const {
     CHECK(idx >= 0 && idx < static_cast<int>(mSize())) << " with idx = " << idx << " and mSize = " << mSize();
     return ptr()[idx];
+  }
+
+  friend std::ostream& operator<<(std::ostream& os, const Tensor& tensor) {
+    if (!tensor.isValid()) {
+      os << "[]";
+    } else if (0 == tensor.mSize()) {
+      os << "[]";
+    } else {
+      os << "[";
+      for (int i = 0; i < tensor.mSize() - 1; ++i) {
+        os << tensor[i] << ", ";
+      }
+      os << tensor[tensor.mSize() - 1] << "]";
+    }
+    return os;
   }
 };
 

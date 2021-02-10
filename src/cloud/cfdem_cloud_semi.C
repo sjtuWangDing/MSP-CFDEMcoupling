@@ -126,7 +126,7 @@ void cfdemCloudSemi::evolve(volVectorField& U, volScalarField& voidF, volVectorF
     // 获取颗粒覆盖当前处理器上的某一个网格索引，如果索引为 -1，则表示颗粒不覆盖当前处理器
     locateM().findMpiCell(parCloud_.findMpiCellIDs());
     // 计算颗粒尺度
-    voidFractionM().getDimensionRatiosForMix(parCloud_.dimensionRatios());
+    voidFractionM().getDimensionRatiosForMix();
     // 计算扩展颗粒覆盖当前处理器上的某一个网格索引
     // 必须位于计算颗粒尺度之后，因为需要判断颗粒是否为 middle
     locateM().findExpandedCell(parCloud_.findExpandedCellIDs(), expandedCellScale());

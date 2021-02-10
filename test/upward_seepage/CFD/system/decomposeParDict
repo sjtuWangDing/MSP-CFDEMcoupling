@@ -15,13 +15,13 @@ FoamFile
   object      decomposeParDict;
 }
 
-numberOfSubdomains  8;
+numberOfSubdomains  16;
 
 method        simple; // hierarchical or scotch or metis or manual
 
 simpleCoeffs
 {
-  n           (2 2 2);
+  n           (2 2 4);
   delta       0.001;
 }
 
