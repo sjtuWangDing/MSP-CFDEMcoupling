@@ -135,7 +135,6 @@ void mixVoidFraction::setVoidFraction() {
   voidFractionNext_.correctBoundaryConditions();
   volumeFractionNext_.correctBoundaryConditions();
   for (int index = 0; index < cloud_.numberOfParticles(); ++index) {
-    base::MPI_Barrier(0.1);
     if (cloud_.checkCoarseParticle(index)) {
       const auto& hashSetPtr = parSets[index];
       int meshNumber = hashSetPtr->size();
