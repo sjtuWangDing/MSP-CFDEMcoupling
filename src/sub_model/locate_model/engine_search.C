@@ -84,6 +84,10 @@ void engineSearch::findCell(const base::CITensor1& findCellIDs) const {
   // 检查颗粒中心所在的处理器上，findCellID 是否 >= 0
   for (int index = 0; index < cloud_.numberOfParticles(); ++index) {
     int rootProc = cloud_.particleRootProcIDs()[index];
+    // 检查颗粒是否溢出计算域，如果 rootProc == -1，则说明颗粒溢出
+    CHECK_GE(rootProc, 0) << __func__ << ": particle " << index << "with position = " << cloud_.positions()[index]
+                          << " and radius = " << cloud_.getRadius(index)
+                          << " is not located in any processor's domain, which means it is out of CFD domain";
     if (rootProc == base::procId()) {
       CHECK_GE(findCellIDs[index], 0) << "Proc[" << base::procId() << "]: findCellIDs[" << index
                                       << "] = " << findCellIDs[index] << ", not >= 0";
@@ -111,16 +115,10 @@ void engineSearch::uniqueFindCell(const base::CITensor1& findCellIDs) const {
     return;
   }
   int tag1 = 100;
-  int tag2 = 101;
   if (0 != procId) {
-    MPI_Request request1, request2;
-    MPI_Status status1, status2;
+    MPI_Request request1;
     // 发送 findCellIDs 给主节点(非阻塞)
     base::MPI_Isend(findCellIDs, 0, tag1, &request1);
-    MPI_Wait(&request1, &status1);
-    // 从主节点接收 particleRootProcIDs
-    base::MPI_Irecv(cloud_.particleRootProcIDs(), 0, tag2, &request2);
-    MPI_Wait(&request2, &status2);
   }
   if (0 == procId) {
     std::vector<MPI_Request> rVec(numProc);
@@ -136,6 +134,8 @@ void engineSearch::uniqueFindCell(const base::CITensor1& findCellIDs) const {
     }
     // 主节点等待 Irecv 执行完成
     MPI_Waitall(numProc - 1, rVec.data() + 1, sVec.data() + 1);
+    // reset particleRootProcIDs to -1
+    base::fillTensor(cloud_.particleRootProcIDs(), -1);
     // 由主节点统计 findCellIDs
     for (int index = 0; index < number; ++index) {
       for (int inode = 0; inode < numProc; ++inode) {
@@ -148,12 +148,9 @@ void engineSearch::uniqueFindCell(const base::CITensor1& findCellIDs) const {
         }
       }
     }
-    for (int inode = 1; inode < numProc; ++inode) {
-      base::MPI_Isend(cloud_.particleRootProcIDs(), inode, tag2, rVec.data() + inode);
-    }
-    // 主节点等待 Isend 执行完成
-    MPI_Waitall(numProc - 1, rVec.data() + 1, sVec.data() + 1);
   }
+  // 主节点主节点广播 particleRootProcIDs
+  base::MPI_Bcast(cloud_.particleRootProcIDs(), 0);
   base::MPI_Barrier();
 }
 

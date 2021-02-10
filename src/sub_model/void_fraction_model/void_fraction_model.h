@@ -67,7 +67,7 @@ class voidFractionModel {
   void getDimensionRatios(const base::CDTensor1& dimensionRatios, const double scale = 1.0) const;
 
   //! \brief 计算颗粒尺寸与其周围网格平均尺寸的比值, 并将颗粒索引按照颗粒尺寸归类
-  void getDimensionRatiosForMix(const base::CDTensor1& dimensionRatios, const double scale = 1.0) const;
+  void getDimensionRatiosForMix(const double scale = 1.0) const;
 
   //! \brief 计算空隙率
   virtual void setVoidFraction() = 0;

@@ -108,8 +108,7 @@ void voidFractionModel::getDimensionRatios(const base::CDTensor1& dimensionRatio
 }
 
 //! \brief 计算颗粒尺寸与其周围网格平均尺寸的比值
-void voidFractionModel::getDimensionRatiosForMix(const base::CDTensor1& dimensionRatios,
-                                                 const double scale /* = 1.0 */) const {
+void voidFractionModel::getDimensionRatiosForMix(const double scale /* = 1.0 */) const {
   // reset dimensionRatios
   base::fillTensor(cloud_.dimensionRatios(), -1.0);
   int number = cloud_.numberOfParticles();                      // 颗粒总数
@@ -139,18 +138,13 @@ void voidFractionModel::getDimensionRatiosForMix(const base::CDTensor1& dimensio
   // 主节点汇总其他节点的 dimension ratio 等信息
   int procId = base::procId();
   int numProc = base::numProc();
-  int rTag = 100;
-  int nTag = 101;
-  int vTag = 102;
+  int nTag = 100;
+  int vTag = 101;
   if (0 != procId) {
-    MPI_Request rq1, rq2, rq3;
-    MPI_Status ms;
+    MPI_Request rq1, rq2;
     // 发送 sumCellsNumber 给主节点( MPI_Isend 非阻塞)
     base::MPI_Isend(sumCellsNumber, 0, nTag, &rq1);
     base::MPI_Isend(sumCellsV, 0, vTag, &rq2);
-    // 从主节点接收 globalDimensionRatios
-    base::MPI_Irecv(dimensionRatios, 0, rTag, &rq3);
-    MPI_Wait(&rq3, &ms);
   }
   if (0 == procId) {
     std::vector<MPI_Request> rVec(numProc);
@@ -185,14 +179,16 @@ void voidFractionModel::getDimensionRatiosForMix(const base::CDTensor1& dimensio
           Vmesh += std::max(sumCellsVVec[j - 1][index], 0.0);
         }
       }
+      CHECK_GT(Nmesh, 0) << __func__ << ": particle " << index
+                         << " cover no mpi cell with position = " << cloud_.positions()[index]
+                         << " and radius = " << cloud_.getRadius(index);
       double ratio = pow(Vmesh / Nmesh, 1.0 / 3.0) / (2.0 * radius);
-      dimensionRatios[index] = ratio;
-    }
-    // 由主节点将 dimension ratio 传递给子节点
-    for (int inode = 1; inode < numProc; ++inode) {
-      base::MPI_Isend(dimensionRatios, inode, rTag, rVec.data() + inode);
+      cloud_.dimensionRatios()[index] = ratio;
     }
   }
+  // 主节点广播 dimensionRatios
+  base::MPI_Bcast(cloud_.dimensionRatios(), 0);
+  base::MPI_Barrier();
   base::MPI_Info("voidFractionModel: getDimensionRatiosForMix - done", true);
 }
 

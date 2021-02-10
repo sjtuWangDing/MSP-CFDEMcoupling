@@ -9,7 +9,7 @@ communicate     single vel yes
 # For style f, the position of the face is fixed. If an atom moves outside the face it may be lost.
 boundary        f f f
 newton          off
-processors      2 2 2
+processors      2 2 4
 units           si
 
 region          reg block 0. 0.04 0. 0.04 0. 0.2 units box
@@ -146,8 +146,8 @@ fix             pdd all particledistribution/discrete/numberbased 67867967 &
 
 # - insert for debug
 fix             ins1 all insert/rate/region seed 86028121 distributiontemplate pdd &
-                nparticles 1500 particlerate 30000 insert_every 100 &
-                overlapcheck yes vel constant 0. 0. 0. all_in yes region factory ntry_mc 10000
+              nparticles 1500 particlerate 30000 insert_every 100 &
+              overlapcheck yes vel constant 0. 0. 0. all_in yes region factory ntry_mc 10000
 run             50000
 
 # **********************************************************************************************

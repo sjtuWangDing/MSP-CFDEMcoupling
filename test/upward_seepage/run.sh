@@ -16,12 +16,12 @@ source $MSP_CFDEM_TOOLS_DIR/msp_cfdem_parallel_run.sh
 casePath="$(dirname "$(readlink -f ${BASH_SOURCE[0]})")"
 solverDir="$MSP_CFDEM_BIN_DIR"
 solverName="mspCfdemSolverMix"
-numberOfProcs="8"
+numberOfProcs="16"
 machineFileName="none" # yourMachinefileName
 logPath=$casePath
 logFileName="log_mpirun_$numberOfProcs_$solverName"
 
-reInitDEM="true"
+reInitDEM="false"
 # if not exist restart file, execute DEM script to get restart file
 if [[ ! -f "$casePath/DEM/pre/restart.liggghts_run" || $reInitDEM = "true" ]]; then
   echo "execute DEM script to get restart file..."
