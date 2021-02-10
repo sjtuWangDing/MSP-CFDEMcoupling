@@ -16,17 +16,28 @@ source $MSP_CFDEM_TOOLS_DIR/msp_cfdem_parallel_run.sh
 casePath="$(dirname "$(readlink -f ${BASH_SOURCE[0]})")"
 solverDir="$MSP_CFDEM_BIN_DIR"
 solverName="mspCfdemSolverMix"
-numberOfProcs="16"
+numberOfProcsDEM="16"
+numberOfProcsCFD="8"
 machineFileName="none" # yourMachinefileName
 logPath=$casePath
-logFileName="log_mpirun_$numberOfProcs_$solverName"
+logFileName="log_mpirun_$numberOfProcsCFD$solverName"
+
+# add post dir to DEM
+if [ ! -d "$casePath/DEM/post" ]; then
+  mkdir "$casePath/DEM/post"
+fi
+
+# add post dir to DEM
+if [ ! -d "$casePath/DEM/pre" ]; then
+  mkdir "$casePath/DEM/pre"
+fi
 
 reInitDEM="false"
 # if not exist restart file, execute DEM script to get restart file
 if [[ ! -f "$casePath/DEM/pre/restart.liggghts_run" || $reInitDEM = "true" ]]; then
   echo "execute DEM script to get restart file..."
   cd $casePath/DEM
-  mpirun -np $numberOfProcs liggghts < in.liggghts_init
+  mpirun -np $numberOfProcsDEM liggghts < in.liggghts_init
 else
   echo "liggght: find restart file, no need to execute DEM script..."
 fi
@@ -40,13 +51,8 @@ echo "blockMesh: mesh will be built..."
 cd $casePath/CFD
 blockMesh
 
-# add post dir to DEM
-if [ ! -d "$casePath/DEM/post" ]; then
-  mkdir "$casePath/DEM/post"
-fi
-
 # call function to run a parallel CFD-DEM case
-mspCfdemParallelRun $casePath "$solverDir/$solverName" $numberOfProcs $machineFileName $logPath $logFileName
+mspCfdemParallelRun $casePath "$solverDir/$solverName" $numberOfProcsCFD $machineFileName $logPath $logFileName
 
 # define variables for post-process
 runOctave="false"

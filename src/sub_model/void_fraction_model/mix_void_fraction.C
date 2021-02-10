@@ -203,22 +203,24 @@ void mixVoidFraction::setVolumeFractionForSingleParticle(const int index,
   // 获取颗粒中心坐标
   Foam::vector particleCentre = cloud_.getPosition(index);
   // 获取到在当前 processor 上颗粒覆盖的某一个网格编号
-  int findCellID = cloud_.findCellIDs()[index];
-  if (findCellID >= 0) {  // particle centre is in domain
+  // 这里必须使用 findMpiCellIDs() 而不能使用 findCellIDs()
+  // 因为只有颗粒中心所在的处理器的 findCellIDs()[index] >= 0
+  int findMpiCellID = cloud_.findMpiCellIDs()[index];
+  if (findMpiCellID >= 0) {  // particle centre is in domain
     // 获取网格中心坐标
-    Foam::vector cellCentre = cloud_.mesh().C()[findCellID];
+    Foam::vector cellCentre = cloud_.mesh().C()[findMpiCellID];
     // 判断网格中心是否在颗粒中
     double fc = pointInParticle(cellCentre, particleCentre, radius);
     // 计算网格的等效半径
-    double corona = 0.5 * sqrt(3.0) * cbrt(cloud_.mesh().V()[findCellID]);
+    double corona = 0.5 * sqrt(3.0) * cbrt(cloud_.mesh().V()[findMpiCellID]);
     // 获取网格的 corona point
     Foam::vector coronaPoint = IBVoidFraction::getCoronaPointPosition(particleCentre, cellCentre, corona);
     if (pointInParticle(coronaPoint, particleCentre, radius) < 0.0) {
       // 如果 coronaPoint 在颗粒中, 则认为整个网格在颗粒中
-      volumeFractionNext_[findCellID] = 0.0;
+      volumeFractionNext_[findMpiCellID] = 0.0;
     } else {
       // 如果 coronaPoint 不在颗粒中, 则需要遍历网格的所有角点, 判断角点与网格中心是否在颗粒中
-      const labelList& vertexPoints = cloud_.mesh().cellPoints()[findCellID];
+      const labelList& vertexPoints = cloud_.mesh().cellPoints()[findMpiCellID];
       double ratio = 0.125;
       // 遍历当前网格的所有角点
       forAll(vertexPoints, i) {
@@ -228,25 +230,25 @@ void mixVoidFraction::setVolumeFractionForSingleParticle(const int index,
         scalar fv = pointInParticle(vertexPosition, particleCentre, radius);
         if (fc < 0.0 && fv < 0.0) {
           // 网格中心在颗粒中, 角点也在颗粒中
-          volumeFractionNext_[findCellID] -= ratio;
+          volumeFractionNext_[findMpiCellID] -= ratio;
         } else if (fc < 0.0 && fv >= 0.0) {
           // 网格中心在颗粒中, 角点不在颗粒中
           // 计算角点 vertexPosition 对体积分数的影响系数 lambda
           double lambda =
               IBVoidFraction::segmentParticleIntersection(radius, particleCentre, cellCentre, vertexPosition);
-          volumeFractionNext_[findCellID] -= ratio * lambda;
+          volumeFractionNext_[findMpiCellID] -= ratio * lambda;
         } else if (fc >= 0.0 && fv < 0.0) {
           // 网格中心不在颗粒中, 角点在颗粒中
           // 计算角点 vertexPosition 对体积分数的影响系数 lambda
           double lambda =
               IBVoidFraction::segmentParticleIntersection(radius, particleCentre, vertexPosition, cellCentre);
-          volumeFractionNext_[findCellID] -= ratio * lambda;
+          volumeFractionNext_[findMpiCellID] -= ratio * lambda;
         }
       }  // End of loop of vertexPoints
     }
     // 颗粒中心所在网格的体积分数已经计算完成, 下面开始递归构建相邻网格
-    buildLabelHashSetForVolumeFraction(findCellID, particleCentre, radius, hashSetPtr);
-  }  // findCellID >= 0
+    buildLabelHashSetForVolumeFraction(findMpiCellID, particleCentre, radius, hashSetPtr);
+  }  // findMpiCellID >= 0
 }
 
 /*!
