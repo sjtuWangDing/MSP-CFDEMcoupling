@@ -192,6 +192,7 @@ void mixDragForce::setForceKernel(const int index, Foam::vector& drag, Foam::vec
     std::call_once(onceOp, [&]() {
       if (forceSubModel_->verbose() && mag(drag) > Foam::SMALL) {
         Pout << "index = " << index << endl;
+        Pout << "diameter = " << diameter << endl;
         Pout << "Ur = " << Ur << endl;
         Pout << "voidFraction = " << vf << endl;
         Pout << "drag (total) = " << drag << endl;

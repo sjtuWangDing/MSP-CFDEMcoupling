@@ -101,7 +101,8 @@ void forceSubModel::partToArray(const int& index, const Foam::vector& dragTot, c
     // usually used for ArchimedesIB and ShirgaonkarIB force model
     for (int j = 0; j < 3; j++) {
       // 如果使用 Junke Guo BBO Equation，则需要 3 倍的浮力
-      if (forceModel_.typeName() == "Archimedes" && cloud_.useGuoBBOEquation()) {
+      if ((forceModel_.typeName() == "Archimedes" || forceModel_.typeName() == "ArchimedesIB") &&
+          cloud_.useGuoBBOEquation()) {
         cloud_.DEMForces()[index][j] += 3.0 * dragTot[j];
       } else {
         cloud_.DEMForces()[index][j] += dragTot[j];

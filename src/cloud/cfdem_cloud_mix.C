@@ -153,7 +153,9 @@ void cfdemCloudMix::setInterface(volScalarField& interface, const double scale) 
   }
 }
 
-void cfdemCloudMix::calcVelocityCorrection(volScalarField& p, volVectorField& U, volScalarField& phiIB) const {
+void cfdemCloudMix::calcVelocityCorrection(volScalarField& p, volVectorField& U, volScalarField& phiIB,
+                                           surfaceScalarField phi, volScalarField& voidFraction,
+                                           volScalarField& volumeFraction) const {
   if (validCouplingStep_) {
     // set particle velocity
     Foam::vector parPos = Foam::vector::zero;
@@ -183,12 +185,12 @@ void cfdemCloudMix::calcVelocityCorrection(volScalarField& p, volVectorField& U,
     U.correctBoundaryConditions();
     // phiIB correction equation should be fvm::laplacian(phiIB) == fvc::div(U) according to:
     // https://www.researchgate.net/profile/Stefan_Pirker/publication/264439676_Models_algorithms_and_validation_for_opensource_DEM_and_CFD-DEM/links/56af5af108ae28588c62fd16.pdf
-    fvScalarMatrix phiIBEqn(fvm::laplacian(phiIB) == fvc::div(U));
+    fvScalarMatrix phiIBEqn(fvm::laplacian(phiIB) == fvc::div(phi) + ddtVoidFraction());
     if (phiIB.needReference()) {
       phiIBEqn.setReference(pRefCell_, pRefValue_);
     }
     phiIBEqn.solve();
-    U = U - fvc::grad(phiIB);
+    U = (voidFraction * U - fvc::grad(phiIB)) / voidFraction;
     U.correctBoundaryConditions();
     // correct the pressure as well
     p = p + phiIB / U.mesh().time().deltaT();

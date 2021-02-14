@@ -61,7 +61,8 @@ class cfdemCloudMix : public cfdemCloud {
   void evolve(volVectorField& U, volScalarField& voidF, volScalarField& volumeF, volVectorField& Us,
               volScalarField& Ksl, volScalarField& interface);
 
-  void calcVelocityCorrection(volScalarField& p, volVectorField& U, volScalarField& phiIB) const;
+  void calcVelocityCorrection(volScalarField& p, volVectorField& U, volScalarField& phiIB, surfaceScalarField phi,
+                              volScalarField& voidFraction, volScalarField& volumeFraction) const;
 
   double expandedCellScale() const { return cProps_.expandedCellScale(); }
 

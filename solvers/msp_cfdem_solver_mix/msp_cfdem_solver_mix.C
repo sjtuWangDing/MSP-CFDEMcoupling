@@ -235,12 +235,13 @@ int main(int argc, char* argv[]) {
       turbulence->correct();
 
       // 通过颗粒速度以及phiIB修正速度与压力
-      if ("none" == modelType) {
-        particleCloud.calcVelocityCorrection(p, U, phiIB);
-        fvOptions.correct(U);
-        dimensionedScalar phiIBTotal = gSum(phiIB);
-        Info << "After calcVelocityCorrection, phiIBTotal = " << phiIBTotal.value() << nl << endl;
-      }
+      particleCloud.calcVelocityCorrection(p, U, phiIB, phi, voidFraction, volumeFraction);
+      fvOptions.correct(U);
+      dimensionedScalar phiIBTotal = gSum(phiIB);
+      Info << "After calcVelocityCorrection, phiIBTotal = " << phiIBTotal.value() << nl << endl;
+
+      // recalculate phiByVoidFraction for next step
+      phiByVoidFraction = fvc::flux(U);
     }  // solve flow
     runTime.write();
     Info << "ExecutionTime = " << runTime.elapsedCpuTime() << " s"
