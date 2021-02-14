@@ -19,7 +19,7 @@ FoamFile
 
 /* ---------------------------- sub-models & settings ---------------------------- */
 
-modelType none;
+modelType B;
 
 couplingInterval 100;
 
