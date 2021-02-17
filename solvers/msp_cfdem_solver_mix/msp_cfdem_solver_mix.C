@@ -73,11 +73,17 @@ int main(int argc, char* argv[]) {
     phi = voidFractionFace * phiByVoidFraction;
 
     Info << "Solver level total Eulerian momentum exchange:" << endl;
+    if (modelType == "none") {
+      volScalarField particleVoidFraction(voidFraction - 1.0);
+      dimensionedScalar totalParticleVoidFraction = gSum(particleVoidFraction);
+      Info << "  total particle voidFraction:  " << totalParticleVoidFraction.value() << endl;
+    }
+    dimensionedScalar totalKsl = gSum(Ksl);
+    Info << "  total Ksl:  " << totalKsl.value() << endl;
     volVectorField fImp(Ksl * (Us - U));
     particleCloud.scaleWithVcell(fImp);
-    dimensionedVector fImpTotal = gSum(fImp);
-    Info << "  TotalForceImp:  " << fImpTotal.value() << endl;
-    Info << "  Warning, these values are based on latest Ksl and Us but prev. iteration U!\n" << endl;
+    dimensionedVector totalImplForce = gSum(fImp);
+    Info << "  total impl force:  " << totalImplForce.value() << endl;
 
     if (particleCloud.solveFlow()) {
       // U equation
@@ -237,8 +243,8 @@ int main(int argc, char* argv[]) {
       // 通过颗粒速度以及phiIB修正速度与压力
       particleCloud.calcVelocityCorrection(p, U, phiIB, phi, voidFraction, volumeFraction);
       fvOptions.correct(U);
-      dimensionedScalar phiIBTotal = gSum(phiIB);
-      Info << "After calcVelocityCorrection, phiIBTotal = " << phiIBTotal.value() << nl << endl;
+      dimensionedVector totalUCorrectedByPhiIB = gSum(volVectorField(fvc::grad(phiIB) / voidFraction));
+      Info << "After calcVelocityCorrection, total U corrected by phiIB = " << totalUCorrectedByPhiIB.value() << nl << endl;
 
       // recalculate phiByVoidFraction for next step
       phiByVoidFraction = fvc::flux(U);

@@ -81,6 +81,8 @@ class cfdemCloudMix : public cfdemCloud {
   //! \brief 从 DEM 获取数据
   void getDEMData();
 
+  void giveDEMData() const;
+
   void printParticleInfo() const;
 
   /*!
