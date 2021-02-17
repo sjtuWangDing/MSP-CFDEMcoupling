@@ -31,7 +31,7 @@ License
 #include "singlePhaseTransportModel.H"
 #include "turbulentTransportModel.H"
 #include "dynamicFvMesh.H"
-#include "cloud/cfdem_cloud_IB_opti.h"
+#include "cloud/cfdem_cloud_impl_fd.h"
 
 int main(int argc, char* argv[]) {
   #include "setRootCase.H"
@@ -45,7 +45,7 @@ int main(int argc, char* argv[]) {
   turbulence->validate();
 
   // create cfdemCloud
-  Foam::cfdemCloudIBOpti particleCloud(mesh);
+  Foam::cfdemCloudImplFD particleCloud(mesh);
 
   Info << "\nStarting time loop\n" << endl;
 
@@ -131,8 +131,7 @@ int main(int argc, char* argv[]) {
     turbulence->correct();
 
     // 通过颗粒速度以及phiIB修正速度与压力
-    volScalarField volumeFractionNext = mesh.lookupObject<volScalarField>("volumeFractionNext");
-    particleCloud.calcVelocityCorrection(p, U, phiIB, volumeFractionNext);
+    particleCloud.calcVelocityCorrection(p, U, phiIB);
     fvOptions.correct(U);
 
     runTime.write();
