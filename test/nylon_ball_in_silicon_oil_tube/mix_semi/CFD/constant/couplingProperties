@@ -5,44 +5,40 @@
 |   \\  /    A nd           | Web:      http://www.openfoam.org               |
 |    \\/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
+
 FoamFile
 {
-    version         2.0;
-    format          ascii;
-    root            "";
-    case            "";
-    instance        "";
-    local           "";
-    class           dictionary;
-    object          couplingProperties;
+  version         2.0;
+  format          ascii;
+  root            "";
+  case            "";
+  instance        "";
+  local           "";
+  class           dictionary;
+  object          couplingProperties;
 }
 
 /* ---------------------------- sub-models & settings ---------------------------- */
 
-modelType B;
+modelType B; // A or B
 
-couplingInterval 100;
+couplingInterval 50;
 
-expandedCellScale 4;
+expandedCellScale 6;
+
+useGuoBBOEquation true;
 
 allowUseSubCFDTimeStep false;
 
 globalForce mixGlobalForce;
 
-minCoarseParticleRadius 0.01;
-
-refineMeshSkin 1.2;
-
-useGuoBBOEquation false;
-
 useDDtVoidFraction true;
 
 forceModels
 (
-  ArchimedesIB
-  ShirgaonkarIB
   Archimedes
   mixDragForce
+  // mixMeiLiftForce
 );
 
 momCoupleModels
@@ -54,7 +50,11 @@ voidFractionModel mix;
 
 locateModel engineMix;
 
+meshMotionModel noMeshMotion;
+
 dataExchangeModel twoWayMPI;
+
+averagingModel dense;
 
 turbulenceModelType turbulenceProperties;
 
@@ -69,23 +69,11 @@ implicitCoupleProps
 
 "(globalForceProps|mixGlobalForceProps)"
 {
-  verbose true;
   GaussCoreEff 3;
+  verbose true;
   velFieldName "U";
   voidFractionFieldName "voidFraction";
-  volumeFractionFieldName "volumeFraction";
   gravityFieldName "g";
-}
-
-ArchimedesIBProps
-{
-  verbose true;
-}
-
-ShirgaonkarIBProps
-{
-  useTorque true;
-  verbose true;
 }
 
 ArchimedesProps
@@ -95,17 +83,26 @@ ArchimedesProps
   treatDEMForceImplicit false;
   verbose true;
   interpolation false;
+  scalarViscosity false;
 }
 
 mixDragForceProps
 {
-  dragModelName "Gidaspow";
+  dragModelName "Dallavalle";
   treatForceExplicitInMomEquation false;
   treatForceBothCFDAndDEM true;
   treatDEMForceImplicit false;
   verbose true;
   interpolation false;
   scalarViscosity false;
+  useGaussCoreFunctionRefined true;
+}
+
+mixMeiLiftForceProps
+{
+  treatForceBothCFDAndDEM true;
+  verbose true;
+  useSecondOrderTerms false;
   useGaussCoreFunctionRefined true;
 }
 
@@ -116,9 +113,8 @@ twoWayMPIProps
 
 mixProps
 {
-  alphaMin 0.3;
+  alphaMin 0.0;
   scaleUpVol 1.0;
-  maxCellsNumPerCoarseParticle 10000000;
 }
 
 engineMixProps

@@ -45,7 +45,16 @@ cfdemCloudMix::cfdemCloudMix(const fvMesh& mesh)
       pRefValue_(readScalar(mesh.solutionDict().subDict("PISO").lookup("pRefValue"))) {}
 
 //! \brief Destructor
-cfdemCloudMix::~cfdemCloudMix() {}
+cfdemCloudMix::~cfdemCloudMix() {
+  dataExchangeM().free(parCloud_.radii(), parCloud_.radiiPtr());
+  dataExchangeM().free(parCloud_.positions(), parCloud_.positionsPtr());
+  dataExchangeM().free(parCloud_.velocities(), parCloud_.velocitiesPtr());
+  dataExchangeM().free(parCloud_.angularVelocities(), parCloud_.angularVelocitiesPtr());
+  dataExchangeM().free(parCloud_.DEMForces(), parCloud_.DEMForcesPtr());
+  dataExchangeM().free(parCloud_.DEMTorques(), parCloud_.DEMTorquesPtr());
+  dataExchangeM().free(parCloud_.cds(), parCloud_.cdsPtr());
+  dataExchangeM().free(parCloud_.fluidVel(), parCloud_.fluidVelPtr());
+}
 
 //! \brief 重新分配内存
 void cfdemCloudMix::reallocate() {
@@ -55,6 +64,7 @@ void cfdemCloudMix::reallocate() {
   dataExchangeM().realloc(parCloud_.positions(), base::makeShape2(number, 3), parCloud_.positionsPtr(), 0.0);
   dataExchangeM().realloc(parCloud_.velocities(), base::makeShape2(number, 3), parCloud_.velocitiesPtr(), 0.0);
   dataExchangeM().realloc(parCloud_.DEMForces(), base::makeShape2(number, 3), parCloud_.DEMForcesPtr(), 0.0);
+  dataExchangeM().realloc(parCloud_.DEMTorques(), base::makeShape2(number, 3), parCloud_.DEMTorquesPtr(), 0.0);
   dataExchangeM().realloc(parCloud_.cds(), base::makeShape1(number), parCloud_.cdsPtr(), 0.0);
   dataExchangeM().realloc(parCloud_.fluidVel(), base::makeShape2(number, 3), parCloud_.fluidVelPtr(), 0.0);
   dataExchangeM().realloc(parCloud_.angularVelocities(), base::makeShape2(number, 3), parCloud_.angularVelocitiesPtr(),
@@ -71,8 +81,13 @@ void cfdemCloudMix::reallocate() {
 }
 
 void cfdemCloudMix::getDEMData() {
-  cfdemCloud::getDEMData();
   dataExchangeM().getData("omega", "vector-atom", parCloud_.angularVelocitiesPtr());
+  cfdemCloud::getDEMData();
+}
+
+void cfdemCloudMix::giveDEMData() const {
+  dataExchangeM().giveData("hdtorque", "vector-atom", DEMTorquesPtr());
+  cfdemCloud::giveDEMData();
 }
 
 void cfdemCloudMix::printParticleInfo() const {
@@ -183,9 +198,12 @@ void cfdemCloudMix::calcVelocityCorrection(volScalarField& p, volVectorField& U,
       }
     }
     U.correctBoundaryConditions();
-    // phiIB correction equation should be fvm::laplacian(phiIB) == fvc::div(U) according to:
-    // https://www.researchgate.net/profile/Stefan_Pirker/publication/264439676_Models_algorithms_and_validation_for_opensource_DEM_and_CFD-DEM/links/56af5af108ae28588c62fd16.pdf
-    fvScalarMatrix phiIBEqn(fvm::laplacian(phiIB) == fvc::div(phi) + ddtVoidFraction());
+    // phiIB correction equation should be
+    // fvm::laplacian(phiIB) == fvc::div(voidFraction * U) + fvc::ddt(voidFraction)
+    surfaceScalarField updatePhiByVoidFraction("updatePhiByVoidFraction", fvc::flux(U));
+    surfaceScalarField voidFractionFace = fvc::interpolate(voidFraction);
+    surfaceScalarField updatePhi("updatePhi", voidFractionFace * updatePhiByVoidFraction);
+    fvScalarMatrix phiIBEqn(fvm::laplacian(phiIB) == fvc::div(updatePhi) + ddtVoidFraction());
     if (phiIB.needReference()) {
       phiIBEqn.setReference(pRefCell_, pRefValue_);
     }
