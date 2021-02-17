@@ -56,17 +56,25 @@ void mixVirtualMassForce::setForce() {
   if (cloud_.numberOfParticlesChanged()) {
     FatalError << "Currently mixVirtualMassForce model not allow number of particle changed\n" << abort(FatalError);
   }
-  UInterpolator_.reset(
-      interpolation<Foam::vector>::New(subPropsDict_.lookupOrDefault("UInterpolationType", word("cellPointFace")), U_)
-          .ptr());
-  voidFractionInterpolator_.reset(
-      interpolation<Foam::scalar>::New(
-          subPropsDict_.lookupOrDefault("voidfractionInterpolationType", word("cellPoint")), voidFraction_)
-          .ptr());
-  DDtUInterpolator_.reset(
-      interpolation<vector>::New(subPropsDict_.lookupOrDefault("DDtUInterpolationType", word("cellPointFace")),
-                                 cloud_.globalF().ddtU())
-          .ptr());
+  if (forceSubModel_->interpolation()) {
+    // Note: not use autoPtr::reset() function for stability
+    // clear interpolator before set new
+    UInterpolator_.clear();
+    voidFractionInterpolator_.clear();
+    DDtUInterpolator_.clear();
+    // set new pointer
+    UInterpolator_.set(
+        interpolation<Foam::vector>::New(subPropsDict_.lookupOrDefault("UInterpolationType", word("cellPoint")), U_)
+            .ptr());
+    voidFractionInterpolator_.set(
+        interpolation<Foam::scalar>::New(
+            subPropsDict_.lookupOrDefault("voidFractionInterpolationType", word("cellPoint")), voidFraction_)
+            .ptr());
+    DDtUInterpolator_.set(
+        interpolation<vector>::New(subPropsDict_.lookupOrDefault("DDtUInterpolationType", word("cellPoint")),
+                                   cloud_.globalF().ddtU())
+            .ptr());
+  }
   for (int index = 0; index < cloud_.numberOfParticles(); ++index) {
     // 只设置 fine and middle 颗粒的虚拟质量力
     if (cloud_.checkCoarseParticle(index)) {

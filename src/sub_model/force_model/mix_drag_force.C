@@ -64,13 +64,20 @@ void mixDragForce::setForce() {
   double dragCoefficient = 0.0;              // 阻力系数
   Foam::vector Ufluid = Foam::vector::zero;  // 背景流体速度
   Foam::vector drag = Foam::vector::zero;    // 阻力
-  UInterpolator_.reset(
-      interpolation<Foam::vector>::New(subPropsDict_.lookupOrDefault("UInterpolationType", word("cellPointFace")), U_)
-          .ptr());
-  voidFractionInterpolator_.reset(
-      interpolation<Foam::scalar>::New(
-          subPropsDict_.lookupOrDefault("voidfractionInterpolationType", word("cellPoint")), voidFraction_)
-          .ptr());
+  if (forceSubModel_->interpolation()) {
+    // Note: not use autoPtr::reset() function for stability
+    // clear interpolator before set new
+    UInterpolator_.clear();
+    voidFractionInterpolator_.clear();
+    // set new pointer
+    UInterpolator_.set(
+        interpolation<Foam::vector>::New(subPropsDict_.lookupOrDefault("UInterpolationType", word("cellPoint")), U_)
+            .ptr());
+    voidFractionInterpolator_.set(
+        interpolation<Foam::scalar>::New(
+            subPropsDict_.lookupOrDefault("voidFractionInterpolationType", word("cellPoint")), voidFraction_)
+            .ptr());
+  }
   std::once_flag onceOp;
   for (int index = 0; index < cloud_.numberOfParticles(); ++index) {
     // 只设置 fine and middle 颗粒的阻力

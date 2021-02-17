@@ -94,15 +94,20 @@ void dragForce::setForce() {
   Foam::vector Ufluid;           // 颗粒中心处流体速度(可以指定是否使用插值模型计算)
   Foam::vector Ur;               // 相对速度
 
-  // #include "resetVoidfractionInterpolator.H"
-  // #include "resetUInterpolator.H"
-  UInterpolator_.reset(
-      interpolation<Foam::vector>::New(subPropsDict_.lookupOrDefault("UInterpolationType", word("cellPointFace")), U_)
-          .ptr());
-  voidFractionInterpolator_.reset(
-      interpolation<Foam::scalar>::New(
-          subPropsDict_.lookupOrDefault("voidfractionInterpolationType", word("cellPoint")), voidFraction_)
-          .ptr());
+  if (forceSubModel_->interpolation()) {
+    // Note: not use autoPtr::reset() function for stability
+    // clear interpolator before set new
+    UInterpolator_.clear();
+    voidFractionInterpolator_.clear();
+    // set new pointer
+    UInterpolator_.set(
+        interpolation<Foam::vector>::New(subPropsDict_.lookupOrDefault("UInterpolationType", word("cellPoint")), U_)
+            .ptr());
+    voidFractionInterpolator_.set(
+        interpolation<Foam::scalar>::New(
+            subPropsDict_.lookupOrDefault("voidFractionInterpolationType", word("cellPoint")), voidFraction_)
+            .ptr());
+  }
 
   for (int index = 0; index < cloud_.numberOfParticles(); ++index) {
     // init

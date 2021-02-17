@@ -40,7 +40,7 @@ Class
 #include "./global_force.h"
 #include "base/run_time_selection_tables.h"
 #include "cloud/cfdem_cloud.h"
-#include "interpolationCellPointFace.H"
+#include "interpolationCellPoint.H"
 #include "sub_model/void_fraction_model/void_fraction_model.h"
 
 namespace Foam {

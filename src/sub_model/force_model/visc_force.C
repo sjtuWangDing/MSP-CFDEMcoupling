@@ -62,10 +62,12 @@ viscForce::~viscForce() {}
 void viscForce::setForce() {
   Info << "Setting visc force..." << endl;
   volVectorField divTau_ = forceSubModel_->divTauField(U_);
-  divTauInterpolator_.reset(
-      interpolation<vector>::New(subPropsDict_.lookupOrDefault("divTauInterpolationType", word("cellPointFace")),
-                                 divTau_)
-          .ptr());
+  if (forceSubModel_->interpolation()) {
+    divTauInterpolator_.clear();
+    divTauInterpolator_.set(interpolation<Foam::vector>::New(
+                                subPropsDict_.lookupOrDefault("divTauInterpolationType", word("cellPoint")), divTau_)
+                                .ptr());
+  }
   double radius = 0.0;
   Foam::vector force = Foam::vector::zero;
   Foam::vector divTau = Foam::vector::zero;
