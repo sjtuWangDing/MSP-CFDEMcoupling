@@ -51,17 +51,25 @@ MeiLiftForce::~MeiLiftForce() {}
 
 void MeiLiftForce::setForce() {
   base::MPI_Info("Setting Mei lift force...", true);
-  UInterpolator_.reset(
-      interpolation<Foam::vector>::New(subPropsDict_.lookupOrDefault("UInterpolationType", word("cellPointFace")), U_)
-          .ptr());
-  voidFractionInterpolator_.reset(
-      interpolation<Foam::scalar>::New(
-          subPropsDict_.lookupOrDefault("voidfractionInterpolationType", word("cellPoint")), voidFraction_)
-          .ptr());
-  vorticityInterpolator_.reset(
-      interpolation<Foam::vector>::New(
-          subPropsDict_.lookupOrDefault("vorticityInterpolationType", word("cellPointFace")), vorticityField_)
-          .ptr());
+  if (forceSubModel_->interpolation()) {
+    // Note: not use autoPtr::reset() function for stability
+    // clear interpolator before set new
+    UInterpolator_.clear();
+    voidFractionInterpolator_.clear();
+    vorticityInterpolator_.clear();
+    // set new pointer
+    UInterpolator_.set(
+        interpolation<Foam::vector>::New(subPropsDict_.lookupOrDefault("UInterpolationType", word("cellPoint")), U_)
+            .ptr());
+    voidFractionInterpolator_.set(
+        interpolation<Foam::scalar>::New(
+            subPropsDict_.lookupOrDefault("voidFractionInterpolationType", word("cellPoint")), voidFraction_)
+            .ptr());
+    vorticityInterpolator_.set(
+        interpolation<Foam::vector>::New(subPropsDict_.lookupOrDefault("vorticityInterpolationType", word("cellPoint")),
+                                         vorticityField_)
+            .ptr());
+  }
   for (int index = 0; index < cloud_.numberOfParticles(); ++index) {
     // 升力
     Foam::vector liftForce = Foam::vector::zero;

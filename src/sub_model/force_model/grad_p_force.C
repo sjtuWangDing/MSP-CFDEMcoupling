@@ -62,9 +62,12 @@ gradPForce::~gradPForce() {}
 void gradPForce::setForce() {
   Info << "Setting grad p force..." << endl;
   volVectorField gradP_ = fvc::grad(p_);
-  gradPInterpolator_.reset(
-      interpolation<vector>::New(subPropsDict_.lookupOrDefault("gradPInterpolationType", word("cellPointFace")), gradP_)
-          .ptr());
+  if (forceSubModel_->interpolation()) {
+    gradPInterpolator_.clear();
+    gradPInterpolator_.set(interpolation<Foam::vector>::New(
+                               subPropsDict_.lookupOrDefault("gradPInterpolationType", word("cellPoint")), gradP_)
+                               .ptr());
+  }
   double radius = 0.0;
   Foam::vector force = Foam::vector::zero;
   Foam::vector gradP = Foam::vector::zero;
