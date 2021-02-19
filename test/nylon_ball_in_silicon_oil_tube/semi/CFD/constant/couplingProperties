@@ -30,15 +30,17 @@ useGuoBBOEquation true;
 
 allowUseSubCFDTimeStep false;
 
-globalForce mixGlobalForce;
-
 useDDtVoidFraction true;
+
+globalForce mixGlobalForce;
 
 forceModels
 (
   Archimedes
   mixDragForce
   // mixMeiLiftForce
+  // mixVirtualMassForce
+  // mixBassetForce
 );
 
 momCoupleModels
@@ -103,6 +105,28 @@ mixMeiLiftForceProps
   treatForceBothCFDAndDEM true;
   verbose true;
   useSecondOrderTerms false;
+  useGaussCoreFunctionRefined true;
+}
+
+mixVirtualMassForceProps
+{
+  treatForceExplicitInMomEquation false;
+  treatForceBothCFDAndDEM true;
+  treatDEMForceImplicit false;
+  verbose true;
+  interpolation false;
+  scalarViscosity false;
+  useGaussCoreFunctionRefined true;
+}
+
+mixBassetForceProps
+{
+  treatForceExplicitInMomEquation false;
+  treatForceBothCFDAndDEM true;
+  treatDEMForceImplicit false;
+  verbose true;
+  interpolation false;
+  scalarViscosity false;
   useGaussCoreFunctionRefined true;
 }
 

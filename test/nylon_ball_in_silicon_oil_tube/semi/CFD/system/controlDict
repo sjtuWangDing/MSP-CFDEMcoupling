@@ -13,9 +13,8 @@ FoamFile
     location    "system";
     object      controlDict;
 }
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-application     mspCfdemSolverImplFD;
+application     mspCfdemSolverSemi;
 
 startFrom       startTime;
 
@@ -29,7 +28,7 @@ deltaT          0.0005;
 
 writeControl    adjustableRunTime;
 
-writeInterval   0.02;
+writeInterval   0.004;
 
 purgeWrite      0;
 
