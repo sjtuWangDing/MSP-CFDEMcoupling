@@ -132,10 +132,6 @@ class IBVoidFraction : public voidFractionModel {
 
  private:
   dictionary subPropsDict_;
-
-  const double alphaMin_;
-
-  const double alphaMax_;
 };
 
 }  // namespace Foam

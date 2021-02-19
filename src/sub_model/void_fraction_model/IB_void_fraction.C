@@ -36,10 +36,7 @@ cfdemCreateNewFunctionAdder(voidFractionModel, IBVoidFraction);
 
 //! \brief Constructor
 IBVoidFraction::IBVoidFraction(cfdemCloud& cloud)
-    : voidFractionModel(cloud),
-      subPropsDict_(cloud.couplingPropertiesDict().subDict(typeName_ + "Props")),
-      alphaMin_(subPropsDict_.lookupOrDefault<double>("alphaMin", 0.0)),
-      alphaMax_(subPropsDict_.lookupOrDefault<double>("alphaMax", 1.0)) {
+    : voidFractionModel(cloud), subPropsDict_(cloud.couplingPropertiesDict().subDict(typeName_ + "Props")) {
   // 单个颗粒覆盖最多网格数量
   maxCellsNumPerCoarseParticle_ = subPropsDict_.lookupOrDefault<int>("maxCellsNumPerCoarseParticle", 1000);
 }
@@ -96,8 +93,8 @@ void IBVoidFraction::setVoidFraction() {
         // 保存颗粒覆盖的所有网格编号
         cloud_.cellIDs()[index][i] = cellID;
         // 保存 volumeFraction
-        volumeFractionNext_[cellID] = volumeFractionNext_[cellID] < alphaMin_ ? alphaMin_ : volumeFractionNext_[cellID];
-        volumeFractionNext_[cellID] = volumeFractionNext_[cellID] > alphaMax_ ? alphaMax_ : volumeFractionNext_[cellID];
+        volumeFractionNext_[cellID] = volumeFractionNext_[cellID] < 0.0 ? 0.0 : volumeFractionNext_[cellID];
+        volumeFractionNext_[cellID] = volumeFractionNext_[cellID] > 1.0 ? 1.0 : volumeFractionNext_[cellID];
         cloud_.volumeFractions()[index][i] = volumeFractionNext_[cellID];
       }
     } else {
@@ -140,6 +137,7 @@ void IBVoidFraction::setVolumeFractionForSingleParticle(const int index,
       // 如果 coronaPoint 不在颗粒中, 则需要遍历网格的所有角点, 判断角点与网格中心是否在颗粒中
       const labelList& vertexPoints = cloud_.mesh().cellPoints()[findCellID];
       double ratio = 0.125;
+      scalar voidF = 1.0;
       // 遍历当前网格的所有角点
       forAll(vertexPoints, i) {
         // 获取第 i 角点坐标
@@ -148,19 +146,32 @@ void IBVoidFraction::setVolumeFractionForSingleParticle(const int index,
         scalar fv = pointInParticle(vertexPosition, particleCentre, radius);
         if (fc < 0.0 && fv < 0.0) {
           // 网格中心在颗粒中, 角点也在颗粒中
-          volumeFractionNext_[findCellID] -= ratio;
+          voidF -= ratio;
         } else if (fc < 0.0 && fv >= 0.0) {
           // 网格中心在颗粒中, 角点不在颗粒中
           // 计算角点 vertexPosition 对体积分数的影响系数 lambda
           double lambda = segmentParticleIntersection(radius, particleCentre, cellCentre, vertexPosition);
-          volumeFractionNext_[findCellID] -= ratio * lambda;
+          voidF -= ratio * lambda;
         } else if (fc >= 0.0 && fv < 0.0) {
           // 网格中心不在颗粒中, 角点在颗粒中
           // 计算角点 vertexPosition 对体积分数的影响系数 lambda
           double lambda = segmentParticleIntersection(radius, particleCentre, vertexPosition, cellCentre);
-          volumeFractionNext_[findCellID] -= ratio * lambda;
+          voidF -= ratio * lambda;
         }
       }  // End of loop of vertexPoints
+      // 保证体积分数 >= 0
+      voidF = voidF < 0.0 ? 0.0 : voidF;
+      voidF = voidF > 1.0 ? 1.0 : voidF;
+      if (fabs(volumeFractionNext_[findCellID] - 1.0) < Foam::SMALL) {
+        // 如果 findCellID 网格的体积分数为 1.0, 则说明第一次遍历到该网格, 可以直接赋值
+        volumeFractionNext_[findCellID] = voidF;
+      } else {
+        // 如果 findCellID 网格的体积分数不为 1.0, 则说明在计算其他颗粒时候, 已经遍历到该网格
+        volumeFractionNext_[findCellID] -= (1.0 - voidF);
+        // 保证体积分数 >= 0
+        volumeFractionNext_[findCellID] = volumeFractionNext_[findCellID] < 0.0 ? 0.0 : volumeFractionNext_[findCellID];
+        volumeFractionNext_[findCellID] = volumeFractionNext_[findCellID] > 1.0 ? 1.0 : volumeFractionNext_[findCellID];
+      }
     }
     // 颗粒中心所在网格的体积分数已经计算完成, 下面开始递归构建相邻网格
     buildLabelHashSetForVolumeFraction(findCellID, particleCentre, radius, hashSetPtr);
@@ -208,7 +219,7 @@ void IBVoidFraction::buildLabelHashSetForVolumeFraction(const label cellID, cons
         // 如果相邻网格的 coronaPoint 不在颗粒中, 则需要遍历该网格的所有角点
         // 定义单个角点对空隙率的影响率
         double ratio = 0.125;
-        scalar scale = 1.0;
+        scalar voidF = 1.0;
         // 获取 neighbour 网格的角点集合
         const labelList& vertexPoints = cloud_.mesh().cellPoints()[neighbour];
         /// 遍历网格 neighbour 的角点
@@ -218,31 +229,30 @@ void IBVoidFraction::buildLabelHashSetForVolumeFraction(const label cellID, cons
           // 判断角点是否在颗粒中
           scalar fv = pointInParticle(vertexPosition, particleCentre, radius);
           if (fc < 0.0 && fv < 0.0) {  // 如果网格 neighbour 中心在颗粒中, 角点 j 也在颗粒中
-            scale -= ratio;
+            voidF -= ratio;
           } else if (fc < 0.0 && fv > 0.0) {  // 如果网格 neighbour 中心在颗粒中, 角点 j 不在颗粒中
             // 计算角点对空隙率的影响系数 lambda
             scalar lambda = segmentParticleIntersection(radius, particleCentre, neighbourCentre, vertexPosition);
-            scale -= lambda * ratio;
+            voidF -= lambda * ratio;
           } else if (fc > 0.0 && fv < 0.0) {  // 如果网格 neighbour 中心不在颗粒中, 角点 j 在颗粒中
             scalar lambda = segmentParticleIntersection(radius, particleCentre, vertexPosition, neighbourCentre);
-            scale -= lambda * ratio;
+            voidF -= lambda * ratio;
           }
         }  // End of loop vertexPoints
         // 保证体积分数 >= 0
-        scale = scale < 0.0 ? 0.0 : scale;
-        scale = scale > 1.0 ? 1.0 : scale;
+        voidF = voidF < 0.0 ? 0.0 : voidF;
+        voidF = voidF > 1.0 ? 1.0 : voidF;
         if (fabs(volumeFractionNext_[neighbour] - 1.0) < Foam::SMALL) {
           // 如果 neighbour 网格的体积分数为 1.0, 则说明第一次遍历到该网格, 可以直接赋值
-          volumeFractionNext_[neighbour] = scale;
+          volumeFractionNext_[neighbour] = voidF;
         } else {
           // 如果 neighbour 网格的体积分数不为 1.0, 则说明在计算其他颗粒时候, 已经遍历到该网格
-          volumeFractionNext_[neighbour] -= (1.0 - scale);
-          volumeFractionNext_[neighbour] =
-              volumeFractionNext_[neighbour] < alphaMin_ ? alphaMin_ : volumeFractionNext_[neighbour];
-          volumeFractionNext_[neighbour] =
-              volumeFractionNext_[neighbour] > alphaMax_ ? alphaMax_ : volumeFractionNext_[neighbour];
+          volumeFractionNext_[neighbour] -= (1.0 - voidF);
+          // 保证体积分数 >= 0
+          volumeFractionNext_[neighbour] = volumeFractionNext_[neighbour] < 0.0 ? 0.0 : volumeFractionNext_[neighbour];
+          volumeFractionNext_[neighbour] = volumeFractionNext_[neighbour] > 1.0 ? 1.0 : volumeFractionNext_[neighbour];
         }
-        if (!(fabs(scale - 1.0) < Foam::SMALL)) {
+        if (!(fabs(voidF - 1.0) < Foam::SMALL)) {
           // 如果体积分数不为 1.0, 则说明该 neighbour 需要递归循环构建哈希集合
           buildLabelHashSetForVolumeFraction(neighbour, particleCentre, radius, hashSetPtr);
         }
@@ -285,8 +295,7 @@ Foam::vector IBVoidFraction::getCoronaPointPosition(const Foam::vector& particle
  * \param pointOutside   <[in] 网格角点
  */
 double IBVoidFraction::segmentParticleIntersection(double radius, const Foam::vector& particleCentre,
-                                                   const Foam::vector& pointInside,
-                                                   const Foam::vector& pointOutside) {
+                                                   const Foam::vector& pointInside, const Foam::vector& pointOutside) {
   // 计算方程系数 a*(x^2) - b*x + c = 0
   double a = (pointOutside - pointInside) & (pointOutside - pointInside);
   double b = 2.0 * (pointOutside - pointInside) & (pointInside - particleCentre);

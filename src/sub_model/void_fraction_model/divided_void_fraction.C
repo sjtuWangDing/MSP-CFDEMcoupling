@@ -53,6 +53,9 @@ dividedVoidFraction::dividedVoidFraction(cfdemCloud& cloud)
   porosity_ = subPropsDict_.lookupOrDefault<double>("porosity", 1.0);
   verbose_ = subPropsDict_.lookupOrDefault<bool>("verbose", false);
   alphaMin_ = subPropsDict_.lookupOrDefault<double>("alphaMin", 0.0);
+  if (alphaMin_ > 1 || alphaMin_ < 0.01) {
+    FatalError << __func__ << ": alphaMin shloud be > 1 and < 0.01." << abort(FatalError);
+  }
 }
 
 //! \brief Destructor

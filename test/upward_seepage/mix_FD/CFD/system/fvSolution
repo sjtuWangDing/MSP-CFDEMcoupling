@@ -21,7 +21,7 @@ solvers
     solver          PCG;
     preconditioner  DIC;
     tolerance       1e-06;
-    relTol          0.1;
+    relTol          0;
   }
 
   pFinal
@@ -32,7 +32,7 @@ solvers
     relTol          0;
   }
 
-  "(U|k|epsilon|R|nuTilda)"
+  U
   {
     solver          PBiCG;
     preconditioner  DILU;
@@ -40,19 +40,51 @@ solvers
     relTol          0;
   }
 
-  "(voidFraction|Ksl|UsNext|voidFractionNext|sSmoothField|vSmoothField|fSmooth)"
+  k
+  {
+    solver          PBiCG;
+    preconditioner  DILU;
+    tolerance       1e-05;
+    relTol          0;
+  }
+
+  epsilon
+  {
+    solver          PBiCG;
+    preconditioner  DILU;
+    tolerance       1e-05;
+    relTol          0;
+  }
+
+  R
+  {
+    solver          PBiCG;
+    preconditioner  DILU;
+    tolerance       1e-05;
+    relTol          0;
+  }
+
+  nuTilda
+  {
+    solver          PBiCG;
+    preconditioner  DILU;
+    tolerance       1e-05;
+    relTol          0;
+  }
+
+  phiIB
   {
     solver          PCG;
     preconditioner  DIC;
-    tolerance       1e-09;
-    relTol          1e-06;
+    tolerance       1e-06;
+    relTol          0;
   }
 }
 
 PISO
 {
   nCorrectors     4;
-  nNonOrthogonalCorrectors 2;
+  nNonOrthogonalCorrectors 0;
   pRefCell        0;
   pRefValue       0;
 }
