@@ -21,13 +21,13 @@ FoamFile
 
 modelType none;
 
-couplingInterval 50;
+couplingInterval 100;
 
-refineMeshSkin 1.1;
+refineMeshSkin 1.2;
 
 globalForce mixGlobalForce;
 
-minCoarseParticleRadius 0.007;
+minCoarseParticleRadius 0.01;
 
 useGuoBBOEquation false;
 
@@ -35,10 +35,10 @@ useDDtVoidFraction true;
 
 forceModels
 (
-    ArchimedesIB
-    ShirgaonkarIB
-    Archimedes
-    mixDragForce
+  ArchimedesIB
+  ShirgaonkarIB
+  Archimedes
+  mixDragForce
 );
 
 momCoupleModels
@@ -75,13 +75,13 @@ implicitCoupleProps
 
 ArchimedesIBProps
 {
-    verbose true;
+  verbose true;
 }
 
 ShirgaonkarIBProps
 {
-    useTorque true;
-    verbose true;
+  useTorque true;
+  verbose true;
 }
 
 ArchimedesProps
@@ -107,12 +107,12 @@ mixDragForceProps
 
 twoWayMPIProps
 {
-    liggghtsPath "../DEM/in.liggghts_run";
+  liggghtsPath "../DEM/in.liggghts_run";
 }
 
 mixProps
 {
-  alphaMin 0.01;
+  alphaMin 0.0;
   scaleUpVol 1.0;
   maxCellsNumPerCoarseParticle 10000000;
 }

@@ -7,21 +7,45 @@
 \*---------------------------------------------------------------------------*/
 FoamFile
 {
-  version     2.0;
-  format      ascii;
-  class       volVectorField;
-  location    "0";
-  object      Us;
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      controlDict;
 }
 
-dimensions      [0 1 -1 0 0 0 0];
+application     mspCfdemSolverIBOpti;
 
-internalField   uniform (0 0 0);
+startFrom       startTime;
 
-boundaryField
-{
-  ".*"
-  {
-    type            zeroGradient;
-  }
-}
+startTime       0;
+
+stopAt          endTime;
+
+endTime         2;
+
+deltaT          0.001;
+
+writeControl    adjustableRunTime;
+
+writeInterval   0.001;
+
+purgeWrite      0;
+
+writeFormat     ascii;
+
+writePrecision  10;
+
+writeCompression uncompressed;
+
+timeFormat      general;
+
+timePrecision   10;
+
+runTimeModifiable off;//yes;
+
+adjustTimeStep  no;
+
+maxCo           1;
+
+maxDeltaT       1;

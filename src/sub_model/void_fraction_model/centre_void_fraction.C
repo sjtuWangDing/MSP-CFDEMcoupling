@@ -37,6 +37,9 @@ cfdemCreateNewFunctionAdder(voidFractionModel, centreVoidFraction);
 centreVoidFraction::centreVoidFraction(cfdemCloud& cloud) : voidFractionModel(cloud), alphaMin_(0.0) {
   weight_ = subPropsDict_.lookupOrDefault<double>("weight", 1.0);
   alphaMin_ = subPropsDict_.lookupOrDefault<double>("alphaMin", 0.0);
+  if (alphaMin_ > 1 || alphaMin_ < 0.01) {
+    FatalError << __func__ << ": alphaMin shloud be > 1 and < 0.01." << abort(FatalError);
+  }
 }
 
 //! \brief Destructor

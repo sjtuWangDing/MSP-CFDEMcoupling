@@ -30,6 +30,6 @@ boundaryField
   outlet
   {
     type            fixedValue;
-    value           uniform 0;
+    value           $internalField;
   }
 }
