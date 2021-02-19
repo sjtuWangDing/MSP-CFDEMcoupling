@@ -7,10 +7,10 @@
 \*---------------------------------------------------------------------------*/
 FoamFile
 {
-    version     2.0;
-    format      ascii;
-    class       dictionary;
-    object      blockMeshDict;
+  version     2.0;
+  format      ascii;
+  class       dictionary;
+  object      blockMeshDict;
 }
 
 convertToMeters 1;
@@ -29,28 +29,24 @@ vertices
 
 blocks
 (
-    hex (0 1 2 3 4 5 6 7) (60 60 96) simpleGrading (1 1 1)
-);
-
-edges
-(
+  hex (0 1 2 3 4 5 6 7) (60 60 96) simpleGrading (1 1 1)
 );
 
 patches
 (
-  wall inlet
+  wall down
   (
     (0 3 2 1)
   )
-  wall wall
+  wall up
+  (
+    (4 5 6 7)
+  )
+  wall walls
   (
     (2 6 5 1)
     (0 4 7 3)
     (3 7 6 2)
     (1 5 4 0)
-  )
-  wall outlet
-  (
-    (4 5 6 7)
   )
 );
