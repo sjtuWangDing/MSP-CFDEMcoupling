@@ -29,6 +29,12 @@
 #export MSP_CFDEM_VERBOSE=false
 #. $MSP_CFDEM_bashrc
 ##-----------------------------------------------------------------------------
+## define multi version coexistence
+#export MSP_CFDEM_VERBOSE=false
+## . $MSP_CFDEM_bashrc
+#alias cfdem="source $HOME/CFDEM/MSP-CFDEMcoupling-$WM_PROJECT_VERSION/etc/bashrc"
+#alias cfdem_debug="source $HOME/CFDEM/MSP-CFDEMcoupling-debug/etc/bashrc"
+##-----------------------------------------------------------------------------
 
 echo_()
 {
@@ -64,21 +70,35 @@ set_var_() {
   fi
 }
 
+#- Set OpenFOAM project dir
+export MSP_OF_PROJECT_DIR=$FOAM_INST_DIR/$WM_PROJECT-$WM_PROJECT_VERSION
+
+#- Set MSP-CFDEM EVs
+# MSP_CFDEM_PROJECT_DIR is the location of the CFDEM installation which defaults to
+# the directory containing this file if sourced by a bash shell.
+export MSP_CFDEM_PROJECT_DIR=$(cd $(dirname ${BASH_SOURCE:-$0})/.. && pwd -P)
+export MSP_CFDEM_ETC_DIR=$MSP_CFDEM_PROJECT_DIR/etc
+export MSP_CFDEM_SOLVERS_DIR=$MSP_CFDEM_PROJECT_DIR/solvers
+export MSP_CFDEM_SRC_DIR=$MSP_CFDEM_PROJECT_DIR/src
+export MSP_CFDEM_TEST_DIR=$MSP_CFDEM_PROJECT_DIR/test
+export MSP_CFDEM_TOOLS_DIR=$MSP_CFDEM_PROJECT_DIR/tools
+export MSP_CFDEM_bashrc=$MSP_CFDEM_ETC_DIR/bashrc
+if [[ "$MSP_CFDEM_PROJECT_DIR" = *"-debug" ]]; then
+  echo "Load cfdem debug environment - done"
+else
+  echo "Load cfdem environment - done"
+fi
+
+#- Set MSP-CFDEM lib name
+export MSP_CFDEM_LIB_DIR=$MSP_CFDEM_PROJECT_DIR/platforms/$WM_OPTIONS/lib
+export MSP_CFDEM_BIN_DIR=$MSP_CFDEM_PROJECT_DIR/platforms/$WM_OPTIONS/bin
+
+#- Set LIGGGHTS EVs
 set_var_ LIGGGHTS_DIR $HOME/LIGGGHTS/LIGGGHTS-PUBLIC
 set_var_ LIGGGHTS_SRC_DIR $LIGGGHTS_DIR/src
 set_var_ LPP_DIR $HOME/LIGGGHTS/lpp
-
-set_var_ MSP_CFDEM_ETC_DIR $MSP_CFDEM_PROJECT_DIR/etc
-set_var_ MSP_CFDEM_SOLVERS_DIR $MSP_CFDEM_PROJECT_DIR/solvers
-set_var_ MSP_CFDEM_SRC_DIR $MSP_CFDEM_PROJECT_DIR/src
-set_var_ MSP_CFDEM_TEST_DIR $MSP_CFDEM_PROJECT_DIR/test
-set_var_ MSP_CFDEM_TOOLS_DIR $MSP_CFDEM_PROJECT_DIR/tools
 set_var_ LIGGGHTS_MAKEFILE_NAME "auto"
 set_var_ LIGGGHTS_MAKEFILE_POSTFIX ""
-
-#- MSP-CFDEM lib name
-export MSP_CFDEM_LIB_DIR=$MSP_CFDEM_PROJECT_DIR/platforms/$WM_OPTIONS/lib
-export MSP_CFDEM_BIN_DIR=$MSP_CFDEM_PROJECT_DIR/platforms/$WM_OPTIONS/bin
 
 #- Important! add lib dir to $LD_LIBRARY_PATH
 # If not add lib dir to $LD_LIBRARY_PATH, loader will not find dynamic lib file and report error:

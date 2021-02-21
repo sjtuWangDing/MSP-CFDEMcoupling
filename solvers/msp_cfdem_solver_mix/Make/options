@@ -1,5 +1,5 @@
-sinclude /home/dw/OpenFOAM/OpenFOAM-5.x/wmake/rules/General/mplibSYSTEMOPENMPI
-include /home/dw/CFDEM/MSP-CFDEMcoupling-5.x/etc/libs/libs_5.x
+sinclude $(MSP_OF_PROJECT_DIR)/wmake/rules/General/mplibSYSTEMOPENMPI
+include $(MSP_CFDEM_ETC_DIR)/libs/libs_5.x
 
 $(shell if [ ! -d "$(MSP_CFDEM_BIN_DIR)" ]; then mkdir -p "$(MSP_CFDEM_BIN_DIR)"; fi)
 
