@@ -62,9 +62,9 @@ class mixVoidFraction : public voidFractionModel {
   /*!
    * \brief 设置单个颗粒的体积分数场
    * \param index 颗粒索引
-   * \param hashSetPtr 哈希集合，用于保存颗粒覆盖的网格索引
+   * \param set   颗粒覆盖的网格索引的集合
    */
-  void setVolumeFractionForSingleParticle(int index, const std::unique_ptr<labelHashSet>& hashSetPtr);
+  void setVolumeFractionForSingleParticle(int index, std::unordered_set<int>& set);
 
   /*!
    * \brief 构建颗粒覆盖的所有网格的哈希集合
@@ -72,10 +72,10 @@ class mixVoidFraction : public voidFractionModel {
    * \param cellID         <[in] 递归循环中要检索网格编号
    * \param particleCentre <[in] 颗粒中心位置
    * \param radius         <[in] 颗粒半径
-   * \param hashSetPtr     <[in, out] 需要构建的哈希集
+   * \param set            <[in, out] 颗粒覆盖的网格索引的集合
    */
-  void buildLabelHashSetForVolumeFraction(const label cellID, const Foam::vector& particleCentre, const double radius,
-                                          const std::unique_ptr<labelHashSet>& hashSetPtr);
+  void buildSetForVolumeFraction(const label cellID, const Foam::vector& particleCentre, const double radius,
+                                 std::unordered_set<int>& set);
 
  private:
   dictionary subPropsDict_;

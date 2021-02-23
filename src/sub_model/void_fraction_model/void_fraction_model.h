@@ -39,6 +39,7 @@ Class
 #ifndef __VOID_FRACTION_MODEL_H__
 #define __VOID_FRACTION_MODEL_H__
 
+#include <unordered_map>
 #include <unordered_set>
 #include "base/run_time_selection_tables.h"
 #include "cloud/cfdem_cloud.h"
