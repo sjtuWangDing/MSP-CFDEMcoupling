@@ -112,7 +112,7 @@ twoWayMPIProps
 mixProps
 {
   verbose true;
-  alphaMin 0.01;
+  alphaMin 0.3;
   scaleUpVol 1.0;
 }
 

@@ -140,13 +140,13 @@ mixProps
 
 centreProps
 {
-  alphaMin 0.30;
+  alphaMin 0.3;
 }
 
 bigParticleProps
 {
   maxCellsPerParticle 1000;
-  alphaMin 0.30;
+  alphaMin 0.3;
   scaleUpVol 1.0;
 }
 

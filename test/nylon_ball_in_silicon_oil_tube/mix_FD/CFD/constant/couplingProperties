@@ -112,7 +112,7 @@ twoWayMPIProps
 
 mixProps
 {
-  alphaMin 0.01;
+  alphaMin 0.3;
   scaleUpVol 1.0;
   maxCellsNumPerCoarseParticle 10000000;
 }
