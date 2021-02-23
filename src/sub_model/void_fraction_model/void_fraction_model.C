@@ -216,6 +216,9 @@ void voidFractionModel::buildExpandedCellSet(std::unordered_set<int>& set, const
   // 遍历链表
   for (int i = 0; i < nc.size(); ++i) {
     int neighbourCellID = nc[i];
+    if (neighbourCellID < 0) {
+      continue;
+    }
     neighbourPos = cloud_.mesh().C()[neighbourCellID];
     // 在集合中没有 neighbour 网格的索引
     if (set.end() == set.find(neighbourCellID)) {
@@ -228,6 +231,9 @@ void voidFractionModel::buildExpandedCellSet(std::unordered_set<int>& set, const
         const labelList& vertexPoints = cloud_.mesh().cellPoints()[neighbourCellID];
         // 遍历当前网格的所有角点
         forAll(vertexPoints, i) {
+          if (vertexPoints[i] < 0) {
+            continue;
+          }
           // 获取第 i 角点坐标
           vector vertexPosition = cloud_.mesh().points()[vertexPoints[i]];
           // 判断角点是否在颗粒中

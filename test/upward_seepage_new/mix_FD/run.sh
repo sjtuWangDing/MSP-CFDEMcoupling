@@ -9,6 +9,13 @@
 . $HOME/.bashrc
 . $MSP_CFDEM_bashrc
 
+# set stack size to 100MB
+defaultStackSize=`ulimit -s`
+if [ $defaultStackSize -lt 102400 ]; then
+  ulimit -s 102400
+  echo "Set stack size to 100MB - done"
+fi
+
 # include functions mspCfdemParallelRun
 source $MSP_CFDEM_TOOLS_DIR/msp_cfdem_parallel_run.sh
 
@@ -16,7 +23,7 @@ source $MSP_CFDEM_TOOLS_DIR/msp_cfdem_parallel_run.sh
 casePath="$(dirname "$(readlink -f ${BASH_SOURCE[0]})")"
 solverDir="$MSP_CFDEM_BIN_DIR"
 solverName="mspCfdemSolverMix"
-numberOfProcs="16"
+numberOfProcs="8"
 machineFileName="none" # yourMachinefileName
 logPath=$casePath
 logFileName="log_mpirun_$numberOfProcs_$solverName"

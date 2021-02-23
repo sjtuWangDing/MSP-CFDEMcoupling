@@ -42,14 +42,12 @@ Syntax
   IBProps
   {
     maxCellsPerParticle number1;
-    alphaMin number2;
-    scaleUpVol number3;
+    scaleUpVol number2;
     checkPeriodicCells ;
   }
   - number1 = maximum number of cells covered by a particle (search will
               fail when more than number1 cells are covered by the particle)
-  - number2 = minimum limit for voidfraction
-  - number3 = diameter of the particle’s representation is artificially
+  - number2 = diameter of the particle’s representation is artificially
               increased according to number3 * Vparticle, volume remains
               unaltered!
   - checkPeriodicCells = (optional, default false) flag for considering the
@@ -108,8 +106,17 @@ class IBVoidFraction : public voidFractionModel {
    * \param cellCentre      <[in] 指定网格中心
    * \param corona          <[in] 指定网格的等效半径
    */
-  static Foam::vector getCoronaPointPosition(const Foam::vector& particleCentre, const Foam::vector& cellCentre,
-                                             const scalar corona);
+  static inline Foam::vector getCoronaPointPosition(const Foam::vector& particleCentre, const Foam::vector& cellCentre,
+                                                    const scalar corona) {
+    // 计算网格中心到颗粒中心的距离
+    scalar centreDist = mag(cellCentre - particleCentre);
+    vector coronaPoint = cellCentre;
+    if (centreDist > 0.0) {
+      coronaPoint = cellCentre + (cellCentre - particleCentre) * (corona / centreDist);
+      return coronaPoint;
+    }
+    return coronaPoint;
+  }
 
  protected:
   /*!

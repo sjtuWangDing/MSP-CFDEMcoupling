@@ -228,6 +228,9 @@ void mixVoidFraction::setVolumeFractionForSingleParticle(const int index,
       double voidF = 1.0;
       // 遍历当前网格的所有角点
       forAll(vertexPoints, i) {
+        if (vertexPoints[i] < 0) {
+          continue;
+        }
         // 获取第 i 角点坐标
         vector vertexPosition = cloud_.mesh().points()[vertexPoints[i]];
         // 判断角点是否在颗粒中
@@ -281,6 +284,9 @@ void mixVoidFraction::setVolumeFractionForSingleParticle(const int index,
 void mixVoidFraction::buildLabelHashSetForVolumeFraction(const label cellID, const Foam::vector& particleCentre,
                                                          const double radius,
                                                          const std::unique_ptr<labelHashSet>& hashSetPtr) {
+  if (cellID < 0) {
+    return;
+  }
   hashSetPtr->insert(cellID);
   // 获取 cellID 网格的所有 neighbour cell 的链表
   const labelList& nc = cloud_.mesh().cellCells()[cellID];
@@ -316,6 +322,9 @@ void mixVoidFraction::buildLabelHashSetForVolumeFraction(const label cellID, con
         const labelList& vertexPoints = cloud_.mesh().cellPoints()[neighbour];
         /// 遍历网格 neighbour 的角点
         forAll(vertexPoints, j) {
+          if (vertexPoints[j] < 0) {
+            continue;
+          }
           // 获取角点坐标
           Foam::vector vertexPosition = cloud_.mesh().points()[vertexPoints[j]];
           // 判断角点是否在颗粒中

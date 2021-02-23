@@ -262,27 +262,6 @@ void IBVoidFraction::buildLabelHashSetForVolumeFraction(const label cellID, cons
 }
 
 /*!
- * \brief 获取 Corona Point
- * \note Corona Point 是在以网格中心为中心, 半径为 corona 的球面上, 距离颗粒中心最远的点
- *       其中, 半径 corona = 0.5 * sqrt(3) * 网格等效半径
- *       网格等效半径 = pow(cellVolume, 1.0 / 3.0)
- * \param particleCentre  <[in] 指定颗粒中心
- * \param cellCentre      <[in] 指定网格中心
- * \param corona          <[in] 指定网格的等效半径
- */
-Foam::vector IBVoidFraction::getCoronaPointPosition(const Foam::vector& particleCentre, const Foam::vector& cellCentre,
-                                                    const scalar corona) {
-  // 计算网格中心到颗粒中心的距离
-  scalar centreDist = mag(cellCentre - particleCentre);
-  vector coronaPoint = cellCentre;
-  if (centreDist > 0.0) {
-    coronaPoint = cellCentre + (cellCentre - particleCentre) * (corona / centreDist);
-    return coronaPoint;
-  }
-  return coronaPoint;
-}
-
-/*!
  * \brief 计算距离系数，对任意一个网格, 如果网格中心 c 在颗粒内部, 但是它的某个角点 p
  *   不在颗粒内部, 则计算 c 与 p 的连线与颗粒表面的交点 i 到网格中心 c 的距离, 即
  *   求解 x 的二元一次方程
