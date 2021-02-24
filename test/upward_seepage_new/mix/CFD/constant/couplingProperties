@@ -23,7 +23,7 @@ modelType B;
 
 couplingInterval 100;
 
-expandedCellScale 4;
+expandedCellScale 5;
 
 allowUseSubCFDTimeStep false;
 

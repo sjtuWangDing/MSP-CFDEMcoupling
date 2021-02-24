@@ -9,6 +9,13 @@
 . $HOME/.bashrc
 . $MSP_CFDEM_bashrc
 
+# set stack size to 100MB
+defaultStackSize=`ulimit -s`
+if [ $defaultStackSize -lt 102400 ]; then
+  ulimit -s 102400
+  echo "Set stack size to 100MB - done"
+fi
+
 # include functions mspCfdemParallelRun
 source $MSP_CFDEM_TOOLS_DIR/msp_cfdem_parallel_run.sh
 
@@ -57,7 +64,6 @@ mspCfdemParallelRun $casePath "$solverDir/$solverName" $numberOfProcsCFD $machin
 # define variables for post-process
 runOctave="false"
 postProc="true"
-liggghtsDumpFileName="dump.run"
 
 if [ $runOctave = "true" ]; then
   echo
@@ -69,7 +75,18 @@ if [ $postProc = "true" ]; then
   # get VTK data from liggghts dump file
   echo
   cd $casePath/DEM/post
-  python2 $LPP_DIR/src/lpp.py $liggghtsDumpFileName
+  if [ ! -d "$casePath/DEM/post/coarse" ]; then
+    mkdir "$casePath/DEM/post/coarse"
+  fi
+  if [ ! -d "$casePath/DEM/post/fine" ]; then
+    mkdir "$casePath/DEM/post/fine"
+  fi
+  cp $casePath/DEM/post/dump_coarseParticles.run $casePath/DEM/post/coarse
+  cp $casePath/DEM/post/dump_fineParticles.run $casePath/DEM/post/fine
+  cd $casePath/DEM/post/coarse
+  python2 $LPP_DIR/src/lpp.py dump_coarseParticles.run
+  cd $casePath/DEM/post/fine
+  python2 $LPP_DIR/src/lpp.py dump_fineParticles.run
 fi
 
 #- keep terminal open (if started in new terminal)
