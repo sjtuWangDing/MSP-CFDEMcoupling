@@ -54,7 +54,7 @@ voidFractionModel::voidFractionModel(cfdemCloud& cloud)
       porosity_(1.0),
       voidFractionPrev_(IOobject("voidFractionPrev", cloud.mesh().time().timeName(), cloud.mesh(),
                                  IOobject::READ_IF_PRESENT,  // or MUST_READ,
-                                 IOobject::AUTO_WRITE),
+                                 IOobject::NO_WRITE),
                         // cloud.mesh().lookupObject<volScalarField>("voidFraction")
                         cloud.mesh(), dimensionedScalar("zero", dimensionSet(0, 0, 0, 0, 0), 1)),
       voidFractionNext_(IOobject("voidFractionNext", cloud.mesh().time().timeName(), cloud.mesh(),
@@ -64,7 +64,7 @@ voidFractionModel::voidFractionModel(cfdemCloud& cloud)
                         cloud.mesh(), dimensionedScalar("zero", dimensionSet(0, 0, 0, 0, 0), 1)),
       volumeFractionPrev_(IOobject("volumeFractionPrev", cloud.mesh().time().timeName(), cloud.mesh(),
                                    IOobject::READ_IF_PRESENT,  // or MUST_READ,
-                                   IOobject::AUTO_WRITE),
+                                   IOobject::NO_WRITE),
                           // cloud.mesh().lookupObject<volScalarField>("volumeFraction")
                           cloud.mesh(), dimensionedScalar("zero", dimensionSet(0, 0, 0, 0, 0), 1)),
       volumeFractionNext_(IOobject("volumeFractionNext", cloud.mesh().time().timeName(), cloud.mesh(),

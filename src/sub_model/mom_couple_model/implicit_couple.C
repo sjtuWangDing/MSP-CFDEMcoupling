@@ -49,11 +49,11 @@ implicitCouple::implicitCouple(cfdemCloud& cloud)
       KslLimit_(1e10),
       KslPrev_(IOobject("KslPrev", cloud.mesh().time().timeName(), cloud.mesh(),
                         IOobject::READ_IF_PRESENT,  // MUST_READ,
-                        IOobject::AUTO_WRITE),
+                        IOobject::NO_WRITE),
                cloud.mesh().lookupObject<volScalarField>("Ksl")),
       KslNext_(IOobject("KslNext", cloud.mesh().time().timeName(), cloud.mesh(),
                         IOobject::READ_IF_PRESENT,  // MUST_READ,
-                        IOobject::AUTO_WRITE),
+                        IOobject::NO_WRITE),
                cloud.mesh().lookupObject<volScalarField>("Ksl")) {
   if (subPropsDict_.found("KslLimit")) {
     KslLimit_ = readScalar(subPropsDict_.lookup("KslLimit"));

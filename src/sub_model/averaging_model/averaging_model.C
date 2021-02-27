@@ -46,11 +46,11 @@ cfdmeDefineBaseTypeNew(autoPtr, averagingModel, (cfdemCloud & cloud, const dicti
 //! \brief Constructor
 averagingModel::averagingModel(cfdemCloud& cloud)
     : cloud_(cloud),
-      UsPrev_(IOobject("UsPrev", cloud.mesh().time().timeName(), cloud.mesh(), IOobject::READ_IF_PRESENT,
-                       IOobject::AUTO_WRITE),
+      UsPrev_(IOobject("UsPrev", cloud.mesh().time().timeName(), cloud.mesh(), IOobject::NO_READ,
+                       IOobject::NO_WRITE),
               cloud_.mesh(), dimensionedVector("zero", dimensionSet(0, 1, -1, 0, 0), Foam::vector::zero)),
-      UsNext_(IOobject("UsNext", cloud.mesh().time().timeName(), cloud.mesh(), IOobject::READ_IF_PRESENT,
-                       IOobject::AUTO_WRITE),
+      UsNext_(IOobject("UsNext", cloud.mesh().time().timeName(), cloud.mesh(), IOobject::NO_READ,
+                       IOobject::NO_WRITE),
               cloud_.mesh(), dimensionedVector("zero", dimensionSet(0, 1, -1, 0, 0), Foam::vector::zero)),
       UsWeightField_(IOobject("UsWeightField", cloud.mesh().time().timeName(), cloud.mesh(), IOobject::NO_READ,
                               IOobject::AUTO_WRITE),
