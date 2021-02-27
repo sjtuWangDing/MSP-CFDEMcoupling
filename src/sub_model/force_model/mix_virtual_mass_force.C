@@ -75,6 +75,7 @@ void mixVirtualMassForce::setForce() {
                                    cloud_.globalF().ddtU())
             .ptr());
   }
+  std::once_flag onceOp;
   for (int index = 0; index < cloud_.numberOfParticles(); ++index) {
     // 只设置 fine and middle 颗粒的虚拟质量力
     if (cloud_.checkCoarseParticle(index)) {
@@ -82,13 +83,13 @@ void mixVirtualMassForce::setForce() {
     }
     // 虚拟质量力
     Foam::vector mixVirtualMassForce = Foam::vector::zero;
-    setForceKernel(index, mixVirtualMassForce);
+    setForceKernel(index, mixVirtualMassForce, onceOp);
     forceSubModel_->partToArray(index, mixVirtualMassForce, Foam::vector::zero, Foam::vector::zero, 0);
   }
   base::MPI_Info("Setting mix virtual mass force - done", true);
 }
 
-void mixVirtualMassForce::setForceKernel(const int index, Foam::vector& mixVirtualMassForce) {
+void mixVirtualMassForce::setForceKernel(const int index, Foam::vector& mixVirtualMassForce, std::once_flag& onceOp) {
   // 颗粒中心所在网格的索引
   int findCellID = cloud_.findCellIDs()[index];
   // 对于每一个颗粒，只需要一个处理器计算，即颗粒中心所在的处理器
@@ -126,16 +127,18 @@ void mixVirtualMassForce::setForceKernel(const int index, Foam::vector& mixVirtu
     if ("B" == cloud_.modelType()) {
       mixVirtualMassForce /= vf;
     }
-    if (forceSubModel_->verbose() && 0 == index) {
-      Pout << "vf = " << vf << endl;
-      Pout << "Ufluid = " << Ufluid << endl;
-      Pout << "ddtU = " << ddtU << endl;
-      Pout << "ddtUp = " << ddtUp << endl;
-      Pout << "ddtUr = " << ddtUr << endl;
-      Pout << "Ac = " << Ac << endl;
-      Pout << "Cvm = " << Cvm << endl;
-      Pout << "mix virtual mass force = " << mixVirtualMassForce << endl;
-    }
+    std::call_once(onceOp, [&]() {
+      if (forceSubModel_->verbose() && mag(mixVirtualMassForce) > Foam::SMALL) {
+        // Pout << "vf = " << vf << endl;
+        // Pout << "Ufluid = " << Ufluid << endl;
+        // Pout << "ddtU = " << ddtU << endl;
+        // Pout << "ddtUp = " << ddtUp << endl;
+        Pout << "ddtUr = " << ddtUr << endl;
+        Pout << "Ac = " << Ac << endl;
+        Pout << "Cvm = " << Cvm << endl;
+        Pout << "mix virtual mass force (total) = " << mixVirtualMassForce << endl;
+      }
+    });
   }
 }
 

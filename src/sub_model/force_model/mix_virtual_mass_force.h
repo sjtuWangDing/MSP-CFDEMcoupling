@@ -48,7 +48,7 @@ class mixVirtualMassForce : public forceModel {
   void setForce();
 
  protected:
-  void setForceKernel(const int index, Foam::vector& mixVirtualMassForce);
+  void setForceKernel(const int index, Foam::vector& mixVirtualMassForce, std::once_flag& onceOp);
 
   void setMiddleParticleForceKernel(Foam::vector& force, const int index);
 
