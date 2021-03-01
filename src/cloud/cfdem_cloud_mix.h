@@ -56,10 +56,11 @@ class cfdemCloudMix : public cfdemCloud {
    * \param volumeF    <[in, out] 大颗粒空隙率场
    * \param Us         <[in, out] 局部平均速度场
    * \param Ksl        <[in, out] 动量交换场
+   * \param expForce   <[in, out] 显式力场
    * \param interface  <[in, out] 界面场
    */
   void evolve(volVectorField& U, volScalarField& voidF, volScalarField& volumeF, volVectorField& Us,
-              volScalarField& Ksl, volScalarField& interface);
+              volScalarField& Ksl, volVectorField expForce, volScalarField& interface);
 
   void calcVelocityCorrection(volScalarField& p, volVectorField& U, volScalarField& phiIB, surfaceScalarField phi,
                               volScalarField& voidFraction, volScalarField& volumeFraction) const;

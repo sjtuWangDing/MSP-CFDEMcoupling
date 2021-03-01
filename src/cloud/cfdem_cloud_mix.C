@@ -30,6 +30,7 @@ License
 #include "sub_model/averaging_model/averaging_model.h"
 #include "sub_model/force_model/force_model.h"
 #include "sub_model/locate_model/locate_model.h"
+#include "sub_model/mom_couple_model/explicit_couple.h"
 #include "sub_model/mom_couple_model/implicit_couple.h"
 #include "sub_model/mom_couple_model/mom_couple_model.h"
 #include "sub_model/void_fraction_model/void_fraction_model.h"
@@ -98,6 +99,7 @@ void cfdemCloudMix::printParticleInfo() const {
     Foam::vector velocity(velocities()[index][0], velocities()[index][1], velocities()[index][2]);
     Foam::vector DEMForce(DEMForces()[index][0], DEMForces()[index][1], DEMForces()[index][2]);
     Foam::vector impForce(impForces()[index][0], impForces()[index][1], impForces()[index][2]);
+    Foam::vector expForce(expForces()[index][0], expForces()[index][1], expForces()[index][2]);
     if (rootId == base::procId()) {
       Pout << "  position[" << index << "]: " << position << endl;
       Pout << "  velocity[" << index << "]: " << velocity << endl;
@@ -107,6 +109,9 @@ void cfdemCloudMix::printParticleInfo() const {
       }
       if (mag(impForce) > Foam::SMALL) {
         Pout << "  impForce[" << index << "]: " << impForce << endl;
+      }
+      if (mag(expForce) > Foam::SMALL) {
+        Pout << "  expForce[" << index << "]: " << expForce << endl;
       }
     }
   };
@@ -223,10 +228,11 @@ void cfdemCloudMix::calcVelocityCorrection(volScalarField& p, volVectorField& U,
  * \param volumeF    <[in, out] 大颗粒空隙率场
  * \param Us         <[in, out] 局部平均速度场
  * \param Ksl        <[in, out] 动量交换场
+ * \param expForce   <[in, out] 显式力场
  * \param interface  <[in, out] 界面场
  */
 void cfdemCloudMix::evolve(volVectorField& U, volScalarField& voidF, volScalarField& volumeF, volVectorField& Us,
-                           volScalarField& Ksl, volScalarField& interface) {
+                           volScalarField& Ksl, volVectorField expForce, volScalarField& interface) {
   Info << "/ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * /" << endl;
   // 检查当前流体时间步是否同时也是耦合时间步
   validCouplingStep_ = dataExchangeM().checkValidCouplingStep();
@@ -274,12 +280,20 @@ void cfdemCloudMix::evolve(volVectorField& U, volScalarField& voidF, volScalarFi
     globalF().endAfterSetForce();
     // 计算局部累加的流体作用力场
     averagingM().setVectorFieldSum(globalF().impParticleForce(), impForces(), particleWeights());
+    averagingM().setVectorFieldSum(globalF().expParticleForce(), expForces(), particleWeights());
     // write DEM data
     giveDEMData();
     // get shared ptr of implicitCouple model and update Ksl field
-    std::shared_ptr<momCoupleModel> sPtr = momCoupleModels_[implicitCouple::cTypeName()];
-    Ksl = sPtr->impMomSource();
-    Ksl.correctBoundaryConditions();
+    if (momCoupleModels_.end() != momCoupleModels_.find(implicitCouple::cTypeName())) {
+      std::shared_ptr<momCoupleModel> sImpPtr = momCoupleModels_[implicitCouple::cTypeName()];
+      Ksl = sImpPtr->impMomSource();
+      Ksl.correctBoundaryConditions();
+    }
+    if (momCoupleModels_.end() != momCoupleModels_.find(explicitCouple::cTypeName())) {
+      std::shared_ptr<momCoupleModel> sExpPtr = momCoupleModels_[explicitCouple::cTypeName()];
+      expForce = sExpPtr->expMomSource();
+      expForce.correctBoundaryConditions();
+    }
     printParticleInfo();
   } else {
     Info << __func__ << ": no need couple, just update mesh..." << endl;

@@ -71,6 +71,13 @@ pair_style      gran model hertz tangential history
 pair_coeff      * *
 
 # **********************************************************************************************
+group           coarseParticles id < 4
+group           fineParticles id >= 4
+# set             group fineParticles density 2450
+# set             group coarseParticles density 2450
+set             group all density 2450
+
+# **********************************************************************************************
 # - define timestep, gravity
 timestep        0.000002
 fix             gravi all gravity 9.81 vector 0.0 0.0 -1.0
@@ -88,11 +95,9 @@ compute_modify  thermo_temp dynamic yes
 
 # **********************************************************************************************
 # - define dump
-group           coarseParticles id < 4
-group           fineParticles id >= 4
-dump            dmp1 coarseParticles custom 25000 ../DEM/post/dump_coarseParticles.run &
+dump            dmp1 coarseParticles custom 12500 ../DEM/post/dump_coarseParticles.run &
                 id type x y z ix iy iz vx vy vz fx fy fz omegax omegay omegaz radius
-dump            dmp2 fineParticles custom 25000 ../DEM/post/dump_fineParticles.run &
+dump            dmp2 fineParticles custom 12500 ../DEM/post/dump_fineParticles.run &
                 id type x y z ix iy iz vx vy vz fx fy fz omegax omegay omegaz radius
 
 # **********************************************************************************************

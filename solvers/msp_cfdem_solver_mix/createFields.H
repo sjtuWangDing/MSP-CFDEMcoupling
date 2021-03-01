@@ -85,6 +85,19 @@ volScalarField Ksl(
   dimensionedScalar("zero", dimensionSet(1, -3, -1, 0, 0), 0.0)  // F / (V * Ur) ~ kg * m^-3 * s^-1
 );
 
+Info << "Reading momentum exchange field expForce\n" << endl;
+volVectorField expForce(
+  IOobject(
+    "expForce",
+    runTime.timeName(),
+    mesh,
+    IOobject::READ_IF_PRESENT,
+    IOobject::AUTO_WRITE
+  ),
+  mesh,
+  dimensionedVector("zero", dimensionSet(1, -2, -2, 0, 0), Foam::vector::zero)
+);
+
 Info << "Reading particle velocity field Us\n" << endl;
 volVectorField Us(
   IOobject(

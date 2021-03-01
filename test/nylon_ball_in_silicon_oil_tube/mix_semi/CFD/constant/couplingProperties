@@ -44,6 +44,7 @@ forceModels
 momCoupleModels
 (
   implicitCouple
+  explicitCouple
 );
 
 voidFractionModel mix;
@@ -67,6 +68,11 @@ implicitCoupleProps
   voidFractionFieldName "voidFraction";
 }
 
+explicitCoupleProps
+{
+  expForceLimit (1e10 1e10 1e10);
+}
+
 "(globalForceProps|mixGlobalForceProps)"
 {
   GaussCoreEff 3;
@@ -78,7 +84,7 @@ implicitCoupleProps
 
 ArchimedesProps
 {
-  treatForceExplicitInMomEquation false;
+  treatForceExplicitInMomEquation true;
   treatForceBothCFDAndDEM true;
   treatDEMForceImplicit false;
   verbose true;

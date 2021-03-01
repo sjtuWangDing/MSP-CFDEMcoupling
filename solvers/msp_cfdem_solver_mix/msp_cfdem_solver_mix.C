@@ -64,7 +64,7 @@ int main(int argc, char* argv[]) {
 
     #include "CourantNo.H"
 
-    particleCloud.evolve(U, voidFraction, volumeFraction, Us, Ksl, interface);
+    particleCloud.evolve(U, voidFraction, volumeFraction, Us, Ksl, expForce, interface);
 
     // 这里不需要计算 U 的通量，因为 phiByVoidFraction 在上个时间步的压力迭代中被修正，满足连续性方程
     // phiByVoidFraction = fvc::interpolate(U) & mesh.Sf();
@@ -103,10 +103,10 @@ int main(int argc, char* argv[]) {
       if (piso.momentumPredictor()) {
         if (modelType == "B" || modelType == "Bfull") {
           // modelType 为 "B" or "Bfull" 时, 压力项中不需要乘以空隙率
-          solve(UEqn == -fvc::grad(p) + Ksl / rho * Us);
+          solve(UEqn == -fvc::grad(p) + Ksl / rho * Us - expForce / rho);
         } else if ("A" == modelType) {
           // modelType 为 "A" 时, 压力项中需要乘以空隙率
-          solve(UEqn == -voidFraction * fvc::grad(p) + Ksl / rho * Us);
+          solve(UEqn == -voidFraction * fvc::grad(p) + Ksl / rho * Us - expForce / rho);
         } else if ("none" == modelType) {
           // modelType 为 "none" 时，直接求解压力项
           solve(UEqn == -fvc::grad(p));
@@ -180,6 +180,12 @@ int main(int argc, char* argv[]) {
         // - 将 Us 通量与 HbyA 通量相加，计算压力修正方程中的总通量
         phiHbyA += fvc::interpolate(rAU) * (fvc::interpolate(Ksl / rho) * phiUs);
 
+        // - 定义 expForce 的通量
+        surfaceScalarField phiExpForce("phiExpForce", fvc::interpolate(expForce / rho) & mesh.Sf());
+
+        // - 将 expForce 通量与 HbyA 通量相加，计算压力修正方程中的总通量
+        phiHbyA -= fvc::interpolate(rAU) * phiExpForce;
+
         // - 在求解压力泊松方程的时候, 如果压力全部是 Neumann 边界条件(即第二类边界条件)，需要满足相容性条件，这里修正的是通量 phiHbyA
         // 在 adjustPhi 函数中，第二个参数必须使用 U，而不能使用 HbyA，因为在 adjustPhi 函数中，需要通过 U 获取 boundaryField
         // Ref: https://cfd-china.com/topic/501/%E5%85%B3%E4%BA%8Ecorrectphi-h%E8%BF%99%E4%B8%AA%E5%87%BD%E6%95%B0/9
@@ -228,9 +234,9 @@ int main(int argc, char* argv[]) {
         #include "continuityErrorPhiPU.H"
 
         if (modelType == "B" || modelType == "Bfull") {
-          U = HbyA - rAU * fvc::grad(p) + Ksl / rho * Us * rAU;
+          U = HbyA - rAU * fvc::grad(p) + Ksl / rho * Us * rAU - expForce / rho * rAU;
         } else if ("A" == modelType) {
-          U = HbyA - voidFraction * rAU * fvc::grad(p) + Ksl / rho * Us * rAU;
+          U = HbyA - voidFraction * rAU * fvc::grad(p) + Ksl / rho * Us * rAU - expForce / rho * rAU;
         } else if ("none" == modelType) {
           U = HbyA - rAU * fvc::grad(p);
         }

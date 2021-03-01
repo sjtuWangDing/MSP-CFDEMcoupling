@@ -23,13 +23,13 @@ modelType B;
 
 couplingInterval 100;
 
-expandedCellScale 5;
+expandedCellScale 4;
 
 allowUseSubCFDTimeStep false;
 
 globalForce mixGlobalForce;
 
-minCoarseParticleRadius 0.01;
+minCoarseParticleRadius 0.009;
 
 refineMeshSkin 1.2;
 
@@ -48,6 +48,7 @@ forceModels
 momCoupleModels
 (
   implicitCouple
+  explicitCouple
 );
 
 voidFractionModel mix;
@@ -67,6 +68,11 @@ implicitCoupleProps
   velFieldName "U";
   granVelFieldName "Us";
   voidFractionFieldName "voidFraction";
+}
+
+explicitCoupleProps
+{
+  expForceLimit (2e10 2e10 2e10);
 }
 
 "(globalForceProps|mixGlobalForceProps)"
