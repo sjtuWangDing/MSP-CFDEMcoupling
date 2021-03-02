@@ -89,8 +89,8 @@ int main(int argc, char* argv[]) {
       // U prev equation
       fvVectorMatrix UEqnPre
       (
-          // voidFraction * fvm::ddt(U)
-          fvm::ddt(voidFraction, U) - fvm::Sp(fvc::ddt(voidFraction), U)
+          voidFraction * fvm::ddt(U)
+          // fvm::ddt(voidFraction, U) - fvm::Sp(fvc::ddt(voidFraction), U)
         + fvm::div(phi, U) - fvm::Sp(fvc::div(phi), U)
         + particleCloud.divVoidFractionTau(U, voidFraction)
         ==
@@ -115,14 +115,14 @@ int main(int argc, char* argv[]) {
         }
         fvOptions.correct(U);
       }
-
       phiByVoidFraction = fvc::flux(U);
       phi = voidFractionFace * phiByVoidFraction;
+
       // U equation
       fvVectorMatrix UEqn
       (
-          // voidFraction * fvm::ddt(U)
-          fvm::ddt(voidFraction, U) - fvm::Sp(fvc::ddt(voidFraction), U)
+          voidFraction * fvm::ddt(U)
+          // fvm::ddt(voidFraction, U) - fvm::Sp(fvc::ddt(voidFraction), U)
         + fvm::div(phi, U) - fvm::Sp(fvc::div(phi), U)
         + particleCloud.divVoidFractionTau(U, voidFraction)
         ==
@@ -131,20 +131,23 @@ int main(int argc, char* argv[]) {
       );
       UEqn.relax();
       fvOptions.constrain(UEqn);
-      particleCloud.calcFictitiousForce(U, rho, volumeFraction, fictitiousForce);
-      if (modelType == "B" || modelType == "Bfull") {
-        // modelType 为 "B" or "Bfull" 时, 压力项中不需要乘以空隙率
-        solve(UEqn == -fvc::grad(p) + Ksl / rho * Us + fictitiousForce);
-      } else if ("A" == modelType) {
-        // modelType 为 "A" 时, 压力项中需要乘以空隙率
-        solve(UEqn == -voidFraction * fvc::grad(p) + Ksl / rho * Us + fictitiousForce);
-      } else if ("none" == modelType) {
-        // modelType 为 "none" 时，直接求解压力项
-        solve(UEqn == -fvc::grad(p) + fictitiousForce);
-      } else {
-        FatalError << __func__ << ": Not implement for modelType = " << modelType << abort(FatalError);
+
+      if (piso.momentumPredictor()) {
+        particleCloud.calcFictitiousForce(U, rho, volumeFraction, fictitiousForce);
+        if (modelType == "B" || modelType == "Bfull") {
+          // modelType 为 "B" or "Bfull" 时, 压力项中不需要乘以空隙率
+          solve(UEqn == -fvc::grad(p) + Ksl / rho * Us + fictitiousForce);
+        } else if ("A" == modelType) {
+          // modelType 为 "A" 时, 压力项中需要乘以空隙率
+          solve(UEqn == -voidFraction * fvc::grad(p) + Ksl / rho * Us + fictitiousForce);
+        } else if ("none" == modelType) {
+          // modelType 为 "none" 时，直接求解压力项
+          solve(UEqn == -fvc::grad(p) + fictitiousForce);
+        } else {
+          FatalError << __func__ << ": Not implement for modelType = " << modelType << abort(FatalError);
+        }
+        fvOptions.correct(U);
       }
-      fvOptions.correct(U);
       /*
         (1) model A
           - 离散后的动量方程是一个线性方程组，其包含系数矩阵(Aa)和右边源项(As)
