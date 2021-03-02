@@ -49,6 +49,8 @@ ShirgaonkarIB::ShirgaonkarIB(cfdemCloud& cloud)
       subPropsDict_(cloud.couplingPropertiesDict().subDict(typeName_ + "Props")),
       U_(cloud.globalF().U()),
       p_(cloud.globalF().p()),
+      fictitiousForce_(cloud.globalF().fictitiousForce()),
+      volumeFraction_(cloud.globalF().volumeFraction()),
       useTorque_(subPropsDict_.lookupOrDefault<bool>("useTorque", false)) {
   createForceSubModels(subPropsDict_, kResolved);
 }
@@ -62,6 +64,8 @@ void ShirgaonkarIB::setForce() {
   Foam::vector cellPos = Foam::vector::zero;
   Foam::vector drag = Foam::vector::zero;
   Foam::vector torque = Foam::vector::zero;
+  Foam::vector particleU = Foam::vector::zero;
+  double radius = 0.0;
   std::once_flag onceOp;
   for (int index = 0; index < cloud_.numberOfParticles(); ++index) {
     if (cloud_.checkCoarseParticle(index)) {
@@ -70,13 +74,33 @@ void ShirgaonkarIB::setForce() {
       torque = Foam::vector::zero;
       // get index's particle center position
       particleCenterPos = cloud_.getPosition(index);
+      particleU = cloud_.getVelocity(index);
+      radius = cloud_.getRadius(index);
       // loop all mesh of current particle
       for (int subCell = 0; subCell < cloud_.particleOverMeshNumber()[index]; ++subCell) {
         int cellID = cloud_.cellIDs()[index][subCell];
         if (cellID >= 0) {  // cell Found
           cellPos = cloud_.mesh().C()[cellID];
+#if 1
+          // 计算颗粒雷诺数
+          double rhoCell = cloud_.globalF().rhoField()[cellID];
+          double nuf = forceSubModel_->nuField()[cellID];
+          double vCell = cloud_.mesh().V()[cellID];
+          double Re = mag(particleU) * 2 * radius / (nuf + Foam::SMALL);
+          double vf = volumeFraction_[cellID];
+          drag += IBDrag[cellID] * IBDrag.mesh().V()[cellID] * (1 - vf);
+          torque += (cellPos - particleCenterPos) ^ IBDrag[cellID] * (1 - vf) * IBDrag.mesh().V()[cellID];
+          if (Re < 50) {
+            drag -= fictitiousForce_[cellID] * rhoCell * vCell;
+            torque -= (cellPos - particleCenterPos) ^ fictitiousForce_[cellID] * rhoCell * vCell;
+          } else {
+            drag -= fictitiousForce_[cellID] * rhoCell * vCell * (1 - vf);
+            torque -= (cellPos - particleCenterPos) ^ fictitiousForce_[cellID] * rhoCell * vCell * (1 - vf);
+          }
+#else
           drag += IBDrag[cellID] * IBDrag.mesh().V()[cellID];
           torque += (cellPos - particleCenterPos) ^ IBDrag[cellID] * IBDrag.mesh().V()[cellID];
+#endif
         }
       }
       // write particle data to global array

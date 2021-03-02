@@ -1,0 +1,45 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  1.6                                   |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "constant";
+    object      dynamicMeshDict;
+}
+
+dynamicFvMesh   dynamicRefineFvMesh; // dynamicRefineFvMesh;  // staticFvMesh
+
+dynamicRefineFvMeshCoeffs
+{
+    refineInterval    1;          // refine every refineInterval timesteps
+    field             interface;  // field to be refinement on
+    lowerRefineLevel  0.0001;     // refine field inbetween lower and upper
+    upperRefineLevel  0.9999;
+    nBufferLayers     4;          // 加密网格和粗网格之间的缓冲层数
+    unrefineLevel     0.0;        // 指定最低值，如果 field value 小于该值则不会加密
+    maxRefinement     2;          // 最大加密层数
+    maxCells          10000000;   // 最大网格数量
+    // Flux field and corresponding velocity field.
+    // Fluxes on changed faces get recalculated by interpolating the velocity.
+    // Use 'none' on surfaceScalarFields that do not need to be reinterpolated,
+    // use NaN to detect use of mapped variable.
+    // First is name of the flux to adapt, second is velocity that will
+    // be interpolated and inner-producted with the face area vector.
+    // 需要校正的通量字段，对于指定的通量场和速度场，通过速度进行插值，重新计算面上的通量
+    // 对于不需要重新插值的 surfaceScalarFields 使用 none 字段
+    correctFluxes
+    (
+        (phiByVoidFraction          U)
+        (phiByVoidFraction_0        U)
+        (phi                        none)
+        (phi_0                      none)
+    );
+    dumpLevel         false;       // 将网格加密的 level 输出为一个 volScalarField
+}

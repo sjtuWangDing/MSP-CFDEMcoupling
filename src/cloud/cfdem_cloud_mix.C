@@ -216,6 +216,82 @@ void cfdemCloudMix::calcVelocityCorrection(volScalarField& p, volVectorField& U,
   }
 }
 
+void cfdemCloudMix::calcFictitiousForce(const volVectorField& U, const volScalarField& rhoField,
+                                        const volScalarField& volumeFraction, volVectorField& fictitiousForce) const {
+  if (validCouplingStep_) {
+    // reset fictitious force
+    fictitiousForce == dimensionedVector("zero", fictitiousForce.dimensions(), Foam::vector::zero);
+    // set particle velocity
+    volVectorField globalUpdateVel = U;
+    Foam::vector parPos = Foam::vector::zero;
+    Foam::vector lVel = Foam::vector::zero;
+    Foam::vector angVel = Foam::vector::zero;
+    Foam::vector rVec = Foam::vector::zero;
+    Foam::vector parVel = Foam::vector::zero;
+    for (int index = 0; index < numberOfParticles(); ++index) {
+      if (checkCoarseParticle(index)) {
+        parPos = getPosition(index);         // 颗粒中心
+        lVel = getVelocity(index);           // 颗粒线速度
+        angVel = getAngularVelocity(index);  // 颗粒角速度
+        for (int subCell = 0; subCell < particleOverMeshNumber()[index]; ++subCell) {
+          int cellID = cellIDs()[index][subCell];
+          if (cellID >= 0) {
+            for (int i = 0; i < 3; ++i) {
+              rVec[i] = U.mesh().C()[cellID][i] - parPos[i];
+            }
+            // 计算颗粒速度
+            parVel = lVel + (angVel ^ rVec);
+            double vf = volumeFractions()[index][subCell];
+            globalUpdateVel[cellID] = (1.0 - vf) * parVel + vf * U[cellID];
+          }
+        }
+      }
+    }
+    // calculate fictitious force
+    Foam::vector updateVel = Foam::vector::zero;
+    Foam::vector neighUpdateVel = Foam::vector::zero;
+    Foam::vector sumFictitiousForce = Foam::vector::zero;
+    Foam::vector sumVelDiff = Foam::vector::zero;
+    int neighbourCellNum = 0;
+    double dt = U.mesh().time().deltaT().value();
+    for (int index = 0; index < numberOfParticles(); ++index) {
+      if (checkCoarseParticle(index)) {
+        for (int subCell = 0; subCell < particleOverMeshNumber()[index]; ++subCell) {
+          int cellID = cellIDs()[index][subCell];
+          updateVel = Foam::vector::zero;
+          neighUpdateVel = Foam::vector::zero;
+          neighbourCellNum = 0;
+          const labelList& neighList = U.mesh().cellCells()[cellID];
+          forAll(neighList, i) {
+            int neighCellID = neighList[i];
+            if (neighCellID < 0) {
+              continue;
+            }
+            neighbourCellNum += 1;
+            neighUpdateVel += globalUpdateVel[neighCellID];
+          }  // End of neighbour loop
+          if (neighbourCellNum > 0) {
+            updateVel = 0.5 * globalUpdateVel[cellID] + 1.0 / (2.0 * neighbourCellNum) * neighUpdateVel;
+          } else {
+            updateVel = globalUpdateVel[cellID];
+          }
+          fictitiousForce[cellID] = (updateVel - U[cellID]) / dt;
+          sumFictitiousForce += fictitiousForce[cellID] * rhoField[cellID] * U.mesh().V()[cellID];
+          sumVelDiff += updateVel - U[cellID];
+        }
+      }
+    }
+    if (mag(sumVelDiff) > Foam::SMALL) {
+      Pout << "sum vel diff = " << sumVelDiff << endl;
+    }
+    base::MPI_Barrier();
+    if (mag(sumFictitiousForce) > Foam::SMALL) {
+      Pout << "sum fictitious force = " << sumFictitiousForce << endl;
+    }
+    base::MPI_Barrier();
+  }
+}
+
 /*!
  * \brief 更新函数
  * \param U          <[in] 流体速度场

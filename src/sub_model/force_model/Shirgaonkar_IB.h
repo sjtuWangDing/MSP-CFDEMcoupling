@@ -79,6 +79,10 @@ class ShirgaonkarIB : public forceModel {
 
   const volScalarField& p_;
 
+  const volVectorField& fictitiousForce_;
+
+  const volScalarField& volumeFraction_;
+
   bool useTorque_;
 };
 

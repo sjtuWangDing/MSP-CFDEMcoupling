@@ -86,11 +86,43 @@ int main(int argc, char* argv[]) {
     Info << "  total impl force:  " << totalImplForce.value() << endl;
 
     if (particleCloud.solveFlow()) {
+      // U prev equation
+      fvVectorMatrix UEqnPre
+      (
+          // voidFraction * fvm::ddt(U)
+          fvm::ddt(voidFraction, U) - fvm::Sp(fvc::ddt(voidFraction), U)
+        + fvm::div(phi, U) - fvm::Sp(fvc::div(phi), U)
+        + particleCloud.divVoidFractionTau(U, voidFraction)
+        ==
+        - fvm::Sp(Ksl / rho, U)
+        + fvOptions(U)
+      );
+      UEqnPre.relax();
+      fvOptions.constrain(UEqnPre);
+
+      if (piso.momentumPredictor()) {
+        if (modelType == "B" || modelType == "Bfull") {
+          // modelType 为 "B" or "Bfull" 时, 压力项中不需要乘以空隙率
+          solve(UEqnPre == -fvc::grad(p) + Ksl / rho * Us);
+        } else if ("A" == modelType) {
+          // modelType 为 "A" 时, 压力项中需要乘以空隙率
+          solve(UEqnPre == -voidFraction * fvc::grad(p) + Ksl / rho * Us);
+        } else if ("none" == modelType) {
+          // modelType 为 "none" 时，直接求解压力项
+          solve(UEqnPre == -fvc::grad(p));
+        } else {
+          FatalError << __func__ << ": Not implement for modelType = " << modelType << abort(FatalError);
+        }
+        fvOptions.correct(U);
+      }
+
+      phiByVoidFraction = fvc::flux(U);
+      phi = voidFractionFace * phiByVoidFraction;
       // U equation
       fvVectorMatrix UEqn
       (
-          voidFraction * fvm::ddt(U)
-          // fvm::ddt(voidFraction, U) - fvm::Sp(fvc::ddt(voidFraction), U)
+          // voidFraction * fvm::ddt(U)
+          fvm::ddt(voidFraction, U) - fvm::Sp(fvc::ddt(voidFraction), U)
         + fvm::div(phi, U) - fvm::Sp(fvc::div(phi), U)
         + particleCloud.divVoidFractionTau(U, voidFraction)
         ==
@@ -99,22 +131,20 @@ int main(int argc, char* argv[]) {
       );
       UEqn.relax();
       fvOptions.constrain(UEqn);
-
-      if (piso.momentumPredictor()) {
-        if (modelType == "B" || modelType == "Bfull") {
-          // modelType 为 "B" or "Bfull" 时, 压力项中不需要乘以空隙率
-          solve(UEqn == -fvc::grad(p) + Ksl / rho * Us);
-        } else if ("A" == modelType) {
-          // modelType 为 "A" 时, 压力项中需要乘以空隙率
-          solve(UEqn == -voidFraction * fvc::grad(p) + Ksl / rho * Us);
-        } else if ("none" == modelType) {
-          // modelType 为 "none" 时，直接求解压力项
-          solve(UEqn == -fvc::grad(p));
-        } else {
-          FatalError << __func__ << ": Not implement for modelType = " << modelType << abort(FatalError);
-        }
-        fvOptions.correct(U);
+      particleCloud.calcFictitiousForce(U, rho, volumeFraction, fictitiousForce);
+      if (modelType == "B" || modelType == "Bfull") {
+        // modelType 为 "B" or "Bfull" 时, 压力项中不需要乘以空隙率
+        solve(UEqn == -fvc::grad(p) + Ksl / rho * Us + fictitiousForce);
+      } else if ("A" == modelType) {
+        // modelType 为 "A" 时, 压力项中需要乘以空隙率
+        solve(UEqn == -voidFraction * fvc::grad(p) + Ksl / rho * Us + fictitiousForce);
+      } else if ("none" == modelType) {
+        // modelType 为 "none" 时，直接求解压力项
+        solve(UEqn == -fvc::grad(p) + fictitiousForce);
+      } else {
+        FatalError << __func__ << ": Not implement for modelType = " << modelType << abort(FatalError);
       }
+      fvOptions.correct(U);
       /*
         (1) model A
           - 离散后的动量方程是一个线性方程组，其包含系数矩阵(Aa)和右边源项(As)
@@ -180,6 +210,12 @@ int main(int argc, char* argv[]) {
         // - 将 Us 通量与 HbyA 通量相加，计算压力修正方程中的总通量
         phiHbyA += fvc::interpolate(rAU) * (fvc::interpolate(Ksl / rho) * phiUs);
 
+        // - 定义 fictitiousForce 的通量
+        surfaceScalarField phiFictitiousForce(fvc::interpolate(fictitiousForce) & mesh.Sf());
+
+        // - 将 fictitiousForce 通量与 HbyA 通量相加，计算压力修正方程中的总通量
+        phiHbyA += fvc::interpolate(rAU) * phiFictitiousForce;
+
         // - 在求解压力泊松方程的时候, 如果压力全部是 Neumann 边界条件(即第二类边界条件)，需要满足相容性条件，这里修正的是通量 phiHbyA
         // 在 adjustPhi 函数中，第二个参数必须使用 U，而不能使用 HbyA，因为在 adjustPhi 函数中，需要通过 U 获取 boundaryField
         // Ref: https://cfd-china.com/topic/501/%E5%85%B3%E4%BA%8Ecorrectphi-h%E8%BF%99%E4%B8%AA%E5%87%BD%E6%95%B0/9
@@ -228,11 +264,11 @@ int main(int argc, char* argv[]) {
         #include "continuityErrorPhiPU.H"
 
         if (modelType == "B" || modelType == "Bfull") {
-          U = HbyA - rAU * fvc::grad(p) + Ksl / rho * Us * rAU;
+          U = HbyA - rAU * fvc::grad(p) + Ksl / rho * Us * rAU + fictitiousForce * rAU;
         } else if ("A" == modelType) {
-          U = HbyA - voidFraction * rAU * fvc::grad(p) + Ksl / rho * Us * rAU;
+          U = HbyA - voidFraction * rAU * fvc::grad(p) + Ksl / rho * Us * rAU + fictitiousForce * rAU;
         } else if ("none" == modelType) {
-          U = HbyA - rAU * fvc::grad(p);
+          U = HbyA - rAU * fvc::grad(p) + fictitiousForce * rAU;
         }
         U.correctBoundaryConditions();
         fvOptions.correct(U);
@@ -240,11 +276,16 @@ int main(int argc, char* argv[]) {
       laminarTransport.correct();
       turbulence->correct();
 
+#if 1
+      Info << "mspCfdemSolverMix: after piso loop and recalculate fictitiousForce..." << endl;
+      particleCloud.calcFictitiousForce(U, rho, volumeFraction, fictitiousForce);
+#else
       // 通过颗粒速度以及phiIB修正速度与压力
       particleCloud.calcVelocityCorrection(p, U, phiIB, phi, voidFraction, volumeFraction);
       fvOptions.correct(U);
       dimensionedVector totalUCorrectedByPhiIB = gSum(volVectorField(fvc::grad(phiIB) / voidFraction));
       Info << "After calcVelocityCorrection, total U corrected by phiIB = " << totalUCorrectedByPhiIB.value() << nl << endl;
+#endif
 
       // recalculate phiByVoidFraction for next step
       phiByVoidFraction = fvc::flux(U);

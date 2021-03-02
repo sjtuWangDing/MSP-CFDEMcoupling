@@ -64,6 +64,9 @@ class cfdemCloudMix : public cfdemCloud {
   void calcVelocityCorrection(volScalarField& p, volVectorField& U, volScalarField& phiIB, surfaceScalarField phi,
                               volScalarField& voidFraction, volScalarField& volumeFraction) const;
 
+  void calcFictitiousForce(const volVectorField& U, const volScalarField& rhoField,
+                           const volScalarField& volumeFraction, volVectorField& fictitiousForce) const;
+
   double expandedCellScale() const { return cProps_.expandedCellScale(); }
 
   bool checkFineParticle(int index) const { return cProps_.checkFineParticle(getDimensionRatio(index)); }

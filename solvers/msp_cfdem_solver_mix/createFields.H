@@ -124,6 +124,20 @@ volScalarField phiIB(
   dimensionedScalar("zero", dimensionSet(0, 2, -1, 0, 0), 0.0)
 );
 
+Info << "Reading fictitious force field\n" << endl;
+volVectorField fictitiousForce(
+  IOobject
+  (
+    "fictitiousForce",
+    runTime.timeName(),
+    mesh,
+    IOobject::NO_READ,
+    IOobject::AUTO_WRITE
+  ),
+  mesh,
+  dimensionedVector("zero", dimensionSet(0, 1, -2, 0, 0), Foam::vector::zero)
+);
+
 Info << "Reading/calculating face flux field phi\n" << endl;
 surfaceScalarField phi(
   IOobject(

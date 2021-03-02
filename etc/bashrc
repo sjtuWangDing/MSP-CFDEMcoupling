@@ -85,6 +85,8 @@ export MSP_CFDEM_TOOLS_DIR=$MSP_CFDEM_PROJECT_DIR/tools
 export MSP_CFDEM_bashrc=$MSP_CFDEM_ETC_DIR/bashrc
 if [[ "$MSP_CFDEM_PROJECT_DIR" = *"-debug" ]]; then
   echo "Load cfdem debug environment - done"
+elif [[ "$MSP_CFDEM_PROJECT_DIR" = *"-mixfd" ]]; then
+  echo "Load cfdem mixfd environment - done"
 else
   echo "Load cfdem environment - done"
 fi

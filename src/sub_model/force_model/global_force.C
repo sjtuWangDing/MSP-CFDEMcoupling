@@ -51,14 +51,24 @@ class defaultField {
     }
     return *volumeFractionSp_;
   }
+  static const volVectorField& getFictitiousForce(const fvMesh& mesh) {
+    if (fictitiousForceSp_) {
+      fictitiousForceSp_ = std::make_shared<volVectorField>(
+          IOobject("fictitiousForceDefault", mesh.time().timeName(), mesh, IOobject::NO_READ, IOobject::NO_WRITE), mesh,
+          dimensionedVector("zero", dimensionSet(0, 1, -2, 0, 0), Foam::vector::zero));
+    }
+    return *fictitiousForceSp_;
+  }
 
  private:
   static std::shared_ptr<volScalarField> voidFractionSp_;
   static std::shared_ptr<volScalarField> volumeFractionSp_;
+  static std::shared_ptr<volVectorField> fictitiousForceSp_;
 };
 
 std::shared_ptr<volScalarField> defaultField::voidFractionSp_(nullptr);
 std::shared_ptr<volScalarField> defaultField::volumeFractionSp_(nullptr);
+std::shared_ptr<volVectorField> defaultField::fictitiousForceSp_(nullptr);
 
 cfdemDefineTypeName(globalForce);
 
@@ -102,6 +112,8 @@ globalForce::globalForce(cfdemCloud& cloud)
           subPropsDict_.lookupOrDefault<Foam::word>("voidFractionFieldName", "voidFraction").c_str()),
       volumeFractionFieldName_(
           subPropsDict_.lookupOrDefault<Foam::word>("volumeFractionFieldName", "volumeFraction").c_str()),
+      fictitiousForceFieldName_(
+          subPropsDict_.lookupOrDefault<Foam::word>("fictitiousForceFieldName", "fictitiousForce").c_str()),
 #if defined(version21)
       g_(cloud.mesh().lookupObject<uniformDimensionedVectorField>(gravityFieldName_)),
 #elif defined(version16ext) || defined(version15)
@@ -118,7 +130,10 @@ globalForce::globalForce(cfdemCloud& cloud)
                         : defaultField::getVoidFraction(cloud.mesh())),
       volumeFraction_(subPropsDict_.found("volumeFractionFieldName")
                           ? cloud.mesh().lookupObject<volScalarField>(volumeFractionFieldName_)
-                          : defaultField::getVolumeFraction(cloud.mesh())) {
+                          : defaultField::getVolumeFraction(cloud.mesh())),
+      fictitiousForce_(subPropsDict_.found("fictitiousForceFieldName")
+                           ? cloud.mesh().lookupObject<volVectorField>(fictitiousForceFieldName_)
+                           : defaultField::getFictitiousForce(cloud.mesh())) {
 }
 
 globalForce::~globalForce() {}

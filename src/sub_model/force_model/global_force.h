@@ -139,6 +139,8 @@ class globalForce {
 
   inline const volScalarField& volumeFraction() const { return volumeFraction_; }
 
+  inline const volVectorField& fictitiousForce() const { return fictitiousForce_; }
+
  protected:
   cfdemCloud& cloud_;
 
@@ -189,6 +191,8 @@ class globalForce {
   //! \brief name of the finite volume voidfraction field
   std::string volumeFractionFieldName_;
 
+  std::string fictitiousForceFieldName_;
+
 #ifdef version21
   const uniformDimensionedVectorField& g_;
 #elif defined(version16ext) || defined(version15)
@@ -206,6 +210,8 @@ class globalForce {
   const volScalarField& voidFraction_;
 
   const volScalarField& volumeFraction_;
+
+  const volVectorField& fictitiousForce_;
 };
 
 }  // namespace Foam
