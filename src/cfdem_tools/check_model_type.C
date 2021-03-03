@@ -12,19 +12,16 @@ namespace Foam {
 void cfdemTools::checkModelType(const cfdemCloud& cloud) {
   const std::string& modelType = cloud.modelType();
   if ("Bfull" == modelType || "A" == modelType) {
-    // 不能使用 Archimedes force
-    if (isUsedForceModel(cloud, "Archimedes") || isUsedForceModel(cloud, "mixArchimedes")) {
-      FatalError << __func__ << ": can not use Archimedes or mixArchimedes with model type " << modelType
-                 << abort(FatalError);
-    }
-    // 必须使用压力梯度力
-    if (!isUsedForceModel(cloud, "gradPForce")) {
-      FatalError << __func__ << ": gradPForce not found with model type " << modelType << abort(FatalError);
-    }
-    // 必须使用粘性力
-    if (!isUsedForceModel(cloud, "viscForce")) {
-      FatalError << __func__ << ": viscForce not found with model type " << modelType << abort(FatalError);
-    }
+    // // 必须使用压力梯度力
+    // if (!isUsedForceModel(cloud, "gradPForce") && !isUsedForceModel(cloud, "mixGradPForce")) {
+    //   FatalError << __func__ << ": gradPForce or mixGradPForce not found with model type " << modelType
+    //              << abort(FatalError);
+    // }
+    // // 必须使用粘性力
+    // if (!isUsedForceModel(cloud, "viscForce") && !isUsedForceModel(cloud, "mixViscForce")) {
+    //   FatalError << __func__ << ": viscForce or mixViscForce not found with model type " << modelType
+    //              << abort(FatalError);
+    // }
   } else if (modelType == "B") {
     // 必须使用 Archimedes force, 且只能指定 Archimedes or mixArchimedes 中任意一个
     if (isUsedForceModel(cloud, "Archimedes") && isUsedForceModel(cloud, "mixArchimedes")) {

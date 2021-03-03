@@ -40,9 +40,8 @@ cfdemCreateNewFunctionAdder(forceModel, gradPForce);
 gradPForce::gradPForce(cfdemCloud& cloud)
     : forceModel(cloud),
       subPropsDict_(cloud.couplingPropertiesDict().subDict(typeName_ + "Props")),
-      pressureFieldName_(subPropsDict_.lookupOrDefault<Foam::word>("pressureFieldName", "p").c_str()),
-      p_(cloud.mesh().lookupObject<volScalarField>(pressureFieldName_)) {
-  createForceSubModels(subPropsDict_, kResolved);
+      p_(cloud.globalF().p()) {
+  createForceSubModels(subPropsDict_, kUnResolved);
   if (cloud_.modelType() == "B") {
     FatalError << "using gradPForce with model type B is not valid\n" << abort(FatalError);
   }

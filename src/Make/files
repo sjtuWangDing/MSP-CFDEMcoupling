@@ -36,6 +36,8 @@ $(sub_model)/force_model/Basset_force.C
 $(sub_model)/force_model/Mei_lift_force.C
 $(sub_model)/force_model/mix_global_force.C
 $(sub_model)/force_model/mix_drag_force.C
+$(sub_model)/force_model/mix_visc_force.C
+$(sub_model)/force_model/mix_grad_p_force.C
 $(sub_model)/force_model/mix_virtual_mass_force.C
 $(sub_model)/force_model/mix_Basset_force.C
 $(sub_model)/force_model/mix_Mei_lift_force.C

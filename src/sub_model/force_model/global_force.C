@@ -28,7 +28,9 @@ License
 #include "./Basset_force.h"
 #include "./Mei_lift_force.h"
 #include "./global_force.h"
+#include "./grad_p_force.h"
 #include "./virtual_mass_force.h"
+#include "./visc_force.h"
 #include "cfdem_tools/cfdem_tools.h"
 
 namespace Foam {
@@ -85,6 +87,14 @@ globalForce::globalForce(cfdemCloud& cloud)
                                IOobject::AUTO_WRITE),
                       cloud.mesh(), dimensionedVector("zero", dimensionSet(0, 0, -1, 0, 0),
                                                       vector(0, 0, 0))),  // [vorticity] == [1 / s])
+      gradPField_(IOobject("gradP", cloud.mesh().time().timeName(), cloud.mesh(), IOobject::READ_IF_PRESENT,
+                           IOobject::AUTO_WRITE),
+                  cloud.mesh(),
+                  dimensionedVector("zero", dimensionSet(0, 1, -2, 0, 0), vector(0, 0, 0))),  // [gradP] == [m / s^2])
+      divTauField_(IOobject("divTau", cloud.mesh().time().timeName(), cloud.mesh(), IOobject::READ_IF_PRESENT,
+                            IOobject::AUTO_WRITE),
+                   cloud.mesh(), dimensionedVector("zero", dimensionSet(1, -2, -2, 0, 0),
+                                                   vector(0, 0, 0))),  // divTau == [kg / (m^2 * s^2)]
       impParticleForce_(IOobject("impParticleForce", cloud.mesh().time().timeName(), cloud.mesh(),
                                  IOobject::READ_IF_PRESENT, IOobject::AUTO_WRITE),
                         cloud.mesh(), dimensionedVector("zero", dimensionSet(1, 1, -2, 0, 0),
@@ -136,6 +146,22 @@ void globalForce::initBeforeSetForce() {
   bool isUsedMeiLiftForce = cfdemTools::isUsedForceModel(cloud_, MeiLiftForce::cTypeName());
   if (isUsedMeiLiftForce) {
     vorticityField_ = fvc::curl(U_);
+  }
+  // 如果使用了压力梯度力，则需要计算 gradPField
+  bool isUsedGradPForce = cfdemTools::isUsedForceModel(cloud_, gradPForce::cTypeName());
+  if (isUsedGradPForce) {
+    gradPField_ = fvc::grad(p_);
+  }
+  // 如果使用了粘性力，则需要计算 divTauField
+  bool isUsedViscForce = cfdemTools::isUsedForceModel(cloud_, viscForce::cTypeName());
+  if (isUsedViscForce) {
+#ifdef compre
+    const volScalarField& mu = muField();
+    divTauField_ = -fvc::laplacian(mu, U_) - fvc::div(mu * dev(fvc::grad(U_)().T()));
+#else
+    const volScalarField& nu = nuField();
+    divTauField_ = -fvc::laplacian(nu * rho_, U_) - fvc::div(nu * rho_ * dev(fvc::grad(U_)().T()));
+#endif
   }
   base::MPI_Info("globalForce: initBeforeSetForce - done", verbose_);
 }

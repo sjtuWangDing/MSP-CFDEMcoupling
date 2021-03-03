@@ -101,6 +101,20 @@ class globalForce {
     return Foam::vector::zero;
   }
 
+  //! \brief 获取颗粒处背景流体的压力梯度
+  virtual Foam::vector getBackgroundGradP(const int index) const {
+    FatalError << __func__ << " not implement in Foam::globalForce, please use Foam::mixGlobalForce"
+               << abort(FatalError);
+    return Foam::vector::zero;
+  }
+
+  //! \brief 获取颗粒处背景流体的粘性应力
+  virtual Foam::vector getBackgroundDivTau(const int index) const {
+    FatalError << __func__ << " not implement in Foam::globalForce, please use Foam::mixGlobalForce"
+               << abort(FatalError);
+    return Foam::vector::zero;
+  }
+
   inline void resetImpParticleForce() {
     impParticleForce_ == dimensionedVector("zero", impParticleForce_.dimensions(), vector::zero);
   }
@@ -116,6 +130,10 @@ class globalForce {
   inline const volVectorField& ddtU() const { return ddtU_; }
 
   inline const volVectorField& vorticityField() const { return vorticityField_; }
+
+  inline const volVectorField& divTauField() const { return divTauField_; }
+
+  inline const volVectorField& gradPField() const { return gradPField_; }
 
   inline const volVectorField& impParticleForce() const { return impParticleForce_; }
 
@@ -139,6 +157,23 @@ class globalForce {
 
   inline const volScalarField& volumeFraction() const { return volumeFraction_; }
 
+  inline const volScalarField& nuField() const {
+#ifdef compre
+    nu_ = cloud_.turbulence().mu() / rho_;
+    return nu_;
+#else
+    return cloud_.turbulence().nu();
+#endif
+  }
+
+  inline const volScalarField& muField() const {
+#ifdef compre
+    return cloud_.turbulence().mu();
+#else
+    return cloud_.turbulence().nu() * rho_;
+#endif
+  }
+
  protected:
   cfdemCloud& cloud_;
 
@@ -161,6 +196,12 @@ class globalForce {
 
   //! \brief 涡量场，vorticityField_ = fvc::curl(U_)
   volVectorField vorticityField_;
+
+  //! \brief 压力梯度场，gradPField_ = fvc::grad(p_)
+  volVectorField gradPField_;
+
+  //! \brief 粘性应力场
+  volVectorField divTauField_;
 
   //! \brief 颗粒隐式力的总和 [N]
   volVectorField impParticleForce_;

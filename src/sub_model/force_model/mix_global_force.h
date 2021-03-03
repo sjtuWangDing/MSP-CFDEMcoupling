@@ -141,6 +141,12 @@ class mixGlobalForce : public globalForce {
   //! \brief 获取颗粒处背景流体的涡量
   Foam::vector getBackgroundVorticity(const int index) const;
 
+  //! \brief 获取颗粒处背景流体的压力梯度
+  Foam::vector getBackgroundGradP(const int index) const;
+
+  //! \brief 获取颗粒处背景流体的粘性应力
+  Foam::vector getBackgroundDivTau(const int index) const;
+
   //! \brief 高斯核函数
   double GaussCore(const Foam::vector& particlePos, const Foam::vector& cellPos, const double radius) const {
     double dist = mag(particlePos - cellPos);
@@ -184,6 +190,14 @@ class mixGlobalForce : public globalForce {
   //! \brief 背景流体的涡量
   //! \note map: 颗粒索引 --> 背景流体的涡量
   std::unordered_map<int, Foam::vector> backgroundVorticityMap_;
+
+  //! \brief 背景流体的压力梯度
+  //! \note map: 颗粒索引 --> 背景流体的压力梯度
+  std::unordered_map<int, Foam::vector> backgroundGradPMap_;
+
+  //! \brief 背景流体的粘性应力
+  //! \note map: 颗粒索引 --> 背景流体的粘性应力
+  std::unordered_map<int, Foam::vector> backgroundDivTauMap_;
 };
 
 /*!

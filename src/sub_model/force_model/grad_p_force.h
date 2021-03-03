@@ -51,9 +51,6 @@ class gradPForce : public forceModel {
   //! \note subPropsDict_ should be declared in front of other members
   dictionary subPropsDict_;
 
-  //! \brief name of the finite volume pressure field
-  std::string pressureFieldName_;
-
   const volScalarField& p_;
 };
 

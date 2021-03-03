@@ -25,35 +25,40 @@ License
   Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 \*---------------------------------------------------------------------------*/
 
-#ifndef __VISC_FORCE_H__
-#define __VISC_FORCE_H__
+#ifndef __MIX_VISC_FORCE_H__
+#define __MIX_VISC_FORCE_H__
 
 #include "./force_model.h"
 
 namespace Foam {
 
-class viscForce : public forceModel {
+class mixViscForce : public forceModel {
  public:
   //! \brief Runtime type information
-  cfdemTypeName("viscForce");
+  cfdemTypeName("mixViscForce");
 
-  cfdemDefineNewFunctionAdder(forceModel, viscForce);
+  cfdemDefineNewFunctionAdder(forceModel, mixViscForce);
 
   //! \brief Constructor
-  viscForce(cfdemCloud& cloud);
+  mixViscForce(cfdemCloud& cloud);
 
   //! \brief Destructor
-  ~viscForce();
+  ~mixViscForce();
 
   void setForce();
+
+ protected:
+  void setForceKernel(const int index, Foam::vector& viscForce, std::once_flag& onceOp);
+
+  Foam::vector getBackgroundDivTau(const int index, const int findCellID) const;
 
  private:
   //! \note subPropsDict_ should be declared in front of other members
   dictionary subPropsDict_;
 
-  const volVectorField& U_;
+  const volVectorField& divTauField_;
 };
 
 }  // namespace Foam
 
-#endif  // __VISC_FORCE_H__
+#endif  // __MIX_VISC_FORCE_H__

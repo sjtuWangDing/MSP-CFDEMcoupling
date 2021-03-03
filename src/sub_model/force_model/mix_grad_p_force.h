@@ -25,35 +25,42 @@ License
   Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 \*---------------------------------------------------------------------------*/
 
-#ifndef __VISC_FORCE_H__
-#define __VISC_FORCE_H__
+#ifndef __MIX_GRAD_P_FORCE_H__
+#define __MIX_GRAD_P_FORCE_H__
 
 #include "./force_model.h"
 
 namespace Foam {
 
-class viscForce : public forceModel {
+class mixGradPForce : public forceModel {
  public:
   //! \brief Runtime type information
-  cfdemTypeName("viscForce");
+  cfdemTypeName("mixGradPForce");
 
-  cfdemDefineNewFunctionAdder(forceModel, viscForce);
+  cfdemDefineNewFunctionAdder(forceModel, mixGradPForce);
 
   //! \brief Constructor
-  viscForce(cfdemCloud& cloud);
+  mixGradPForce(cfdemCloud& cloud);
 
   //! \brief Destructor
-  ~viscForce();
+  ~mixGradPForce();
 
   void setForce();
+
+ protected:
+  void setForceKernel(const int index, Foam::vector& mixGradPF, std::once_flag& onceOp);
+
+  Foam::vector getBackgroundGradP(const int index, const int findCellID) const;
 
  private:
   //! \note subPropsDict_ should be declared in front of other members
   dictionary subPropsDict_;
 
-  const volVectorField& U_;
+  const volScalarField& p_;
+
+  const volVectorField& gradPField_;
 };
 
 }  // namespace Foam
 
-#endif  // __VISC_FORCE_H__
+#endif  // __MIX_GRAD_P_FORCE_H__

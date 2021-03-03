@@ -20,7 +20,7 @@ FoamFile
 
 /* ---------------------------- sub-models & settings ---------------------------- */
 
-modelType B; // A or B
+modelType Bfull; // A or Bfull or B
 
 couplingInterval 50;
 
@@ -38,7 +38,8 @@ forceModels
 (
   Archimedes
   mixDragForce
-  // mixMeiLiftForce
+  mixGradPForce
+  mixViscForce
 );
 
 momCoupleModels
@@ -85,7 +86,7 @@ explicitCoupleProps
 ArchimedesProps
 {
   treatForceExplicitInMomEquation true;
-  treatForceBothCFDAndDEM true;
+  treatForceBothCFDAndDEM false;
   treatDEMForceImplicit false;
   verbose true;
   interpolation false;
@@ -104,11 +105,21 @@ mixDragForceProps
   useGaussCoreFunctionRefined true;
 }
 
-mixMeiLiftForceProps
+mixGradPForceProps
 {
-  treatForceBothCFDAndDEM true;
+  treatForceExplicitInMomEquation true;
+  treatForceBothCFDAndDEM true; // false (A model)
+  treatDEMForceImplicit false;
   verbose true;
-  useSecondOrderTerms false;
+  useGaussCoreFunctionRefined true;
+}
+
+mixViscForceProps
+{
+  treatForceExplicitInMomEquation true;
+  treatForceBothCFDAndDEM true; // false (A model)
+  treatDEMForceImplicit false;
+  verbose true;
   useGaussCoreFunctionRefined true;
 }
 

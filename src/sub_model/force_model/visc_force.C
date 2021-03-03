@@ -40,9 +40,8 @@ cfdemCreateNewFunctionAdder(forceModel, viscForce);
 viscForce::viscForce(cfdemCloud& cloud)
     : forceModel(cloud),
       subPropsDict_(cloud.couplingPropertiesDict().subDict(typeName_ + "Props")),
-      velFieldName_(subPropsDict_.lookupOrDefault<Foam::word>("velFieldName", "U").c_str()),
-      U_(cloud.mesh().lookupObject<volVectorField>(velFieldName_)) {
-  createForceSubModels(subPropsDict_, kResolved);
+      U_(cloud.globalF().U()) {
+  createForceSubModels(subPropsDict_, kUnResolved);
   if (cloud_.modelType() == "B") {
     FatalError << "using viscForce with model type B is not valid\n" << abort(FatalError);
   }

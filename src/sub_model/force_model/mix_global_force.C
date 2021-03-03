@@ -28,7 +28,9 @@ License
 #include "./mix_Basset_force.h"
 #include "./mix_Mei_lift_force.h"
 #include "./mix_global_force.h"
+#include "./mix_grad_p_force.h"
 #include "./mix_virtual_mass_force.h"
+#include "./mix_visc_force.h"
 #include "cfdem_tools/cfdem_tools.h"
 #include "sub_model/void_fraction_model/void_fraction_model.h"
 
@@ -112,6 +114,8 @@ void mixGlobalForce::initBeforeSetForce() {
   backgroundVoidFractionMap_.clear();
   backgroundDDtUMap_.clear();
   backgroundVorticityMap_.clear();
+  backgroundGradPMap_.clear();
+  backgroundDivTauMap_.clear();
 
   // (2) 如果使用了 BassetForce or virtualMassForce，则需要计算 ddtU
   bool isUsedVirtualMassForce = cfdemTools::isUsedForceModel(cloud_, mixVirtualMassForce::cTypeName());
@@ -128,7 +132,25 @@ void mixGlobalForce::initBeforeSetForce() {
     vorticityField_ = fvc::curl(U_);
   }
 
-  // (4) build expanded cell set
+  // (4) 如果使用了压力梯度力，则需要计算 gradPField
+  bool isUsedMixGradPForce = cfdemTools::isUsedForceModel(cloud_, mixGradPForce::cTypeName());
+  if (isUsedMixGradPForce) {
+    gradPField_ = fvc::grad(p_);
+  }
+
+  // (5) 如果使用了粘性力，则需要计算 divTauField
+  bool isUsedMixViscForce = cfdemTools::isUsedForceModel(cloud_, mixViscForce::cTypeName());
+  if (isUsedMixViscForce) {
+#ifdef compre
+    const volScalarField& mu = muField();
+    divTauField_ = -fvc::laplacian(mu, U_) - fvc::div(mu * dev(fvc::grad(U_)().T()));
+#else
+    const volScalarField& nu = nuField();
+    divTauField_ = -fvc::laplacian(nu * rho_, U_) - fvc::div(nu * rho_ * dev(fvc::grad(U_)().T()));
+#endif
+  }
+
+  // (6) build expanded cell set
   for (int index = 0; index < cloud_.numberOfParticles(); ++index) {
     if (cloud_.checkMiddleParticle(index)) {
       double radius = cloud_.getRadius(index);                       // 颗粒半径
@@ -144,18 +166,27 @@ void mixGlobalForce::initBeforeSetForce() {
   }
   base::MPI_Barrier();
 
-  // (5) 计算背景流体速度
+  // 计算背景流体速度
   setBackgroundFieldValue<true, 3, volVectorField, Foam::vector>(U_, backgroundUfluidMap_);
-  // (6) 计算背景流体空隙率
+  // 计算背景流体空隙率
   setBackgroundFieldValue<false, 1, volScalarField, Foam::scalar>(voidFraction_, backgroundVoidFractionMap_);
-  // (7) 计算背景流体的 ddtU
+  // 计算背景流体的 ddtU
   if (isUsedVirtualMassForce || isUsedBassetForce) {
     setBackgroundFieldValue<true, 3, volVectorField, Foam::vector>(ddtU_, backgroundDDtUMap_);
   }
-  // (8) 计算背景流体的涡量
+  // 计算背景流体的涡量
   if (isUsedMixMeiLiftForce) {
     setBackgroundFieldValue<true, 3, volVectorField, Foam::vector>(vorticityField_, backgroundVorticityMap_);
   }
+  // 计算背景流体的压力梯度
+  if (isUsedMixGradPForce) {
+    setBackgroundFieldValue<true, 3, volVectorField, Foam::vector>(gradPField_, backgroundGradPMap_);
+  }
+  // 计算背景流体的 divTauField
+  if (isUsedMixViscForce) {
+    setBackgroundFieldValue<true, 3, volVectorField, Foam::vector>(divTauField_, backgroundDivTauMap_);
+  }
+
   base::MPI_Info("mixGlobalForce: initBeforeSetForce - done", verbose_);
 
 #if 0
@@ -307,6 +338,26 @@ Foam::vector mixGlobalForce::getBackgroundVorticity(const int index) const {
   CHECK(cloud_.checkMiddleParticle(index)) << __func__ << ": particle " << index << " is not middle type";
   auto iter = backgroundVorticityMap_.find(index);
   if (backgroundVorticityMap_.end() != iter) {
+    return iter->second;
+  }
+  return Foam::vector::zero;
+}
+
+//! \brief 获取颗粒处背景流体的压力梯度
+Foam::vector mixGlobalForce::getBackgroundGradP(const int index) const {
+  CHECK(cloud_.checkMiddleParticle(index)) << __func__ << ": particle " << index << " is not middle type";
+  auto iter = backgroundGradPMap_.find(index);
+  if (backgroundGradPMap_.end() != iter) {
+    return iter->second;
+  }
+  return Foam::vector::zero;
+}
+
+//! \brief 获取颗粒处背景流体的粘性应力
+Foam::vector mixGlobalForce::getBackgroundDivTau(const int index) const {
+  CHECK(cloud_.checkMiddleParticle(index)) << __func__ << ": particle " << index << " is not middle type";
+  auto iter = backgroundDivTauMap_.find(index);
+  if (backgroundDivTauMap_.end() != iter) {
     return iter->second;
   }
   return Foam::vector::zero;
