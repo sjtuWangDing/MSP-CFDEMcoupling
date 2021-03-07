@@ -10,7 +10,7 @@ boundary        f f f
 newton          off
 
 units           si
-processors      1 1 2
+processors      2 2 1
 
 region          reg block 0.0 0.1 0.0 0.1 0.0 0.16 units box
 create_box      1 reg
@@ -52,7 +52,7 @@ fix     cfd2 all couple/cfd/force
 variable rhoF equal 960
 variable rhoP equal 1120
 variable rho equal ${rhoP}+2*${rhoF}
-create_atoms 1 single 0.05 0.05 0.12 units box
+create_atoms 1 single 0.052 0.053 0.12 units box
 set atom 1 diameter 0.015 density ${rho} vx 0 vy 0 vz 0
 
 variable        vx1 equal vx[1]

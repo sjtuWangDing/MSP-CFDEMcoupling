@@ -9,38 +9,19 @@ FoamFile
 {
   version     2.0;
   format      ascii;
-  class       dictionary;
-  location    "system";
-  object      decomposeParDict;
+  class       volVectorField;
+  location    "0";
+  object      expForce;
 }
 
-numberOfSubdomains 4;
+dimensions      [1 -2 -2 0 0 0 0];
 
-method          simple;
+internalField   uniform (0 0 0);
 
-simpleCoeffs
+boundaryField
 {
-  n               ( 2 2 1 );
-  delta           0.001;
+  ".*"
+  {
+    type            zeroGradient;
+  }
 }
-
-hierarchicalCoeffs
-{
-  n               ( 2 2 1 );
-  delta           0.001;
-  order           xyz;
-}
-
-metisCoeffs
-{
-}
-
-manualCoeffs
-{
-  dataFile        "";
-}
-
-distributed     no;
-
-roots           ( );
-

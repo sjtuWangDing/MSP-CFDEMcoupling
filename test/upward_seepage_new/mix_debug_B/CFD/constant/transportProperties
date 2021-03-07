@@ -10,37 +10,26 @@ FoamFile
   version     2.0;
   format      ascii;
   class       dictionary;
-  location    "system";
-  object      decomposeParDict;
+  location    "constant";
+  object      transportProperties;
 }
 
-numberOfSubdomains 4;
+transportModel  Newtonian;
 
-method          simple;
+nu              nu [ 0 2 -1 0 0 0 0 ] 1e-06;
 
-simpleCoeffs
+CrossPowerLawCoeffs
 {
-  n               ( 2 2 1 );
-  delta           0.001;
+  nu0             nu0 [ 0 2 -1 0 0 0 0 ] 1e-06;
+  nuInf           nuInf [ 0 2 -1 0 0 0 0 ] 1e-06;
+  m               m [ 0 0 1 0 0 0 0 ] 1;
+  n               n [ 0 0 0 0 0 0 0 ] 1;
 }
 
-hierarchicalCoeffs
+BirdCarreauCoeffs
 {
-  n               ( 2 2 1 );
-  delta           0.001;
-  order           xyz;
+  nu0             nu0 [ 0 2 -1 0 0 0 0 ] 1e-06;
+  nuInf           nuInf [ 0 2 -1 0 0 0 0 ] 1e-06;
+  k               k [ 0 0 1 0 0 0 0 ] 0;
+  n               n [ 0 0 0 0 0 0 0 ] 1;
 }
-
-metisCoeffs
-{
-}
-
-manualCoeffs
-{
-  dataFile        "";
-}
-
-distributed     no;
-
-roots           ( );
-

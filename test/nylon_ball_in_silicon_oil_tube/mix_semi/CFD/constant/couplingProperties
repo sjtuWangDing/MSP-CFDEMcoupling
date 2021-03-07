@@ -24,7 +24,7 @@ modelType Bfull; // A or Bfull or B
 
 couplingInterval 50;
 
-expandedCellScale 6;
+expandedCellScale 8;
 
 useGuoBBOEquation true;
 
@@ -132,6 +132,9 @@ mixProps
 {
   alphaMin 0.3;
   scaleUpVol 1.0;
+  useGuassVoidFractionForMiddleParticle true;
+  GaussKernelBandWidth 0.03;
+  GaussKernelScale 2.0;
 }
 
 engineMixProps

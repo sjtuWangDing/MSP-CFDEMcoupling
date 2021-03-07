@@ -19,11 +19,11 @@ FoamFile
 
 /* ---------------------------- sub-models & settings ---------------------------- */
 
-modelType A;
+modelType B;
 
 couplingInterval 100;
 
-expandedCellScale 6;
+expandedCellScale 12;
 
 allowUseSubCFDTimeStep false;
 
@@ -43,8 +43,6 @@ forceModels
   ShirgaonkarIB
   Archimedes
   mixDragForce
-  mixGradPForce
-  mixViscForce
 );
 
 momCoupleModels
@@ -104,6 +102,7 @@ ArchimedesProps
   treatForceBothCFDAndDEM false;
   treatDEMForceImplicit false;
   verbose true;
+  interpolation false;
 }
 
 mixDragForceProps
@@ -115,27 +114,7 @@ mixDragForceProps
   verbose true;
   interpolation false;
   scalarViscosity false;
-  useGaussCoreFunctionRefined true;
-}
-
-mixGradPForceProps
-{
-  treatForceExplicitInMomEquation false;
-  treatForceBothCFDAndDEM false; // false (A model)
-  treatDEMForceImplicit false;
-  verbose true;
-  interpolation false;
-  useGaussCoreFunctionRefined true;
-}
-
-mixViscForceProps
-{
-  treatForceExplicitInMomEquation false;
-  treatForceBothCFDAndDEM false; // false (A model)
-  treatDEMForceImplicit false;
-  verbose true;
-  interpolation false;
-  useGaussCoreFunctionRefined true;
+  useGaussCoreFunctionRefined false;
 }
 
 twoWayMPIProps

@@ -23,7 +23,7 @@ modelType Bfull;
 
 couplingInterval 100;
 
-expandedCellScale 6;
+expandedCellScale 12;
 
 allowUseSubCFDTimeStep false;
 
@@ -43,8 +43,8 @@ forceModels
   ShirgaonkarIB
   Archimedes
   mixDragForce
-  // mixGradPForce
-  // mixViscForce
+  mixGradPForce
+  mixViscForce
 );
 
 momCoupleModels
@@ -59,7 +59,7 @@ locateModel engineMix;
 
 dataExchangeModel twoWayMPI;
 
-averagingModel dense;
+averagingModel mixDense;
 
 turbulenceModelType turbulenceProperties;
 
@@ -115,7 +115,7 @@ mixDragForceProps
   verbose true;
   interpolation false;
   scalarViscosity false;
-  useGaussCoreFunctionRefined true;
+  useGaussCoreFunctionRefined false;
 }
 
 mixGradPForceProps
@@ -125,7 +125,7 @@ mixGradPForceProps
   treatDEMForceImplicit false;
   verbose true;
   interpolation false;
-  useGaussCoreFunctionRefined true;
+  useGaussCoreFunctionRefined false;
 }
 
 mixViscForceProps
@@ -135,7 +135,7 @@ mixViscForceProps
   treatDEMForceImplicit false;
   verbose true;
   interpolation false;
-  useGaussCoreFunctionRefined true;
+  useGaussCoreFunctionRefined false;
 }
 
 twoWayMPIProps
@@ -146,7 +146,10 @@ twoWayMPIProps
 mixProps
 {
   alphaMin 0.3;
-  scaleUpVol 1.0;
+  useGuassVoidFractionForMiddleParticle true;
+  GaussKernelBandWidth 0.00286;
+  GaussKernelScale 2.0;
+  verbose true;
   maxCellsNumPerCoarseParticle 10000000;
 }
 
