@@ -216,7 +216,7 @@ void cfdemCloudMix::calcVelocityCorrection(volScalarField& p, volVectorField& U,
     U = (voidFraction * U - fvc::grad(phiIB)) / voidFraction;
     U.correctBoundaryConditions();
     // correct the pressure as well
-    p = p + phiIB / U.mesh().time().deltaT();
+    p = p + phiIB / U.mesh().time().deltaT() / voidFraction;
     p.correctBoundaryConditions();
   }
 }
@@ -260,6 +260,8 @@ void cfdemCloudMix::evolve(volVectorField& U, volScalarField& voidF, volScalarFi
     // 必须位于计算颗粒尺度之后，因为需要判断颗粒是否为 middle
     // findExpandedCell() 只会作用于 middle 颗粒
     locateM().findExpandedCell(parCloud_.findExpandedCellIDs(), expandedCellScale());
+    // 构建 expanded cell set，必须在 setVoidFraction() 以及 initBeforeSetForce() 前调用
+    globalF().buildExpandedCellMap();
     // 计算颗粒空隙率
     voidFractionM().setVoidFraction();
     voidF = voidFractionM().voidFractionNext();

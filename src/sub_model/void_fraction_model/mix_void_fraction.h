@@ -59,6 +59,11 @@ class mixVoidFraction : public voidFractionModel {
   void setVoidFractionForSingleParticle(const int index, const int findCellID,
                                         std::unordered_map<int, Foam::vector>& parMap);
 
+  void getAccumulateCellVolume();
+
+  void setGaussVoidFractionForSingleMiddleParticle(const int index, const int findExpandedCellID,
+                                                   std::unordered_map<int, Foam::vector>& parMap);
+
   /*!
    * \brief 设置单个颗粒的体积分数场
    * \param index 颗粒索引
@@ -83,11 +88,25 @@ class mixVoidFraction : public voidFractionModel {
   //! \brief 是否打印详细信息
   bool verbose_;
 
+  //! \brief 中等尺度颗粒使用高斯空隙率模型
+  bool useGuassVoidFractionForMiddleParticle_;
+
+  //! \brief 高斯核函数带宽，通常设置为 2 倍的颗粒直径
+  double GaussKernelBandWidth_;
+
+  //! \brief 颗粒影响域因子
+  //! \brief 影响半径 = GaussKernelBandWidth_ * GaussKernelScale_
+  //! \note GaussKernelScale_ > 2 with err < 5%, GaussKernelScale_ > 3 with err < 1%
+  double GaussKernelScale_;
+
   //! \brief 空隙率的最小值
   double alphaMin_;
 
   //! \brief 由于空隙率限制而导致颗粒体积的累积损失
   double tooMuch_;
+
+  //! \brief 颗粒累计网格体积
+  base::CDTensor1 accumulateCellVolumes_;
 };
 
 }  // namespace Foam

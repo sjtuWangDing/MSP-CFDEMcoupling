@@ -123,11 +123,22 @@ class mixGlobalForce : public globalForce {
   //! \brief Destructor
   ~mixGlobalForce();
 
+  //! \brief 构建 expanded cell set
+  void buildExpandedCellMap();
+
   //! \brief 每一次耦合中，在 set force 前执行
   void initBeforeSetForce();
 
   //! \brief 每一次耦合中，在 set force 后执行
   void endAfterSetForce();
+
+  //! \brief 获取颗粒的 expanded cell set
+  const std::unordered_set<int>& getExpandedCellSet(const int index) {
+    if (expandedCellMap_.end() == expandedCellMap_.find(index)) {
+      FatalError << __func__ << ": invoke buildExpandedCellMap() before get cell set" << abort(FatalError);
+    }
+    return expandedCellMap_[index];
+  }
 
   //! \brief 获取颗粒处背景流体速度
   Foam::vector getBackgroundUfluid(const int index) const;
@@ -147,11 +158,19 @@ class mixGlobalForce : public globalForce {
   //! \brief 获取颗粒处背景流体的粘性应力
   Foam::vector getBackgroundDivTau(const int index) const;
 
+#if 0
   //! \brief 高斯核函数
   double GaussCore(const Foam::vector& particlePos, const Foam::vector& cellPos, const double radius) const {
     double dist = mag(particlePos - cellPos);
     return exp(-1.0 * dist * dist / (2 * pow(2 * radius * GaussCoreEff_, 2)));
   }
+#else
+  //! \brief 高斯核函数
+  double GaussCore(const Foam::vector& particlePos, const Foam::vector& cellPos, const double radius) const {
+    double dist = mag(particlePos - cellPos);
+    return exp(-1.0 * sqr(dist) / sqr(GaussCoreEff_ * 2 * radius));
+  }
+#endif
 
  private:
   /*!
@@ -171,10 +190,6 @@ class mixGlobalForce : public globalForce {
   void setBackgroundFieldValue(const FieldType& field, std::unordered_map<int, DType>& fieldValueMap) const;
 
  private:
-  //! \brief 颗粒覆盖的扩展网格的索引
-  //! \brief map: 颗粒索引 --> 扩展网格索引
-  std::unordered_map<int, std::unordered_set<int>> expandedCellMap_;
-
   //! \brief 背景流体速度
   //! \note map: 颗粒索引 --> 背景流体速度
   std::unordered_map<int, Foam::vector> backgroundUfluidMap_;

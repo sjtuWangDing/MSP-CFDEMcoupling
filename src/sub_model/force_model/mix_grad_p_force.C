@@ -46,9 +46,9 @@ mixGradPForce::mixGradPForce(cfdemCloud& cloud)
   if (cloud_.modelType() == "B") {
     FatalError << "using mixGradPForce with model type B is not valid\n" << abort(FatalError);
   }
-  if (!forceSubModel_->treatForceExplicitInMomEquation()) {
-    FatalError << "mixGradPForce model need treatForceExplicitInMomEquation = true\n" << abort(FatalError);
-  }
+  // if (!forceSubModel_->treatForceExplicitInMomEquation()) {
+  //   FatalError << "mixGradPForce model need treatForceExplicitInMomEquation = true\n" << abort(FatalError);
+  // }
   if (cloud_.modelType() == "A" && forceSubModel_->treatForceBothCFDAndDEM()) {
     FatalError << "mixGradPForce with model type A requires treatForceBothCFDAndDEM = false\n" << abort(FatalError);
   }

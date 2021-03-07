@@ -105,11 +105,30 @@ void mixGlobalForce::initBeforeSetForce() {
 
 #else
 
+//! \brief 构建 expanded cell set
+void mixGlobalForce::buildExpandedCellMap() {
+  // nerver forget init data !!!
+  expandedCellMap_.clear();
+  for (int index = 0; index < cloud_.numberOfParticles(); ++index) {
+    if (cloud_.checkMiddleParticle(index)) {
+      double radius = cloud_.getRadius(index);                       // 颗粒半径
+      Foam::vector particlePos = cloud_.getPosition(index);          // 颗粒中心坐标
+      int findExpandedCellID = cloud_.findExpandedCellIDs()[index];  // 扩展网格ID
+      // 计算颗粒覆盖的扩展网格集合
+      expandedCellMap_.insert(std::make_pair(index, std::unordered_set<int>()));
+      if (findExpandedCellID >= 0) {
+        cloud_.voidFractionM().buildExpandedCellSet(expandedCellMap_[index], findExpandedCellID, particlePos, radius,
+                                                    cloud_.expandedCellScale());
+      }
+    }
+  }
+  base::MPI_Barrier();
+}
+
 //! \brief 每一次耦合中，在 set force 前执行
 void mixGlobalForce::initBeforeSetForce() {
   // (1) init data - Important !!!
   // nerver forget !!!
-  expandedCellMap_.clear();
   backgroundUfluidMap_.clear();
   backgroundVoidFractionMap_.clear();
   backgroundDDtUMap_.clear();
@@ -149,22 +168,6 @@ void mixGlobalForce::initBeforeSetForce() {
     divTauField_ = -fvc::laplacian(nu * rho_, U_) - fvc::div(nu * rho_ * dev(fvc::grad(U_)().T()));
 #endif
   }
-
-  // (6) build expanded cell set
-  for (int index = 0; index < cloud_.numberOfParticles(); ++index) {
-    if (cloud_.checkMiddleParticle(index)) {
-      double radius = cloud_.getRadius(index);                       // 颗粒半径
-      Foam::vector particlePos = cloud_.getPosition(index);          // 颗粒中心坐标
-      int findExpandedCellID = cloud_.findExpandedCellIDs()[index];  // 扩展网格ID
-      // 计算颗粒覆盖的扩展网格集合
-      expandedCellMap_.insert(std::make_pair(index, std::unordered_set<int>()));
-      if (findExpandedCellID >= 0) {
-        cloud_.voidFractionM().buildExpandedCellSet(expandedCellMap_[index], findExpandedCellID, particlePos, radius,
-                                                    cloud_.expandedCellScale());
-      }
-    }
-  }
-  base::MPI_Barrier();
 
   // 计算背景流体速度
   setBackgroundFieldValue<true, 3, volVectorField, Foam::vector>(U_, backgroundUfluidMap_);

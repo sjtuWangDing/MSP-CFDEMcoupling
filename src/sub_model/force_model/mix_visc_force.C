@@ -45,9 +45,9 @@ mixViscForce::mixViscForce(cfdemCloud& cloud)
   if (cloud_.modelType() == "B") {
     FatalError << "using mixViscForce with model type B is not valid\n" << abort(FatalError);
   }
-  if (!forceSubModel_->treatForceExplicitInMomEquation()) {
-    FatalError << "mixViscForce model need treatForceExplicitInMomEquation = true\n" << abort(FatalError);
-  }
+  // if (!forceSubModel_->treatForceExplicitInMomEquation()) {
+  //   FatalError << "mixViscForce model need treatForceExplicitInMomEquation = true\n" << abort(FatalError);
+  // }
   if (cloud_.modelType() == "A" && forceSubModel_->treatForceBothCFDAndDEM()) {
     FatalError << "mixViscForce with model type A requires treatForceBothCFDAndDEM = false\n" << abort(FatalError);
   }

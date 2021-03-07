@@ -30,6 +30,7 @@ License
 
 #include <memory>
 #include <unordered_map>
+#include <unordered_set>
 #include "base/run_time_selection_tables.h"
 #include "cloud/cfdem_cloud.h"
 #include "sub_model/data_exchange_model/data_exchange_model.h"
@@ -72,6 +73,19 @@ class globalForce {
 
   //! \brief 获取颗粒的历史 ddtUr
   std::vector<Foam::vector>& getDDtUrHistory(const int index);
+
+  //! \brief 构建 expanded cell set
+  virtual void buildExpandedCellMap() {
+    FatalError << __func__ << " not implement in Foam::globalForce, please use Foam::mixGlobalForce"
+               << abort(FatalError);
+  }
+
+  //! \brief 获取颗粒的 expanded cell set
+  virtual const std::unordered_set<int>& getExpandedCellSet(const int index) {
+    FatalError << __func__ << " not implement in Foam::globalForce, please use Foam::mixGlobalForce"
+               << abort(FatalError);
+    return expandedCellMap_[index];
+  }
 
   //! \brief 获取颗粒处背景流体速度
   virtual Foam::vector getBackgroundUfluid(const int index) const {
@@ -191,6 +205,10 @@ class globalForce {
   //! \brief 记录每一个颗粒的每一个耦合时间步的 ddtUr = d(Ufluid - Up) / dt
   //! \note map: 颗粒索引 --> 历史 ddtUr
   std::unordered_map<int, std::vector<Foam::vector>> ddtUrHistoryMap_;
+
+  //! \brief 颗粒覆盖的扩展网格的索引
+  //! \brief map: 颗粒索引 --> 扩展网格索引
+  std::unordered_map<int, std::unordered_set<int>> expandedCellMap_;
 
   volVectorField ddtU_;
 

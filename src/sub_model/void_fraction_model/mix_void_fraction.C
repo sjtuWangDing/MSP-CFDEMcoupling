@@ -28,6 +28,7 @@ License
 #include "./IB_void_fraction.h"
 #include "./divided_void_fraction.h"
 #include "./mix_void_fraction.h"
+#include "sub_model/force_model/global_force.h"
 #include "sub_model/locate_model/locate_model.h"
 
 namespace Foam {
@@ -41,11 +42,27 @@ mixVoidFraction::mixVoidFraction(cfdemCloud& cloud)
     : voidFractionModel(cloud),
       subPropsDict_(cloud.couplingPropertiesDict().subDict(typeName_ + "Props")),
       verbose_(false),
+      useGuassVoidFractionForMiddleParticle_(false),
+      GaussKernelBandWidth_(0.0),
+      GaussKernelScale_(0.0),
       alphaMin_(0.0),
       tooMuch_(0.0) {
   weight_ = subPropsDict_.lookupOrDefault<double>("weight", 1.0);
   porosity_ = subPropsDict_.lookupOrDefault<double>("porosity", 1.0);
   verbose_ = subPropsDict_.lookupOrDefault<bool>("verbose", false);
+  useGuassVoidFractionForMiddleParticle_ =
+      subPropsDict_.lookupOrDefault<bool>("useGuassVoidFractionForMiddleParticle", false);
+  if (useGuassVoidFractionForMiddleParticle_) {
+    GaussKernelBandWidth_ = subPropsDict_.lookupOrDefault<double>("GaussKernelBandWidth", 0.0);
+    GaussKernelScale_ = subPropsDict_.lookupOrDefault<double>("GaussKernelScale", 2.0);
+    if (GaussKernelBandWidth_ < Foam::SMALL) {
+      FatalError << __func__ << ": GaussKernelBandWidth shloud be >= 2.0 * dp(diamter of middle particle)."
+                 << abort(FatalError);
+    }
+    if (GaussKernelScale_ < 2.0 - Foam::SMALL) {
+      FatalError << __func__ << ": GaussKernelScale shloud be >= 2.0." << abort(FatalError);
+    }
+  }
   alphaMin_ = subPropsDict_.lookupOrDefault<double>("alphaMin", 0.0);
   // 单个颗粒覆盖最多网格数量
   maxCellsNumPerCoarseParticle_ = subPropsDict_.lookupOrDefault<int>("maxCellsNumPerCoarseParticle", 1000);
@@ -114,29 +131,52 @@ void mixVoidFraction::setVoidFraction() {
   std::unordered_map<int, std::unordered_map<int, Foam::vector>> parMaps;
   std::unordered_map<int, std::unordered_set<int>> parSets;
   // set voidFraction and volumeFraction
+  // 先设置大颗粒体积分数，然后设置小颗粒空隙率，因为使用高斯核函数
+  // 计算小颗粒空隙率时需要使用大颗粒体积分数
   for (int index = 0; index < cloud_.numberOfParticles(); ++index) {
     if (cloud_.checkCoarseParticle(index)) {
       // coarse particle
       parSets.insert(std::make_pair(index, std::unordered_set<int>()));
       setVolumeFractionForSingleParticle(index, parSets[index]);
-    } else {
-      // find and middle particle
+    }
+  }  // End loop of all coarse particles
+  // 计算累计网格体积
+  if (useGuassVoidFractionForMiddleParticle_) {
+    getAccumulateCellVolume();
+  }
+  // 计算小颗粒空隙率
+  for (int index = 0; index < cloud_.numberOfParticles(); ++index) {
+    if (cloud_.checkFineParticle(index) ||
+        (cloud_.checkMiddleParticle(index) && !useGuassVoidFractionForMiddleParticle_)) {
       int findCellID = cloud_.findCellIDs()[index];
       parMaps.insert(std::make_pair(index, std::unordered_map<int, Foam::vector>()));
       if (findCellID >= 0) {
         setVoidFractionForSingleParticle(index, findCellID, parMaps[index]);
       }
+    } else {
+      int findExpandedCellID = cloud_.findExpandedCellIDs()[index];
+      parMaps.insert(std::make_pair(index, std::unordered_map<int, Foam::vector>()));
+      if (findExpandedCellID >= 0) {
+        setGaussVoidFractionForSingleMiddleParticle(index, findExpandedCellID, parMaps[index]);
+      }
     }
+  }  // End loop of all fine and middle particles
+  // 在大颗粒边界处光滑空隙率场
+  forAll(voidFractionNext_, cellID) {
+    double volumeF = volumeFractionNext_[cellID];
+    if (volumeF > Foam::SMALL && volumeF < 1.0 - Foam::SMALL) {
+      voidFractionNext_[cellID] = volumeF * voidFractionNext_[cellID] + (1.0 - volumeF);
+    }
+  }
+  voidFractionNext_.correctBoundaryConditions();
+  volumeFractionNext_.correctBoundaryConditions();
+  for (int index = 0; index < cloud_.numberOfParticles(); ++index) {
     // no matter what kind of particle, need to construct default tensor
     cloud_.pCloud().cellIDs().emplace_back();
     cloud_.pCloud().voidFractions().emplace_back();
     cloud_.pCloud().volumeFractions().emplace_back();
     cloud_.pCloud().particleWeights().emplace_back();
     cloud_.pCloud().particleVolumes().emplace_back();
-  }  // End loop of all particles
-  voidFractionNext_.correctBoundaryConditions();
-  volumeFractionNext_.correctBoundaryConditions();
-  for (int index = 0; index < cloud_.numberOfParticles(); ++index) {
     if (cloud_.checkCoarseParticle(index)) {
       const auto& set = parSets[index];
       int meshNumber = set.size();
@@ -179,12 +219,12 @@ void mixVoidFraction::setVoidFraction() {
           const Foam::vector& data = iter->second;
           // 保存颗粒覆盖的所有网格编号
           cloud_.cellIDs()[index][i] = subCellID;
-          // 保存 voidFractions
-          cloud_.voidFractions()[index][i] = voidFractionNext_[subCellID];
           // 保存 particleWeights
           cloud_.particleWeights()[index][i] = data[0];
           // 保存 particleVolumes
           cloud_.particleVolumes()[index][i] = data[1];
+          // 保存 voidFractions
+          cloud_.voidFractions()[index][i] = data[1] / cloud_.mesh().V()[subCellID];
         }
       }
     }
@@ -361,6 +401,130 @@ void mixVoidFraction::buildSetForVolumeFraction(const label cellID, const Foam::
       }
     }  // not found neighbour in hash set
   }    // End of loop neighbour cell
+}
+
+//! \brief 计算颗粒的累计网格体积
+void mixVoidFraction::getAccumulateCellVolume() {
+  int number = cloud_.numberOfParticles();
+  // reallocate memory
+  accumulateCellVolumes_ = std::move(base::CDTensor1(base::makeShape1(number), 0.0));
+  Foam::vector cellPos = Foam::vector::zero;                    // 网格位置
+  Foam::vector particlePos = Foam::vector::zero;                // 颗粒中心坐标
+  double Vcell = 0.0;                                           // 网格体积
+  double volumeF = 0.0;                                         // 大颗粒体积分数
+  double GaussKernel = 0.0;                                     // 颗粒在网格处的高斯核
+  base::CDTensor1 accuCellsVol(base::makeShape1(number), 0.0);  // 颗粒覆盖当前求解器的网格的累计体积
+  for (int index = 0; index < cloud_.numberOfParticles(); ++index) {
+    // 如果颗粒是 middle particle 同时 findExpandedCellID 位于当前求解器上
+    if (cloud_.checkMiddleParticle(index) && cloud_.findExpandedCellIDs()[index] >= 0) {
+      const std::unordered_set<int>& cellSet = cloud_.globalF().getExpandedCellSet(index);
+      particlePos = cloud_.getPosition(index);
+      // 计算累计网体积
+      double accuCellVol = 0.0;
+      for (const auto& cellID : cellSet) {
+        // 网格 cellID 位于计算区域外部
+        if (cellID < 0) {
+          continue;
+        }
+        volumeF = volumeFractionNext_[cellID];
+        // 网格 cellID 位于大颗粒内部
+        if (volumeF < Foam::SMALL) {
+          continue;
+        }
+        cellPos = cloud_.mesh().C()[cellID];
+        Vcell = cloud_.mesh().V()[cellID];
+        GaussKernel = GaussCore(cellPos, particlePos, GaussKernelBandWidth_);
+        accuCellVol += GaussKernel * Vcell * volumeF;
+      }
+      accuCellsVol[index] = accuCellVol;
+    }
+  }
+  // 主节点汇总其他节点的 accuCellsVol
+  int procId = base::procId();
+  int numProc = base::numProc();
+  int nTag = 100;
+  if (0 != procId) {
+    MPI_Request rq;
+    // 发送 accuCellsVol 给主节点( MPI_Isend 非阻塞)
+    base::MPI_Isend(accuCellsVol, 0, nTag, &rq);
+  }
+  if (0 == procId) {
+    std::vector<MPI_Request> rVec(numProc);
+    std::vector<MPI_Status> sVec(numProc);
+    std::vector<base::CDTensor1> accuCellsVolVec;
+    // 接收其他节点的 accuCellsVol 信息
+    for (int inode = 1; inode < numProc; ++inode) {
+      accuCellsVolVec.emplace_back(base::makeShape1(number), 0);
+      base::MPI_Irecv(accuCellsVolVec[inode - 1], inode, nTag, rVec.data() + inode);
+    }
+    // 主节点等待 Irecv 执行完成
+    MPI_Waitall(numProc - 1, rVec.data() + 1, sVec.data() + 1);
+    // 由主节点计算 accuCellsVol
+    for (int index = 0; index < number; ++index) {
+      double accuCellVol = 0.0;
+      if (cloud_.checkMiddleParticle(index)) {
+        for (int j = 0; j < numProc; ++j) {
+          if (0 == j) {
+            accuCellVol += std::max(accuCellsVol[index], 0.0);
+          } else {
+            accuCellVol += std::max(accuCellsVolVec[j - 1][index], 0.0);
+          }
+        }
+        CHECK_GT(accuCellVol, 0) << __func__ << ": particle " << index << " 's accuCellVol <= 0.0";
+      }
+      accumulateCellVolumes_[index] = accuCellVol;
+    }
+  }
+  // 主节点广播 accumulateCellVolume
+  base::MPI_Bcast(accumulateCellVolumes_, 0);
+  base::MPI_Barrier();
+}
+
+void mixVoidFraction::setGaussVoidFractionForSingleMiddleParticle(const int index, const int findExpandedCellID,
+                                                                  std::unordered_map<int, Foam::vector>& parMap) {
+  parMap.clear();
+  double radius = cloud_.getRadius(index);                  // 颗粒半径
+  Foam::vector particleCentre = cloud_.getPosition(index);  // 颗粒中心坐标
+  std::unordered_set<int> expandedCellSet;                  // 扩展网格索引
+  // 计算颗粒覆盖的扩展网格集合
+  cloud_.voidFractionM().buildExpandedCellSet(expandedCellSet, findExpandedCellID, particleCentre, radius,
+                                              GaussKernelBandWidth_ * GaussKernelScale_ / radius);
+  Foam::vector cellPos = Foam::vector::zero;                    // 网格位置
+  double Vcell = 0.0;                                           // 网格体积
+  double volumeF = 0.0;                                         // 大颗粒体积分数
+  double GaussKernel = 0.0;                                     // 颗粒在网格处的高斯核
+  double effectRatio = 0.0;                                     // 颗粒影响网格系数
+  double newAlpha = 1.0;                                        // 网格空隙率
+  double accumulateCellVolume = accumulateCellVolumes_[index];  // 网格累计体积
+  for (const int& cellID : expandedCellSet) {
+    // 网格 cellID 位于计算区域外部
+    if (cellID < 0) {
+      continue;
+    }
+    volumeF = volumeFractionNext_[cellID];
+    // 网格 cellID 位于大颗粒内部
+    if (volumeF < Foam::SMALL) {
+      continue;
+    }
+    cellPos = cloud_.mesh().C()[cellID];
+    Vcell = cloud_.mesh().V()[cellID];
+    GaussKernel = GaussCore(cellPos, particleCentre, GaussKernelBandWidth_);
+    // 计算颗粒 index 对网格 cellID 的体积
+    effectRatio = GaussKernel * Vcell * volumeF / accumulateCellVolume;
+    // 计算空隙率
+    newAlpha = voidFractionNext_[cellID] - pV(radius) * effectRatio / Vcell;
+    voidFractionNext_[cellID] = newAlpha;
+    // 将 cellID 插入到 map 中
+    auto iter = parMap.find(cellID);
+    if (parMap.end() == iter) {
+      // 需要创建新的索引
+      cloud_.particleOverMeshNumber()[index] += 1;
+      parMap.insert(std::make_pair(cellID, Foam::vector::zero));
+    }
+    parMap[cellID][0] += effectRatio;               // add particleWeights
+    parMap[cellID][1] += pV(radius) * effectRatio;  // add particleVolumes
+    parMap[cellID][2] += pV(radius) * effectRatio;  // add particleVs
+  }
 }
 
 //! \brief 设置索引为 index 的单个颗粒的空隙率

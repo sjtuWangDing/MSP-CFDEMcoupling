@@ -46,8 +46,8 @@ Archimedes::Archimedes(cfdemCloud& cloud)
     CHECK(!forceSubModel_->treatForceBothCFDAndDEM())
         << ": model type A and Bfull request Archimedes model treatForceBothCFDAndDEM == false";
   } else if (cloud_.modelType() == "B") {
-    CHECK(forceSubModel_->treatForceBothCFDAndDEM())
-        << ": model type B request Archimedes model treatForceBothCFDAndDEM == true";
+    // CHECK(forceSubModel_->treatForceBothCFDAndDEM())
+    //     << ": model type B request Archimedes model treatForceBothCFDAndDEM == true";
   }
 }
 

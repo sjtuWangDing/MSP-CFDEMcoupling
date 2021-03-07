@@ -120,12 +120,9 @@ class voidFractionModel {
   }
 
   //! \brief 高斯核函数
-  inline double GaussCore(const Foam::vector& particlePos, const Foam::vector& cellPos, const double radius) const {
+  inline double GaussCore(const Foam::vector& particlePos, const Foam::vector& cellPos, const double bandWidth) const {
     double dist = mag(particlePos - cellPos);
-    // 计算高斯系数
-    double gaussEff = 0.2615 * 3.0 + 0.3234;
-    gaussEff *= (2 * radius);
-    return exp(-1.0 * dist * dist / sqr(gaussEff)) / pow(sqr(gaussEff) * M_PI, 1.5);
+    return exp(-1.0 * sqr(dist) / sqr(bandWidth));
   }
 
   /*!

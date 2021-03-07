@@ -18,6 +18,7 @@ $(sub_model)/averaging_model/averaging_model.C
 $(sub_model)/averaging_model/no_averaging_model.C
 $(sub_model)/averaging_model/dense.C
 $(sub_model)/averaging_model/dilute.C
+$(sub_model)/averaging_model/mix_dense.C
 
 $(sub_model)/data_exchange_model/data_exchange_model.C
 $(sub_model)/data_exchange_model/two_way_mpi.C
