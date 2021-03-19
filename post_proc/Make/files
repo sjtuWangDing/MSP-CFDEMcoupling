@@ -1,0 +1,3 @@
+cfdem_post_proc.C
+
+EXE=./test/mspCfdemPostProc
