@@ -46,65 +46,6 @@ mixGlobalForce::mixGlobalForce(cfdemCloud& cloud) : globalForce(cloud) {}
 //! \brief Destructor
 mixGlobalForce::~mixGlobalForce() {}
 
-#if 0
-
-//! \brief 每一次耦合中，在 set force 前执行
-void mixGlobalForce::initBeforeSetForce() {
-  // init data - Important !!!
-  // nerver forget !!!
-  expandedCellMap_.clear();
-  backgroundUfluidMap_.clear();
-  backgroundVoidFractionMap_.clear();
-  backgroundDDtUMap_.clear();
-  backgroundVorticityMap_.clear();
-
-  // 如果使用了 BassetForce or virtualMassForce，则需要计算 ddtU
-  bool isUsedVirtualMassForce = cfdemTools::isUsedForceModel(cloud_, mixVirtualMassForce::cTypeName());
-  bool isUsedBassetForce = cfdemTools::isUsedForceModel(cloud_, mixBassetForce::cTypeName());
-  if (isUsedVirtualMassForce || isUsedBassetForce) {
-    // 计算 ddtU field
-    ddtU_ = fvc::ddt(U_) + fvc::div(phi_, U_);
-  }
-
-  // 如果使用了升力，则需要计算 vorticityField
-  bool isUsedMixMeiLiftForce = cfdemTools::isUsedForceModel(cloud_, mixMeiLiftForce::cTypeName());
-  if (isUsedMixMeiLiftForce) {
-    // 计算 vorticityField
-    vorticityField_ = fvc::curl(U_);
-  }
-
-  // reset data
-  for (int index = 0; index < cloud_.numberOfParticles(); ++index) {
-    if (cloud_.checkMiddleParticle(index)) {
-      double radius = cloud_.getRadius(index);                       // 颗粒半径
-      Foam::vector particlePos = cloud_.getPosition(index);          // 颗粒中心坐标
-      int findExpandedCellID = cloud_.findExpandedCellIDs()[index];  // 扩展网格ID
-      // 计算颗粒覆盖的扩展网格集合
-      expandedCellMap_.insert(std::make_pair(index, std::unordered_set<int>()));
-      if (findExpandedCellID >= 0) {
-        cloud_.voidFractionM().buildExpandedCellSet(expandedCellMap_[index], findExpandedCellID, particlePos, radius,
-                                                    cloud_.expandedCellScale());
-      }
-      // 计算背景流体速度
-      backgroundUfluidMap_.insert(std::make_pair(index, getBackgroundFieldValue(index, U_)));
-      // 计算背景流体空隙率
-      backgroundVoidFractionMap_.insert(
-          std::make_pair(index, getBackgroundFieldValue<false, 1, volScalarField, scalar>(index, voidFraction_)));
-      // 计算背景流体的 ddtU
-      if (isUsedVirtualMassForce || isUsedBassetForce) {
-        backgroundDDtUMap_.insert(std::make_pair(index, getBackgroundFieldValue(index, ddtU_)));
-      }
-      // 计算背景流体的涡量
-      if (isUsedMixMeiLiftForce) {
-        backgroundVorticityMap_.insert(std::make_pair(index, getBackgroundFieldValue(index, vorticityField_)));
-      }
-    }
-  }
-  base::MPI_Info("mixGlobalForce: initBeforeSetForce - done", verbose_);
-}
-
-#else
-
 //! \brief 构建 expanded cell set
 void mixGlobalForce::buildExpandedCellMap() {
   // nerver forget init data !!!
@@ -168,7 +109,6 @@ void mixGlobalForce::initBeforeSetForce() {
     divTauField_ = -fvc::laplacian(nu * rho_, U_) - fvc::div(nu * rho_ * dev(fvc::grad(U_)().T()));
 #endif
   }
-
   // 计算背景流体速度
   setBackgroundFieldValue<true, 3, volVectorField, Foam::vector>(U_, backgroundUfluidMap_);
   // 计算背景流体空隙率
@@ -191,107 +131,7 @@ void mixGlobalForce::initBeforeSetForce() {
   }
 
   base::MPI_Info("mixGlobalForce: initBeforeSetForce - done", verbose_);
-
-#if 0
-
-  int number = cloud_.numberOfParticles();
-  base::CDTensor2 dataTensor(base::makeShape2(number, 4), 0.0);
-  for (int index = 0; index < number; ++index) {
-    int findExpandedCellID = cloud_.findExpandedCellIDs()[index];
-    if (findExpandedCellID >= 0) {
-      Foam::vector particlePos = cloud_.getPosition(index);  // 颗粒中心坐标
-      Foam::vector cellPos = Foam::vector::zero;             // 网格中心坐标
-      double radius = cloud_.getRadius(index);               // 颗粒半径
-      double gcore = 0.0;                                    // 高斯核
-      double cellV = 0.0;                                    // 网格体积
-      auto iter = expandedCellMap_.find(index);
-      if (expandedCellMap_.end() != iter) {
-        const std::unordered_set<int>& set = iter->second;  // 颗粒扩展网格的集合
-        for (int cellID : set) {
-          if (cellID >= 0) {  // cell found
-            cellPos = cloud_.mesh().C()[cellID];
-            cellV = cloud_.mesh().V()[cellID];
-            // 计算高斯核
-            gcore = GaussCore(particlePos, cellPos, radius);
-            // 计算累计数据
-            fieldRefine<Foam::vector, base::CDTensor1>::op<true>(dataTensor[index], U_[cellID], cellV, gcore,
-                                                                 voidFraction_[cellID]);
-          }
-        }
-      }
-    }
-  }
-  base::MPI_Barrier();
-  int procId = base::procId();    // 处理器编号
-  int numProc = base::numProc();  // 处理器数量
-  int tag = 100;
-  if (0 != procId) {
-    MPI_Request request;
-    MPI_Status status;
-    // 发送 dataTensor 给主节点(非阻塞)
-    base::MPI_Isend(dataTensor, 0, tag, &request);
-    MPI_Wait(&request, &status);
-  }
-  if (0 == procId) {
-    std::vector<MPI_Request> rVec(numProc);
-    std::vector<MPI_Status> sVec(numProc);
-    std::vector<base::CDTensor2> dataTensorVec;
-    // 接收其他节点的 dataTensor
-    for (int inode = 0; inode < numProc; ++inode) {
-      if (inode == 0) {
-        dataTensorVec.emplace_back(base::makeShape2(number, 4), 0.0);
-        base::copyTensor(dataTensor, dataTensorVec[inode]);
-      } else {
-        dataTensorVec.emplace_back(base::makeShape2(number, 4), 0.0);
-        base::MPI_Irecv(dataTensorVec[inode], inode, tag, rVec.data() + inode);
-      }
-    }
-    // 主节点等待 Irecv 执行完成
-    MPI_Waitall(numProc - 1, rVec.data() + 1, sVec.data() + 1);
-    // 主节点重置 dataTensor
-    std::memset(dataTensor.ptr(), dataTensor.mSize(), 0.0);
-    for (int index = 0; index < number; ++index) {
-      for (int i = 0; i < 4; ++i) {
-        dataTensor[index][i] = 0.0;
-      }
-      if (index == 0) {
-        Info << dataTensor[0][0] << ", " << dataTensor[0][1] << ", " << dataTensor[0][2] << ", " << dataTensor[0][3]
-             << ", " << endl;
-      }
-      for (int inode = 0; inode < numProc; ++inode) {
-        for (int i = 0; i < 3; ++i) {
-          dataTensor[index][i] += dataTensorVec[inode][index][i];
-        }
-        dataTensor[index][3] += dataTensorVec[inode][index][3];
-      }
-      for (int i = 0; i < 3; ++i) {
-        dataTensor[index][i] /= dataTensor[index][3];
-      }
-      if (index == 0) {
-        Info << dataTensor[0][0] << ", " << dataTensor[0][1] << ", " << dataTensor[0][2] << ", " << dataTensor[0][3]
-             << ", " << endl;
-      }
-    }
-  }
-
-  // 主节点广播 dataTensor
-  MPI_Bcast(dataTensor.ptr(), dataTensor.mSize(), MPI_DOUBLE, 0, MPI_COMM_WORLD);
-  base::MPI_Barrier();
-
-  for (int index = 0; index < number; ++index) {
-    // 计算背景流体速度
-    int rootProc = cloud_.particleRootProcIDs()[index];  // 主节点编号，即颗粒所在的处理器编号
-    if (rootProc == procId) {
-      backgroundUfluidMap_.insert(
-          std::make_pair(index, Foam::vector(dataTensor[index][0], dataTensor[index][1], dataTensor[index][2])));
-    } else {
-      backgroundUfluidMap_.insert(std::make_pair(index, Foam::vector::zero));
-    }
-  }
-#endif
 }
-
-#endif
 
 //! \brief 每一次耦合中，在 set force 后执行
 void mixGlobalForce::endAfterSetForce() {

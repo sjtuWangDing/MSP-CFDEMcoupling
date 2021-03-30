@@ -158,7 +158,7 @@ class mixGlobalForce : public globalForce {
   //! \brief 获取颗粒处背景流体的粘性应力
   Foam::vector getBackgroundDivTau(const int index) const;
 
-#if 0
+#if 1
   //! \brief 高斯核函数
   double GaussCore(const Foam::vector& particlePos, const Foam::vector& cellPos, const double radius) const {
     double dist = mag(particlePos - cellPos);
@@ -181,10 +181,6 @@ class mixGlobalForce : public globalForce {
    * \tparam DType 场元素类型
    * \tparam BDType 场元素基本数据类型
    */
-  template <bool fieldIsNotVF = true, int NDim = Foam::vector::dim, typename FieldType = Foam::volVectorField,
-            typename DType = Foam::vector, typename BDType = Foam::scalar>
-  DType getBackgroundFieldValue(int index, const FieldType& field) const;
-
   template <bool fieldIsNotVF = true, int NDim = Foam::vector::dim, typename FieldType = Foam::volVectorField,
             typename DType = Foam::vector, typename BDType = Foam::scalar>
   void setBackgroundFieldValue(const FieldType& field, std::unordered_map<int, DType>& fieldValueMap) const;
@@ -321,84 +317,6 @@ void mixGlobalForce::setBackgroundFieldValue(const FieldType& field,
     }
   }
   base::MPI_Barrier();
-}
-
-/*!
- * \brief 计算颗粒 index 处的背景物理场量
- * \tparam fieldIsNotVF 背景物理场量是否是空隙率场，空隙率场的计算与其他场的方法不同
- * \tparam NDim 基本数据的个数，Eg: for Foam::vector, NDim = 3
- * \tparam FieldType 场类型
- * \tparam DType 场元素类型
- * \tparam BDType 场元素基本数据类型
- */
-template <bool fieldIsNotVF /*= true */, int NDim /* = Foam::vector::dim*/,
-          typename FieldType /* = Foam::volVectorField */, typename DType /* = Foam::vector */,
-          typename BDType /* = Foam::scalar*/
-          >
-DType mixGlobalForce::getBackgroundFieldValue(int index, const FieldType& field) const {
-  typedef base::Tensor<1, BDType> TensorType;
-  // 数据集合，data[0 ~ NDim - 1] 为累计数据和，data[NDim] 为累计因数
-  TensorType data(base::makeShape1(NDim + 1), 0.0);
-  int findExpandedCellID = cloud_.findExpandedCellIDs()[index];
-  if (findExpandedCellID >= 0) {
-    Foam::vector particlePos = cloud_.getPosition(index);  // 颗粒中心坐标
-    Foam::vector cellPos = Foam::vector::zero;             // 网格中心坐标
-    double radius = cloud_.getRadius(index);               // 颗粒半径
-    double gcore = 0.0;                                    // 高斯核
-    double cellV = 0.0;                                    // 网格体积
-    auto iter = expandedCellMap_.find(index);
-    if (expandedCellMap_.end() != iter) {
-      const std::unordered_set<int>& set = iter->second;  // 颗粒扩展网格的集合
-      for (int cellID : set) {
-        if (cellID >= 0) {  // cell found
-          cellPos = cloud_.mesh().C()[cellID];
-          cellV = cloud_.mesh().V()[cellID];
-          // 计算高斯核
-          gcore = GaussCore(particlePos, cellPos, radius);
-          // 计算累计数据
-          fieldRefine<DType, TensorType>::template op<fieldIsNotVF>(data, field[cellID], cellV, gcore,
-                                                                    voidFraction_[cellID]);
-        }
-      }
-    }
-  }
-  DType res = DType();                                 // 计算结果
-  int procId = base::procId();                         // 处理器编号
-  int numProc = base::numProc();                       // 处理器数量
-  int rootProc = cloud_.particleRootProcIDs()[index];  // 主节点编号，即颗粒所在的处理器编号
-  int tag = 100;
-  // 非主节点
-  if (rootProc != procId) {
-    MPI_Request request;
-    MPI_Status status;
-    // 发送 data 给主节点(非阻塞)
-    base::MPI_Isend(data, rootProc, tag, &request);
-    MPI_Wait(&request, &status);
-    res = fieldRefine<DType, TensorType>::subProcOp();
-  }
-  // 主节点
-  if (rootProc == procId) {
-    std::vector<MPI_Request> rVec(numProc - 1);
-    std::vector<MPI_Status> sVec(numProc - 1);
-    std::vector<TensorType> dataVec;
-    // 接收其他节点的 data
-    for (int inode = 0; inode < numProc; ++inode) {
-      if (inode == rootProc) {
-        dataVec.emplace_back(base::makeShape1(NDim + 1), 0.0);
-        base::copyTensor(data, dataVec[inode]);
-      } else {
-        dataVec.emplace_back(base::makeShape1(NDim + 1), 0.0);
-        base::MPI_Irecv(dataVec[inode], inode, tag, rVec.data() + (inode < rootProc ? inode : inode - 1));
-      }
-    }
-    // 主节点等待 Irecv 执行完成
-    MPI_Waitall(numProc - 1, rVec.data(), sVec.data());
-    // 由主节点计算 refined data
-    res = fieldRefine<DType, TensorType>::rootProcOp(dataVec);
-  }
-  // 所有处理器同步后返回结果
-  base::MPI_Barrier();
-  return res;
 }
 
 }  // namespace Foam

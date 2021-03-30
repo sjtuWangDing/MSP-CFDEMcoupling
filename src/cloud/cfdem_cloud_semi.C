@@ -130,6 +130,8 @@ void cfdemCloudSemi::evolve(volVectorField& U, volScalarField& voidF, volVectorF
     // 计算扩展颗粒覆盖当前处理器上的某一个网格索引
     // 必须位于计算颗粒尺度之后，因为需要判断颗粒是否为 middle
     locateM().findExpandedCell(parCloud_.findExpandedCellIDs(), expandedCellScale());
+    // 构建 expanded cell set，必须在 setVoidFraction() 以及 initBeforeSetForce() 前调用
+    globalF().buildExpandedCellMap();
     // 计算颗粒空隙率
     voidFractionM().setVoidFraction();
     voidF = voidFractionM().voidFractionNext();
