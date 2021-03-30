@@ -43,6 +43,7 @@ forceModels
   ShirgaonkarIB
   Archimedes
   mixDragForce
+  mixVirtualMassForce
 );
 
 momCoupleModels
@@ -55,8 +56,6 @@ voidFractionModel mix;
 locateModel engineMix;
 
 dataExchangeModel twoWayMPI;
-
-averagingModel dense;
 
 turbulenceModelType turbulenceProperties;
 
@@ -108,6 +107,13 @@ mixDragForceProps
   verbose true;
   interpolation false;
   scalarViscosity false;
+  useGaussCoreFunctionRefined true;
+}
+
+mixVirtualMassForceProps
+{
+  treatForceBothCFDAndDEM true;
+  verbose true;
   useGaussCoreFunctionRefined true;
 }
 
