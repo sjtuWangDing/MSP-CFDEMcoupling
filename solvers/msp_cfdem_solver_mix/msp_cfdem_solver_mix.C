@@ -89,8 +89,8 @@ int main(int argc, char* argv[]) {
       // U equation
       fvVectorMatrix UEqn
       (
-          voidFraction * fvm::ddt(U)
-          // fvm::ddt(voidFraction, U) - fvm::Sp(fvc::ddt(voidFraction), U)
+          // voidFraction * fvm::ddt(U)
+          fvm::ddt(voidFraction, U) - fvm::Sp(fvc::ddt(voidFraction), U)
         + fvm::div(phi, U) - fvm::Sp(fvc::div(phi), U)
         + particleCloud.divVoidFractionTau(U, voidFraction)
         ==

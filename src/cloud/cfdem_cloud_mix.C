@@ -183,8 +183,10 @@ void cfdemCloudMix::calcVelocityCorrection(volScalarField& p, volVectorField& U,
     Foam::vector angVel = Foam::vector::zero;
     Foam::vector rVec = Foam::vector::zero;
     Foam::vector parVel = Foam::vector::zero;
+    bool hasCoarseParticle = false;
     for (int index = 0; index < numberOfParticles(); ++index) {
       if (checkCoarseParticle(index)) {
+        hasCoarseParticle = true;
         parPos = getPosition(index);         // 颗粒中心
         lVel = getVelocity(index);           // 颗粒线速度
         angVel = getAngularVelocity(index);  // 颗粒角速度
@@ -201,6 +203,9 @@ void cfdemCloudMix::calcVelocityCorrection(volScalarField& p, volVectorField& U,
           }
         }
       }
+    }
+    if (!hasCoarseParticle) {
+      return;
     }
     U.correctBoundaryConditions();
     // phiIB correction equation should be
@@ -264,8 +269,16 @@ void cfdemCloudMix::evolve(volVectorField& U, volScalarField& voidF, volScalarFi
     globalF().buildExpandedCellMap();
     // 计算颗粒空隙率
     voidFractionM().setVoidFraction();
+    // 更新 voidF
     voidF = voidFractionM().voidFractionNext();
+    // if (dataExchangeM().couplingStep() < 2) {
+      voidF.oldTime() = voidF;
+      voidF.oldTime().correctBoundaryConditions();
+    // }
+    voidF.correctBoundaryConditions();
+    // 更新 volumeF
     volumeF = voidFractionM().volumeFractionNext();
+    volumeF.correctBoundaryConditions();
     // 计算 ddtVoidFraction_
     calcDDtVoidFraction(voidF);
     // 计算局部平局颗粒速度场

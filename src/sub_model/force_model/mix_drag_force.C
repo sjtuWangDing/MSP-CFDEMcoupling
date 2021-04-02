@@ -154,6 +154,27 @@ void mixDragForce::setForceKernel(const int index, Foam::vector& drag, Foam::vec
           dragCoefficient = 150 * (1 - vf) * nuf * rho / (vf * diameter * diameter) + 1.75 * magUr * rho / diameter;
         }
         dragCoefficient *= cloud_.voidFractionM().pV(radius);
+#if 0
+        {
+          double ds = 2 * radius;
+          double Vs = ds * ds * ds * M_PI / 6;
+          double Rep = 0.0;
+          double voidfraction = vf;
+          double localPhiP = 1.0f - voidfraction + SMALL;
+          double betaP = 0.0;
+          Ur = Ufluid - Up;
+          magUr = mag(Ur);
+          if (voidfraction > 0.8) {  // dilute
+            Rep = ds * voidfraction * magUr / (nuf + SMALL);
+            double CdMagUrLag = (24.0 * nuf / (ds * voidfraction)) * (scalar(1.0) + 0.15 * Foam::pow(Rep, 0.687));
+            betaP = 0.75 * (rho * voidfraction * CdMagUrLag / (ds * Foam::pow(voidfraction, 2.65)));
+          } else {  // dense
+            betaP =
+                (150 * localPhiP * nuf * rho) / (voidfraction * ds * 1 * ds * 1) + (1.75 * magUr * rho) / ((ds * 1));
+          }
+          dragCoefficient = Vs * betaP;
+        }
+#endif
       } else if (dragForce::SyamlalObrienHashValue_ == dragModelHashValue) {
         // Syamlal-Obrien drag model
         fRe = diameter * magUr / (nuf + Foam::SMALL);
@@ -224,35 +245,7 @@ Foam::vector mixDragForce::getBackgroundUfluid(const int index, const int findCe
   Foam::vector Ufluid = Foam::vector::zero;
   // 对于 middle 颗粒，使用高斯核函数计算
   if (forceSubModel_->useGaussCoreFunctionRefined() && cloud_.checkMiddleParticle(index)) {
-#if 1
     Ufluid = cloud_.globalF().getBackgroundUfluid(index);
-#else
-    if (findCellID >= 0) {
-      // 获取当前颗粒的 Expanded Cell 集合
-      std::unordered_set<int> set;
-      double radius = cloud_.getRadius(index);
-      Foam::vector particlePos = cloud_.getPosition(index);
-      cloud_.voidFractionM().buildExpandedCellSet(set, findCellID, particlePos, radius, 6);
-      double sumCore = 0.0;
-      double core = 0.0;
-      double cellV = 0.0;
-      Foam::vector cellPos = Foam::vector::zero;
-      for (int cellID : set) {
-        if (cellID >= 0) {  // cell found
-          cellPos = cloud_.mesh().C()[cellID];
-          cellV = cloud_.mesh().V()[cellID];
-          // 计算高斯核
-          core = cloud_.globalF().GaussCore(particlePos, cellPos, radius);
-          // 计算累计速度
-          Ufluid += voidFraction_[cellID] * U_[cellID] * core * cellV;
-          // 计算累加因数
-          sumCore += voidFraction_[cellID] * core * cellV;
-        }
-      }
-      // 计算平均流体速度
-      Ufluid /= sumCore;
-    }
-#endif
   } else if (!cloud_.checkCoarseParticle(index) && findCellID >= 0) {
     if (forceSubModel_->interpolation()) {
       // 获取颗粒中心的坐标, 将颗粒中心所在网格的空隙率和流体速度插值到颗粒中心处
@@ -271,31 +264,7 @@ double mixDragForce::getBackgroundVoidFraction(const int index, const int findCe
   double vf = 1.0;
   // 对于 middle 颗粒，使用高斯核函数计算
   if (forceSubModel_->useGaussCoreFunctionRefined() && cloud_.checkMiddleParticle(index)) {
-#if 1
     vf = cloud_.globalF().getBackgroundVoidFraction(index);
-#else
-    if (findCellID >= 0) {
-      // 获取当前颗粒的 Expanded Cell 集合
-      std::unordered_set<int> set;
-      double radius = cloud_.getRadius(index);
-      Foam::vector particlePos = cloud_.getPosition(index);
-      cloud_.voidFractionM().buildExpandedCellSet(set, findCellID, particlePos, radius, 6);
-      double cellV = 0.0;
-      double sumPV = 0.0;
-      double sumCV = 0.0;
-      for (int cellID : set) {
-        if (cellID >= 0) {  // cell found
-          cellV = cloud_.mesh().V()[cellID];
-          // 计算累加流体体积
-          sumPV += voidFraction_[cellID] * cellV;
-          // 计算累加网格体积
-          sumCV += cellV;
-        }
-      }
-      // 计算空隙率
-      vf = sumPV / sumCV;
-    }
-#endif
   } else if (!cloud_.checkCoarseParticle(index) && findCellID >= 0) {
     if (forceSubModel_->interpolation()) {
       // 获取颗粒中心的坐标, 将颗粒中心所在网格的空隙率和流体速度插值到颗粒中心处
