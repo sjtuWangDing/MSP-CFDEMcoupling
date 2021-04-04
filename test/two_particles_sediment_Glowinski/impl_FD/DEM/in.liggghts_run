@@ -19,11 +19,11 @@ neighbor        0.001 bin
 neigh_modify    delay 0
 
 # Material properties required for new pair styles
-hard_particles  yes
-fix             m1 all property/global youngsModulus peratomtype 1e10
-fix             m2 all property/global poissonsRatio peratomtype 0.25
+# hard_particles  yes
+fix             m1 all property/global youngsModulus peratomtype 5.e7
+fix             m2 all property/global poissonsRatio peratomtype 0.45
 fix             m3 all property/global coefficientRestitution peratomtypepair 1 0.9
-fix             m4 all property/global coefficientFriction peratomtypepair 1 0.35
+fix             m4 all property/global coefficientFriction peratomtypepair 1 0.5
 
 # walls
 fix             xwalls1 all wall/gran model hertz tangential history primitive type 1 xplane 0.
