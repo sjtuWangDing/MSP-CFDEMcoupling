@@ -5,40 +5,44 @@
 |   \\  /    A nd           | Web:      http://www.openfoam.org               |
 |    \\/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
-
 FoamFile
 {
-  version         2.0;
-  format          ascii;
-  root            "";
-  case            "";
-  instance        "";
-  local           "";
-  class           dictionary;
-  object          couplingProperties;
+    version         2.0;
+    format          ascii;
+    root            "";
+    case            "";
+    instance        "";
+    local           "";
+    class           dictionary;
+    object          couplingProperties;
 }
 
 /* ---------------------------- sub-models & settings ---------------------------- */
 
-modelType B; // A or B
+modelType B;
 
-couplingInterval 50;
+couplingInterval 100;
 
-expandedCellScale 6;
-
-useGuoBBOEquation true;
+expandedCellScale 8;
 
 allowUseSubCFDTimeStep false;
 
 globalForce mixGlobalForce;
 
+minCoarseParticleRadius 0.01;
+
+refineMeshSkin 1.2;
+
+useGuoBBOEquation false;
+
 useDDtVoidFraction true;
 
 forceModels
 (
+  ArchimedesIB
+  ShirgaonkarIB
   Archimedes
   mixDragForce
-  // mixMeiLiftForce
 );
 
 momCoupleModels
@@ -50,11 +54,7 @@ voidFractionModel mix;
 
 locateModel engineMix;
 
-meshMotionModel noMeshMotion;
-
 dataExchangeModel twoWayMPI;
-
-averagingModel dense;
 
 turbulenceModelType turbulenceProperties;
 
@@ -69,11 +69,23 @@ implicitCoupleProps
 
 "(globalForceProps|mixGlobalForceProps)"
 {
-  GaussCoreEff 3;
   verbose true;
+  GaussCoreEff 2;
   velFieldName "U";
   voidFractionFieldName "voidFraction";
+  volumeFractionFieldName "volumeFraction";
   gravityFieldName "g";
+}
+
+ArchimedesIBProps
+{
+  verbose true;
+}
+
+ShirgaonkarIBProps
+{
+  useTorque true;
+  verbose true;
 }
 
 ArchimedesProps
@@ -83,7 +95,6 @@ ArchimedesProps
   treatDEMForceImplicit false;
   verbose true;
   interpolation false;
-  scalarViscosity false;
 }
 
 mixDragForceProps
@@ -98,23 +109,16 @@ mixDragForceProps
   useGaussCoreFunctionRefined true;
 }
 
-mixMeiLiftForceProps
-{
-  treatForceBothCFDAndDEM true;
-  verbose true;
-  useSecondOrderTerms false;
-  useGaussCoreFunctionRefined true;
-}
-
 twoWayMPIProps
 {
-  liggghtsPath "../DEM/in.liggghts_run";
+  liggghtsPath "../DEM/in.run";
 }
 
 mixProps
 {
   alphaMin 0.3;
   scaleUpVol 1.0;
+  maxCellsNumPerCoarseParticle 10000000;
 }
 
 engineMixProps

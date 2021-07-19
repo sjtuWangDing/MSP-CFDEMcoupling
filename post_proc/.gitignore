@@ -1,3 +1,5 @@
 test/*.run
 test/mspCfdemPostProc
 test/timeAveVel*
+
+!test/*.png
