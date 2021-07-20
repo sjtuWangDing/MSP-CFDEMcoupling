@@ -162,7 +162,7 @@ class mixGlobalForce : public globalForce {
   //! \brief 高斯核函数
   double GaussCore(const Foam::vector& particlePos, const Foam::vector& cellPos, const double radius) const {
     double dist = mag(particlePos - cellPos);
-    return exp(-1.0 * dist * dist / (2 * pow(2 * radius * GaussCoreEff_, 2)));
+    return exp(-1.0 * dist * dist / pow(2 * radius * GaussCoreEff_, 2));
   }
 #else
   //! \brief 高斯核函数
