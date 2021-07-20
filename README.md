@@ -6,9 +6,16 @@ Wang Ding, School of Naval Architecture, Ocean & Civil Engineering, ShangHai Jia
 
 ## Description
 
-This code provides new solvers for multiscale model to realize coupled CFD-DEM simulations using LIGGGHTS and OpenFOAM® technology.
+This code provides new framework and solvers for multi-scale model to realize coupled CFD-DEM simulations using LIGGGHTS® and OpenFOAM® technology.
 
 ## List of new solvers
 
-- cfdemSolverIB
-- cfdemSolverMix
+- mspCfdemSolverIB
+- mspCfdemSolverMix
+- mspCfdemSolverSemi
+
+## Basic Features
+
+- Multi-scale particle-fluid two phase flow simulation
+- All solvers support MPI parallelization for large scale problems
+- Convenient implementation of new modules
