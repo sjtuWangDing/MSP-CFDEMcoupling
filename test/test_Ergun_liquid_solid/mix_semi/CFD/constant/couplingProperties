@@ -1,0 +1,145 @@
+/*---------------------------------------------------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  1.4                                   |
+|   \\  /    A nd           | Web:      http://www.openfoam.org               |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+
+FoamFile
+{
+  version         2.0;
+  format          ascii;
+  root            "";
+  case            "";
+  instance        "";
+  local           "";
+  class           dictionary;
+  object          couplingProperties;
+}
+
+/* ---------------------------- sub-models & settings ---------------------------- */
+
+modelType A; // A or B or Bfull
+
+couplingInterval 100;
+
+expandedCellScale 8;
+
+useGuoBBOEquation false;
+
+allowUseSubCFDTimeStep false;
+
+globalForce mixGlobalForce;
+
+useDDtVoidFraction true;
+
+forceModels
+(
+  Archimedes
+  mixDragForce
+  mixGradPForce
+  mixViscForce
+);
+
+momCoupleModels
+(
+  implicitCouple
+  explicitCouple
+);
+
+voidFractionModel mix;
+
+locateModel engineMix;
+
+meshMotionModel noMeshMotion;
+
+dataExchangeModel twoWayMPI;
+
+averagingModel dense;
+
+turbulenceModelType turbulenceProperties;
+
+/* ---------------------------- sub-model properties ------------------------- */
+
+implicitCoupleProps
+{
+  velFieldName "U";
+  granVelFieldName "Us";
+  voidFractionFieldName "voidFraction";
+}
+
+explicitCoupleProps
+{
+  expForceLimit (2e10 2e10 2e10);
+}
+
+"(globalForceProps|mixGlobalForceProps)"
+{
+  verbose true;
+  GaussCoreEff 2;
+  velFieldName "U";
+  voidFractionFieldName "voidFraction";
+  gravityFieldName "g";
+}
+
+ArchimedesProps
+{
+  treatForceExplicitInMomEquation false;
+  treatForceBothCFDAndDEM false;
+  treatDEMForceImplicit false;
+  verbose true;
+  interpolation false;
+}
+
+mixDragForceProps
+{
+  dragModelName "Gidaspow"; // Gidaspow or DiFelice
+  treatForceExplicitInMomEquation false;
+  treatForceBothCFDAndDEM true;
+  treatDEMForceImplicit false;
+  verbose true;
+  interpolation true;
+  scalarViscosity false;
+  useGaussCoreFunctionRefined true;
+}
+
+mixGradPForceProps
+{
+  treatForceExplicitInMomEquation false;
+  treatForceBothCFDAndDEM false; // false (A model)
+  treatDEMForceImplicit false;
+  verbose true;
+  interpolation true;
+  useGaussCoreFunctionRefined true;
+}
+
+mixViscForceProps
+{
+  treatForceExplicitInMomEquation false;
+  treatForceBothCFDAndDEM false; // false (A model)
+  treatDEMForceImplicit false;
+  verbose true;
+  interpolation true;
+  useGaussCoreFunctionRefined true;
+}
+
+twoWayMPIProps
+{
+  liggghtsPath "../DEM/in.run";
+}
+
+mixProps
+{
+  verbose true;
+  alphaMin 0.3;
+  scaleUpVol 1.0;
+}
+
+engineMixProps
+{
+  verbose true;
+  treeSearch true;
+  zSplit 8;
+  xySplit 16;
+}

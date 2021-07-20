@@ -1,0 +1,72 @@
+echo            both
+log             ../DEM/log.run
+
+atom_style      granular
+atom_modify     map array
+communicate     single vel yes
+
+boundary        f f f
+newton          off
+units           si
+
+# read restart file
+read_restart    ../DEM/prev/restart.init
+
+neighbor        0.0005 bin
+neigh_modify    delay 0
+
+# **********************************************************************************************
+# - define material properties required for new pair styles
+
+# hard_particles  yes
+variable YoungsP equal 1.0e+7
+variable PoissonsP equal 0.2
+variable CoefRestitutionP equal 0.9
+variable CoefFrictionP equal 0.844
+variable CoefRollingFrictionP equal 0.261
+
+fix             m1 all property/global youngsModulus peratomtype ${YoungsP}
+
+fix             m2 all property/global poissonsRatio peratomtype ${PoissonsP}
+
+fix             m3 all property/global coefficientRestitution peratomtypepair 1 ${CoefRestitutionP}
+
+fix             m4 all property/global coefficientFriction peratomtypepair 1 ${CoefFrictionP}
+
+fix             m5 all property/global coefficientRollingFriction peratomtypepair 1 ${CoefRollingFrictionP}
+
+# pair style
+pair_style      gran model hertz tangential history
+
+#Hertzian without cohesion
+pair_coeff      * *
+
+# timestep, gravity
+timestep        0.000005
+fix             gravi all gravity 9.81 vector 0.0 0.0 -1.0
+
+# walls
+fix             zwalls1 all wall/gran model hertz tangential history primitive type 1 zplane 0.0
+fix             zwalls2 all wall/gran model hertz tangential history primitive type 1 zplane 0.055
+fix             cyclinderWall all wall/gran model hertz tangential history primitive type 1 zcylinder 0.0075 0.0 0.0
+
+# apply nve integration to all particles that are inserted as single particles
+fix             integr all nve/sphere
+
+# **********************************************************************************************
+# - define screen output
+compute         rke all erotate/sphere
+thermo_style    custom step atoms ke c_rke vol
+thermo          1000
+thermo_modify   lost ignore norm no
+compute_modify  thermo_temp dynamic yes
+
+# insert the first particles so that dump is not empty
+dump            dmp all custom 5000 ../DEM/post/dump.run id type x y z ix iy iz vx vy vz fx fy fz omegax omegay omegaz radius
+
+# **********************************************************************************************
+# - define cfd coupling
+fix           cfd1  all couple/cfd couple_every 100 mpi
+fix           cfd2  all couple/cfd/force
+
+run 1
